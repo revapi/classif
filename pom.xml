@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright 2014-2018 Lukas Krejci
+    Copyright 2018 Lukas Krejci
     and other contributors as indicated by the @author tags.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -103,20 +103,12 @@
                         <configuration>
                             <rules>
                                 <requireJavaVersion>
-                                    <version>9</version>
+                                    <version>1.8</version>
                                 </requireJavaVersion>
                             </rules>
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>pw.krejci</groupId>
-                <artifactId>multi-release-jar-maven-plugin</artifactId>
-                <version>${version.pw.krejci.multi-release-jar-maven-plugin}</version>
-                <configuration>
-                    <mainModuleInfo>9</mainModuleInfo>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.antlr</groupId>
@@ -167,6 +159,8 @@
             </plugin>
         </plugins>
     </build>
+
+    <inceptionYear>2018</inceptionYear>
 
     <licenses>
         <license>
