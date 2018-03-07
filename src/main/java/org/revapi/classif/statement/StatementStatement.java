@@ -20,10 +20,12 @@ import java.util.List;
 
 public abstract class StatementStatement extends AbstractStatement {
     protected final List<AnnotationStatement> annotations;
+    protected final ModifiersStatement modifiers;
 
     protected StatementStatement(String definedVariable, List<String> referencedVariables,
-            List<AnnotationStatement> annotations, boolean isMatch) {
+            List<AnnotationStatement> annotations, ModifiersStatement modifiers, boolean isMatch) {
         super(definedVariable, referencedVariables, isMatch);
         this.annotations = annotations;
+        this.modifiers = modifiers;
     }
 }

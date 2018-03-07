@@ -37,6 +37,7 @@ import org.revapi.classif.statement.ModifierStatement;
 import org.revapi.classif.statement.ModifiersStatement;
 import org.revapi.classif.statement.NameStatement;
 import org.revapi.classif.statement.StatementStatement;
+import org.revapi.classif.statement.TypeKindStatement;
 
 public final class Classif {
 
@@ -156,12 +157,50 @@ public final class Classif {
                             }).collect(toList())))
                     .collect(toList()));
 
-            return super.visitStatement(ctx);
+            return new TypeDefinitionOrGenericStatementVisitor(annos, modifiers)
+                    .visitTypeDefinitionOrGenericStatement(ctx.typeDefinitionOrGenericStatement());
         }
     }
 
     private static final class AnnotationVisitor extends ClassifBaseVisitor<AnnotationStatement> {
         static final AnnotationVisitor INSTANCE = new AnnotationVisitor();
 
+    }
+
+    private static final class TypeDefinitionOrGenericStatementVisitor extends ClassifBaseVisitor<StatementStatement> {
+        private final List<AnnotationStatement> annotations;
+        private final ModifiersStatement modifiers;
+
+        private TypeDefinitionOrGenericStatementVisitor(
+                List<AnnotationStatement> annotations, ModifiersStatement modifiers) {
+            this.annotations = annotations;
+            this.modifiers = modifiers;
+        }
+
+        @Override
+        public StatementStatement visitTypeDefinitionOrGenericStatement(
+                ClassifParser.TypeDefinitionOrGenericStatementContext ctx) {
+            if (ctx.typeKind() != null) {
+                // type definition
+                TypeKindStatement typeKind = TypeKindVisitor.INSTANCE.visitTypeKind(ctx.typeKind());
+                // TODO implement
+            } else {
+                // generic statement
+                // TODO implement
+            }
+            return super.visitTypeDefinitionOrGenericStatement(ctx);
+        }
+    }
+
+    private static final class TypeKindVisitor extends ClassifBaseVisitor<TypeKindStatement> {
+        private static final TypeKindVisitor INSTANCE = new TypeKindVisitor();
+
+        @Override
+        public TypeKindStatement visitTypeKind(ClassifParser.TypeKindContext ctx) {
+            boolean neg = ctx.not() != null;
+            String typeKind = neg ? ctx.getText().substring(ctx.not().getText().length()) : ctx.getText();
+
+            return new TypeKindStatement(neg, typeKind);
+        }
     }
 }

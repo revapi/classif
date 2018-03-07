@@ -77,15 +77,17 @@ public final class StructuralMatcher {
     }
 
     /**
-     * Tests whether this match program matches given model element.
+     * Tests whether this matcher matches given model element.
      *
-     * @param model the model representing some Java construct
+     * @param model     the model representing some Java construct
      * @param inspector the inspector of the model elements
-     * @param <E> the type of the model
+     * @param <M>       the type of the model
      * @return a match describing the result of the test
      */
-    public <E> boolean test(E model, ModelInspector<E> inspector) {
-        return matchers.stream().reduce(false,
-                (prior, unevaluated) -> prior || unevaluated.test(model, inspector, variables), (a, b) -> a || b);
+    public <M> boolean test(M model, ModelInspector<M> inspector) {
+        return matchers.stream().reduce(
+                false,
+                (prior, unevaluated) -> prior || unevaluated.test(model, inspector, variables),
+                (a, b) -> a || b);
     }
 }

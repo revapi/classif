@@ -76,7 +76,7 @@ statement
     ;
 
 typeDefinitionOrGenericStatement
-    : typeType WS returned? resolveableTypeReference (WS typeConstraints)? WS?
+    : typeKind WS returned? resolveableTypeReference (WS typeConstraints)? WS?
         (OPEN_BRACE elementStatement* WS? CLOSE_BRACE | end)
     | (returned | ANY) (WS genericConstraints)? end
     ;
@@ -237,7 +237,7 @@ methodConstraint
     | DEFAULT WS annotationValue
     ;
 
-typeType
+typeKind
     : not? (CLASS | INTERFACE | ENUM | ANNOTATION_TYPE | TYPE)
     ;
 
