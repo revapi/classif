@@ -14,13 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.revapi.classif.match;
+package org.revapi.classif.match.instance;
 
 import java.util.List;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.SimpleTypeVisitor8;
+
+import org.revapi.classif.match.MatchContext;
 
 public final class TypeParameterWildcardMatch extends TypeInstanceMatch {
     private final int index;

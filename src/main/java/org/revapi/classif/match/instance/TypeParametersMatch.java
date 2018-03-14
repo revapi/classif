@@ -14,22 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.revapi.classif.match;
+package org.revapi.classif.match.instance;
 
-import java.util.Collection;
-
-import javax.lang.model.element.Element;
-import javax.lang.model.type.TypeMirror;
-
-public final class ModifierClusterMatch extends DeclarationMatch {
-    private final Collection<ModifierMatch> modifiers;
-
-    public ModifierClusterMatch(Collection<ModifierMatch> modifiers) {
-        this.modifiers = modifiers;
-    }
-
-    @Override
-    protected <M> boolean testDeclaration(Element declaration, TypeMirror instance, MatchContext<M> ctx) {
-        return modifiers.stream().anyMatch(m -> m.testDeclaration(declaration, instance, ctx));
-    }
+public final class TypeParametersMatch extends TypeInstanceMatch {
+    // TODO implement
 }

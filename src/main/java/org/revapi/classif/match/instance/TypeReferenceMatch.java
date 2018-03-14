@@ -14,11 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.revapi.classif.match;
+package org.revapi.classif.match.instance;
 
 import java.util.Collection;
 
 import javax.lang.model.type.TypeMirror;
+
+import org.revapi.classif.match.MatchContext;
 
 public final class TypeReferenceMatch extends TypeInstanceMatch {
     private final Collection<SingleTypeReferenceMatch> matches;

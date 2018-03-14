@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.revapi.classif.match;
+package org.revapi.classif.match.instance;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.type.ArrayType;
@@ -31,6 +31,9 @@ import javax.lang.model.type.TypeVisitor;
 import javax.lang.model.type.UnionType;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.SimpleTypeVisitor8;
+
+import org.revapi.classif.match.Match;
+import org.revapi.classif.match.MatchContext;
 
 public abstract class TypeInstanceMatch extends Match {
 

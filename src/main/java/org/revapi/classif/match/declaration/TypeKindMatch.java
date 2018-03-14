@@ -14,13 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.revapi.classif.match;
+package org.revapi.classif.match.declaration;
 
 import static java.util.Objects.requireNonNull;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
+
+import org.revapi.classif.match.MatchContext;
 
 public final class TypeKindMatch extends DeclarationMatch {
     private final boolean negation;

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.revapi.classif.match;
+package org.revapi.classif.match.instance;
 
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
@@ -37,6 +37,9 @@ import javax.lang.model.type.TypeVisitor;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.SimpleElementVisitor8;
 import javax.lang.model.util.SimpleTypeVisitor8;
+
+import org.revapi.classif.match.MatchContext;
+import org.revapi.classif.match.ModelMatch;
 
 public final class SingleTypeReferenceMatch extends TypeInstanceMatch {
     private final FqnMatch fullyQualifiedName;

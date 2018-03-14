@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.revapi.classif.match;
+package org.revapi.classif.match.instance;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -25,6 +25,9 @@ import javax.lang.model.type.NoType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+
+import org.revapi.classif.match.MatchContext;
+import org.revapi.classif.match.NameMatch;
 
 public final class FqnMatch extends TypeInstanceMatch {
     private final Pattern fqnRegex;

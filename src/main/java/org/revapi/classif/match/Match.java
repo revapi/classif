@@ -19,9 +19,12 @@ package org.revapi.classif.match;
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
 
+import org.revapi.classif.match.declaration.DeclarationMatch;
+import org.revapi.classif.match.instance.TypeInstanceMatch;
+
 public abstract class Match {
 
-    Match() {
+    protected Match() {
 
     }
 

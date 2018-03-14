@@ -31,12 +31,12 @@ import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.revapi.classif.match.AnnotationMatch;
-import org.revapi.classif.match.ModifierClusterMatch;
-import org.revapi.classif.match.ModifierMatch;
-import org.revapi.classif.match.ModifiersMatch;
 import org.revapi.classif.match.NameMatch;
-import org.revapi.classif.match.TypeKindMatch;
-import org.revapi.classif.match.TypeReferenceMatch;
+import org.revapi.classif.match.declaration.ModifierClusterMatch;
+import org.revapi.classif.match.declaration.ModifierMatch;
+import org.revapi.classif.match.declaration.ModifiersMatch;
+import org.revapi.classif.match.declaration.TypeKindMatch;
+import org.revapi.classif.match.instance.TypeReferenceMatch;
 import org.revapi.classif.statement.AbstractStatement;
 import org.revapi.classif.statement.StatementStatement;
 
