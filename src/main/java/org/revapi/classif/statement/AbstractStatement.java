@@ -23,7 +23,6 @@ import javax.lang.model.type.TypeMirror;
 
 import org.revapi.classif.TreeNode;
 import org.revapi.classif.match.Match;
-import org.revapi.classif.match.TypeInstanceMatch;
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.ModelMatch;
 

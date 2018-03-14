@@ -76,6 +76,33 @@
     <build>
         <plugins>
             <plugin>
+                <!-- This is a workaround until maven-compiler-plugin can ignore the - -release parameter if the JDK
+                     to be run doesn't support it. This old version of the compiler plugin doesn't even know
+                     maven.compiler.release.
+
+                     Unfortunately, we can't build on Java9 because surefire in combination with JUnit5 and/or the use
+                     javax.lang.model (from java.compiler module) in our tests causes some serious fits.
+                -->
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.5.1</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <configuration>
+                    <!-- exclude the generated-sources from checkstyle -->
+                    <sourceDirectories>${project.build.sourceDirectory}</sourceDirectories>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <configuration>
+                    <mapping>
+                        <g4>SLASHSTAR_STYLE</g4>
+                    </mapping>
+                </configuration>
+            </plugin>
+            <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.19.1</version>
                 <dependencies>

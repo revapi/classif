@@ -198,6 +198,7 @@ public final class Classif {
             } else {
                 // generic statement
                 // TODO implement
+                int __ = 0;
             }
             return super.visitTypeDefinitionOrGenericStatement(ctx);
         }

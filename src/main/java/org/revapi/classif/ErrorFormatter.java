@@ -59,7 +59,9 @@ final class ErrorFormatter {
 
     private static void appendLineNo(StringBuilder sb, int lineNo, int maxDigits) {
         int lineDigits = getNumberOfDigits(lineNo);
-        while (lineDigits++ < maxDigits) sb.append(" ");
+        while (lineDigits++ < maxDigits) {
+            sb.append(" ");
+        }
         sb.append(lineNo);
         sb.append(" | ");
     }
