@@ -14,10 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-public class TestClass {
-    public interface Iface {}
-    public enum Enum {}
-    public @interface Anno {}
+package org.revapi.classif.match;
 
-    public void method() {}
+import static java.util.Collections.unmodifiableMap;
+import static java.util.Objects.requireNonNull;
+
+import java.util.Map;
+
+import org.revapi.classif.ModelInspector;
+
+public final class MatchContext<M> {
+
+    public final ModelInspector<M> modelInspector;
+    public final Map<String, ModelMatch> variables;
+
+    public MatchContext(ModelInspector<M> modelInspector, Map<String, ModelMatch> variables) {
+        this.modelInspector = requireNonNull(modelInspector);
+        this.variables = unmodifiableMap(requireNonNull(variables));
+    }
 }

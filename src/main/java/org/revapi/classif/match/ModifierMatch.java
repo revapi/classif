@@ -14,24 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.revapi.classif.statement;
+package org.revapi.classif.match;
 
-import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.type.TypeMirror;
 
-import org.revapi.classif.ModelInspector;
-
-public final class ModifierStatement extends AbstractStatement {
+public final class ModifierMatch extends DeclarationMatch {
     private final boolean negation;
     private final Modifier modifier;
     private final boolean packagePrivate;
 
-    public ModifierStatement(boolean negation, String modifier) {
-        super(null, Collections.emptyList(), false);
+    public ModifierMatch(boolean negation, String modifier) {
         this.negation = negation;
         switch (modifier) {
             case "public":
@@ -70,26 +66,17 @@ public final class ModifierStatement extends AbstractStatement {
     }
 
     @Override
-    public AbstractMatcher createMatcher() {
-        return new AbstractMatcher() {
-            @Override
-            protected <E> boolean defaultElementTest(E element, ModelInspector<E> inspector,
-                    Map<String, AbstractMatcher> variables) {
+    protected <M> boolean defaultTest(Element el, TypeMirror instantiation, MatchContext<M> ctx) {
+        Set<Modifier> modifiers = el.getModifiers();
 
-                Element el = inspector.toElement(element);
+        boolean ret;
+        if (packagePrivate) {
+            ret = !(modifiers.contains(Modifier.PUBLIC) || modifiers.contains(Modifier.PROTECTED)
+                    || modifiers.contains(Modifier.PRIVATE));
+        } else {
+            ret = modifiers.contains(modifier);
+        }
 
-                Set<Modifier> modifiers = el.getModifiers();
-
-                boolean ret;
-                if (packagePrivate) {
-                    ret = !(modifiers.contains(Modifier.PUBLIC) || modifiers.contains(Modifier.PROTECTED)
-                            || modifiers.contains(Modifier.PRIVATE));
-                } else {
-                    ret = modifiers.contains(modifier);
-                }
-
-                return negation != ret;
-            }
-        };
+        return negation != ret;
     }
 }

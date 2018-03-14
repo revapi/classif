@@ -23,8 +23,20 @@ import java.util.Set;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
 
 public final class MirroringModelInspector implements ModelInspector<Element> {
+    private final Elements elements;
+
+    public MirroringModelInspector(Elements elements) {
+        this.elements = elements;
+    }
+
+    @Override
+    public TypeElement getJavaLangObjectElement() {
+        return elements.getTypeElement("java.lang.Object");
+    }
+
     @Override
     public Element toElement(Element model) {
         return model;
@@ -61,7 +73,7 @@ public final class MirroringModelInspector implements ModelInspector<Element> {
     }
 
     @Override
-    public Element fromTypeElement(TypeElement element) {
+    public Element fromElement(Element element) {
         return element;
     }
 }

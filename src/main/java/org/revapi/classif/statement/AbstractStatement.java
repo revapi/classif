@@ -18,14 +18,26 @@ package org.revapi.classif.statement;
 
 import java.util.List;
 
+import javax.lang.model.element.Element;
+import javax.lang.model.type.TypeMirror;
+
+import org.revapi.classif.TreeNode;
+import org.revapi.classif.match.Match;
+import org.revapi.classif.match.TypeInstanceMatch;
+import org.revapi.classif.match.MatchContext;
+import org.revapi.classif.match.ModelMatch;
+
 public abstract class AbstractStatement extends TreeNode<AbstractStatement> {
     private final String definedVariable;
     private final List<String> referencedVariables;
+    private final List<Match> innerMatchers;
     private final boolean isMatch;
 
-    protected AbstractStatement(String definedVariable, List<String> referencedVariables, boolean isMatch) {
+    protected AbstractStatement(String definedVariable, List<String> referencedVariables,
+            List<Match> innerMatchers, boolean isMatch) {
         this.definedVariable = definedVariable;
         this.referencedVariables = referencedVariables;
+        this.innerMatchers = innerMatchers;
         this.isMatch = isMatch;
     }
 
@@ -41,5 +53,21 @@ public abstract class AbstractStatement extends TreeNode<AbstractStatement> {
         return isMatch;
     }
 
-    public abstract AbstractMatcher createMatcher();
+    public final ModelMatch createMatcher() {
+        return new ModelMatch() {
+            ModelMatch exact = createExactMatcher();
+
+            @Override
+            protected <M> boolean defaultElementTest(M model, MatchContext<M> ctx) {
+                Element el = ctx.modelInspector.toElement(model);
+                TypeMirror t = ctx.modelInspector.toMirror(model);
+
+                return innerMatchers.stream().allMatch(m -> m.test(el, t, ctx))
+                        && exact.test(model, ctx);
+
+            }
+        };
+    }
+
+    protected abstract ModelMatch createExactMatcher();
 }

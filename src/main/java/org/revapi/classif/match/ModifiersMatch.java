@@ -14,10 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-public class TestClass {
-    public interface Iface {}
-    public enum Enum {}
-    public @interface Anno {}
+package org.revapi.classif.match;
 
-    public void method() {}
+import java.util.Collection;
+
+import javax.lang.model.element.Element;
+import javax.lang.model.type.TypeMirror;
+
+public final class ModifiersMatch extends DeclarationMatch {
+    private final Collection<ModifierClusterMatch> clusters;
+
+    public ModifiersMatch(Collection<ModifierClusterMatch> clusters) {
+        this.clusters = clusters;
+    }
+
+    @Override
+    protected <M> boolean testDeclaration(Element declaration, TypeMirror instance, MatchContext<M> ctx) {
+        return clusters.stream().allMatch(m -> m.testDeclaration(declaration, instance, ctx));
+    }
 }

@@ -16,17 +16,19 @@
  */
 package org.revapi.classif.statement;
 
+import java.util.Collections;
 import java.util.List;
 
-import org.revapi.classif.matcher.AnnotationMatcher;
+import org.revapi.classif.match.AnnotationMatch;
+import org.revapi.classif.match.ModelMatch;
 
 public final class AnnotationStatement extends AbstractStatement {
     public AnnotationStatement(String definedVariable, List<String> referencedVariables, boolean isMatch) {
-        super(definedVariable, referencedVariables, isMatch);
+        super(definedVariable, referencedVariables, Collections.emptyList(), isMatch);
     }
 
     @Override
-    public AbstractMatcher createMatcher() {
-        return new AnnotationMatcher();
+    public ModelMatch createExactMatcher() {
+        return new AnnotationMatch();
     }
 }

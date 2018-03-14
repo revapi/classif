@@ -14,12 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.revapi.classif.statement;
+package org.revapi.classif.match;
 
 import java.util.regex.Pattern;
 
-public abstract class NameStatement {
-    private NameStatement() {
+public abstract class NameMatch {
+    private NameMatch() {
 
     }
 
@@ -39,25 +39,25 @@ public abstract class NameStatement {
         return null;
     }
 
-    public static NameStatement exact(String name) {
+    public static NameMatch exact(String name) {
         return new MatchExact(name);
     }
 
-    public static NameStatement pattern(Pattern name) {
+    public static NameMatch pattern(Pattern name) {
         return new MatchPattern(name);
     }
 
-    public static NameStatement any() {
+    public static NameMatch any() {
         return new MatchAny();
     }
 
-    public static NameStatement all() {
+    public static NameMatch all() {
         return new MatchAll();
     }
 
     public abstract boolean matches(String name);
 
-    private static final class MatchExact extends NameStatement {
+    private static final class MatchExact extends NameMatch {
         private final String match;
 
         private MatchExact(String match) {
@@ -75,7 +75,7 @@ public abstract class NameStatement {
         }
     }
 
-    private static final class MatchPattern extends NameStatement {
+    private static final class MatchPattern extends NameMatch {
         private final Pattern pattern;
 
         private MatchPattern(Pattern pattern) {
@@ -93,7 +93,7 @@ public abstract class NameStatement {
         }
     }
 
-    private static final class MatchAny extends NameStatement {
+    private static final class MatchAny extends NameMatch {
         @Override
         public boolean isMatchAny() {
             return true;
@@ -105,7 +105,7 @@ public abstract class NameStatement {
         }
     }
 
-    private static final class MatchAll extends NameStatement {
+    private static final class MatchAll extends NameMatch {
 
         @Override
         public boolean matches(String name) {

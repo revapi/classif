@@ -30,14 +30,15 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.revapi.classif.match.AnnotationMatch;
+import org.revapi.classif.match.ModifierClusterMatch;
+import org.revapi.classif.match.ModifierMatch;
+import org.revapi.classif.match.ModifiersMatch;
+import org.revapi.classif.match.NameMatch;
+import org.revapi.classif.match.TypeKindMatch;
+import org.revapi.classif.match.TypeReferenceMatch;
 import org.revapi.classif.statement.AbstractStatement;
-import org.revapi.classif.statement.AnnotationStatement;
-import org.revapi.classif.statement.ModifierClusterStatement;
-import org.revapi.classif.statement.ModifierStatement;
-import org.revapi.classif.statement.ModifiersStatement;
-import org.revapi.classif.statement.NameStatement;
 import org.revapi.classif.statement.StatementStatement;
-import org.revapi.classif.statement.TypeKindStatement;
 
 public final class Classif {
 
@@ -92,12 +93,12 @@ public final class Classif {
         }
     }
 
-    private static final class ResolvedNameVisitor extends ClassifBaseVisitor<NameStatement> {
+    private static final class ResolvedNameVisitor extends ClassifBaseVisitor<NameMatch> {
         static final ResolvedNameVisitor INSTANCE = new ResolvedNameVisitor();
 
         @Override
-        public NameStatement visitResolvedName(ClassifParser.ResolvedNameContext ctx) {
-            return NameStatement.exact(ctx.getText());
+        public NameMatch visitResolvedName(ClassifParser.ResolvedNameContext ctx) {
+            return NameMatch.exact(ctx.getText());
         }
     }
 
@@ -118,21 +119,21 @@ public final class Classif {
         }
     }
 
-    private static final class NameVisitor extends ClassifBaseVisitor<NameStatement> {
+    private static final class NameVisitor extends ClassifBaseVisitor<NameMatch> {
         static final NameVisitor INSTANCE = new NameVisitor();
 
         @Override
-        public NameStatement visitName(ClassifParser.NameContext ctx) {
-            NameStatement ret = ifNotNull(ctx.resolvedName(), c ->  c.accept(ResolvedNameVisitor.INSTANCE));
+        public NameMatch visitName(ClassifParser.NameContext ctx) {
+            NameMatch ret = ifNotNull(ctx.resolvedName(), c ->  c.accept(ResolvedNameVisitor.INSTANCE));
 
             if (ret == null) {
-                ret = ifNotNull(ctx.REGEX(), r -> NameStatement.pattern(toRegex(r)));
+                ret = ifNotNull(ctx.REGEX(), r -> NameMatch.pattern(toRegex(r)));
 
                 if (ret == null) {
-                    ret = ifNotNull(ctx.ANY(), r -> NameStatement.any());
+                    ret = ifNotNull(ctx.ANY(), r -> NameMatch.any());
 
                     if (ret == null) {
-                        ret = ifNotNull(ctx.ANY_NUMBER_OF_THINGS(), r -> NameStatement.all());
+                        ret = ifNotNull(ctx.ANY_NUMBER_OF_THINGS(), r -> NameMatch.all());
                     }
                 }
             }
@@ -145,15 +146,15 @@ public final class Classif {
         static final StatementVisitor INSTANCE = new StatementVisitor();
         @Override
         public StatementStatement visitStatement(ClassifParser.StatementContext ctx) {
-            List<AnnotationStatement> annos = ctx.annotations().annotation().stream()
+            List<AnnotationMatch> annos = ctx.annotations().annotation().stream()
                     .map(a -> a.accept(AnnotationVisitor.INSTANCE)).collect(toList());
 
-            ModifiersStatement modifiers = new ModifiersStatement(ctx.modifiers().modifierCluster().stream()
-                    .map(cc -> new ModifierClusterStatement(cc.modifier().stream()
+            ModifiersMatch modifiers = new ModifiersMatch(ctx.modifiers().modifierCluster().stream()
+                    .map(cc -> new ModifierClusterMatch(cc.modifier().stream()
                             .map(mc -> {
                                 boolean negation = mc.not() != null;
                                 String text = negation ? mc.getText().substring(1) : mc.getText();
-                                return new ModifierStatement(negation, text);
+                                return new ModifierMatch(negation, text);
                             }).collect(toList())))
                     .collect(toList()));
 
@@ -162,17 +163,27 @@ public final class Classif {
         }
     }
 
-    private static final class AnnotationVisitor extends ClassifBaseVisitor<AnnotationStatement> {
+    private static final class AnnotationVisitor extends ClassifBaseVisitor<AnnotationMatch> {
         static final AnnotationVisitor INSTANCE = new AnnotationVisitor();
 
     }
 
+    private static final class TypeReferenceVisitor extends ClassifBaseVisitor<TypeReferenceMatch> {
+        static final TypeReferenceVisitor INSTANCE = new TypeReferenceVisitor();
+
+        @Override
+        public TypeReferenceMatch visitTypeReference(ClassifParser.TypeReferenceContext ctx) {
+            // TODO implement
+            return null;
+        }
+    }
+
     private static final class TypeDefinitionOrGenericStatementVisitor extends ClassifBaseVisitor<StatementStatement> {
-        private final List<AnnotationStatement> annotations;
-        private final ModifiersStatement modifiers;
+        private final List<AnnotationMatch> annotations;
+        private final ModifiersMatch modifiers;
 
         private TypeDefinitionOrGenericStatementVisitor(
-                List<AnnotationStatement> annotations, ModifiersStatement modifiers) {
+                List<AnnotationMatch> annotations, ModifiersMatch modifiers) {
             this.annotations = annotations;
             this.modifiers = modifiers;
         }
@@ -182,7 +193,7 @@ public final class Classif {
                 ClassifParser.TypeDefinitionOrGenericStatementContext ctx) {
             if (ctx.typeKind() != null) {
                 // type definition
-                TypeKindStatement typeKind = TypeKindVisitor.INSTANCE.visitTypeKind(ctx.typeKind());
+                TypeKindMatch typeKind = TypeKindVisitor.INSTANCE.visitTypeKind(ctx.typeKind());
                 // TODO implement
             } else {
                 // generic statement
@@ -192,15 +203,15 @@ public final class Classif {
         }
     }
 
-    private static final class TypeKindVisitor extends ClassifBaseVisitor<TypeKindStatement> {
+    private static final class TypeKindVisitor extends ClassifBaseVisitor<TypeKindMatch> {
         private static final TypeKindVisitor INSTANCE = new TypeKindVisitor();
 
         @Override
-        public TypeKindStatement visitTypeKind(ClassifParser.TypeKindContext ctx) {
+        public TypeKindMatch visitTypeKind(ClassifParser.TypeKindContext ctx) {
             boolean neg = ctx.not() != null;
             String typeKind = neg ? ctx.getText().substring(ctx.not().getText().length()) : ctx.getText();
 
-            return new TypeKindStatement(neg, typeKind);
+            return new TypeKindMatch(neg, typeKind);
         }
     }
 }

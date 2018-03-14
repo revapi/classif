@@ -22,7 +22,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.revapi.classif.statement.AbstractMatcher;
+import org.revapi.classif.match.MatchContext;
+import org.revapi.classif.match.ModelMatch;
 import org.revapi.classif.statement.AbstractStatement;
 
 /**
@@ -32,8 +33,8 @@ import org.revapi.classif.statement.AbstractStatement;
  * @see #test(Object, ModelInspector)
  */
 public final class StructuralMatcher {
-    private final List<AbstractMatcher> matchers;
-    private final Map<String, AbstractMatcher> variables;
+    private final List<ModelMatch> matchers;
+    private final Map<String, ModelMatch> variables;
     private final boolean decidableInPlace;
 
     StructuralMatcher(List<String> namedMatches, List<AbstractStatement> statements) {
@@ -43,13 +44,13 @@ public final class StructuralMatcher {
         this.decidableInPlace = initMatchEvaluators(null, namedMatches, statements);
     }
 
-    private boolean initMatchEvaluators(AbstractMatcher parentMatcher, List<String> namedMatches,
+    private boolean initMatchEvaluators(ModelMatch parentMatcher, List<String> namedMatches,
             Collection<AbstractStatement> statements) {
 
         boolean decidableInPlace = true;
 
         for (AbstractStatement st : statements) {
-            AbstractMatcher stMatcher = st.createMatcher();
+            ModelMatch stMatcher = st.createMatcher();
             stMatcher.setParent(parentMatcher);
 
             if (st.isMatch() || namedMatches.contains(st.getDefinedVariable())) {
@@ -85,9 +86,11 @@ public final class StructuralMatcher {
      * @return a match describing the result of the test
      */
     public <M> boolean test(M model, ModelInspector<M> inspector) {
+        MatchContext<M> ctx = new MatchContext<>(inspector, variables);
+
         return matchers.stream().reduce(
                 false,
-                (prior, unevaluated) -> prior || unevaluated.test(model, inspector, variables),
+                (prior, unevaluated) -> prior || unevaluated.test(model, ctx),
                 (a, b) -> a || b);
     }
 }

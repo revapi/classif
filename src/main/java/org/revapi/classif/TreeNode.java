@@ -14,14 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.revapi.classif.statement;
+package org.revapi.classif;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-abstract class TreeNode<This extends TreeNode<This>> {
+public abstract class TreeNode<This extends TreeNode<This>> {
 
     private This parent;
     private ParentPreservingSet children = new ParentPreservingSet();

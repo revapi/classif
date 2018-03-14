@@ -14,12 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.revapi.classif.statement;
+package org.revapi.classif.match;
 
 import static java.util.Objects.requireNonNull;
 
 import java.util.IdentityHashMap;
-import java.util.Map;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -27,35 +26,33 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.SimpleElementVisitor8;
 
-import org.revapi.classif.ModelInspector;
+import org.revapi.classif.TreeNode;
 
-public abstract class AbstractMatcher extends TreeNode<AbstractMatcher> {
+public abstract class ModelMatch extends TreeNode<ModelMatch> {
     private final IdentityHashMap<Object, Boolean> decisionCache = new IdentityHashMap<>();
 
-    public final <E> boolean test(E element, ModelInspector<E> inspector, Map<String, AbstractMatcher> variables) {
-        element = requireNonNull(element);
-        inspector = requireNonNull(inspector);
-        variables = requireNonNull(variables);
+    public final <M> boolean test(M model, MatchContext<M> ctx) {
+        model = requireNonNull(model);
+        ctx = requireNonNull(ctx);
 
-        Boolean match = decisionCache.get(element);
+        Boolean match = decisionCache.get(model);
         if (match == null) {
-            match = dispatchTest(element, inspector, variables);
+            match = dispatchTest(model, ctx);
 
             if (match) {
-                AbstractMatcher parent = getParent();
+                ModelMatch parent = getParent();
                 if (parent != null) {
-                    match = parent.test(inspector.getEnclosing(element), inspector, variables);
+                    match = parent.test(ctx.modelInspector.getEnclosing(model), ctx);
                 }
             }
 
-            decisionCache.put(element, match);
+            decisionCache.put(model, match);
         }
 
         return match;
     }
 
-    public final <E> boolean dispatchTest(E el, ModelInspector<E> inspector,
-            Map<String, AbstractMatcher> variables) {
+    public final <M> boolean dispatchTest(M model, MatchContext<M> ctx) {
         return new SimpleElementVisitor8<Boolean, Void>() {
             @Override
             protected Boolean defaultAction(Element e, Void aVoid) {
@@ -64,38 +61,34 @@ public abstract class AbstractMatcher extends TreeNode<AbstractMatcher> {
 
             @Override
             public Boolean visitVariable(VariableElement e, Void __) {
-                return testVariable(el, inspector, variables);
+                return testVariable(model, ctx);
             }
 
             @Override
             public Boolean visitType(TypeElement e, Void __) {
-                return testType(el, inspector, variables);
+                return testType(model, ctx);
             }
 
             @Override
             public Boolean visitExecutable(ExecutableElement e, Void __) {
-                return testMethod(el, inspector, variables);
+                return testMethod(model, ctx);
             }
-        }.visit(inspector.toElement(el));
+        }.visit(ctx.modelInspector.toElement(model));
     }
 
-    public <E> boolean testType(E type, ModelInspector<E> inspector,
-            Map<String, AbstractMatcher> variables) {
-        return defaultElementTest(type, inspector, variables);
+    public <M> boolean testType(M type, MatchContext<M> ctx) {
+        return defaultElementTest(type, ctx);
     }
 
-    public <E> boolean testMethod(E method, ModelInspector<E> inspector,
-            Map<String, AbstractMatcher> variables) {
-        return defaultElementTest(method, inspector, variables);
+    public <M> boolean testMethod(M method, MatchContext<M> ctx) {
+        return defaultElementTest(method, ctx);
     }
 
-    public <E> boolean testVariable(E var, ModelInspector<E> inspector,
-            Map<String, AbstractMatcher> variables) {
-        return defaultElementTest(var, inspector, variables);
+    public <M> boolean testVariable(M var, MatchContext<M> ctx) {
+        return defaultElementTest(var, ctx);
     }
 
-    protected <E> boolean defaultElementTest(E element, ModelInspector<E> inspector,
-            Map<String, AbstractMatcher> variables) {
+    protected <M> boolean defaultElementTest(M model, MatchContext<M> ctx) {
         return false;
     }
 }

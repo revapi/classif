@@ -16,15 +16,19 @@
  */
 package org.revapi.classif.statement;
 
+import java.util.Collections;
 import java.util.List;
 
+import org.revapi.classif.match.AnnotationMatch;
+import org.revapi.classif.match.ModifiersMatch;
+
 public abstract class StatementStatement extends AbstractStatement {
-    protected final List<AnnotationStatement> annotations;
-    protected final ModifiersStatement modifiers;
+    protected final List<AnnotationMatch> annotations;
+    protected final ModifiersMatch modifiers;
 
     protected StatementStatement(String definedVariable, List<String> referencedVariables,
-            List<AnnotationStatement> annotations, ModifiersStatement modifiers, boolean isMatch) {
-        super(definedVariable, referencedVariables, isMatch);
+            List<AnnotationMatch> annotations, ModifiersMatch modifiers, boolean isMatch) {
+        super(definedVariable, referencedVariables, Collections.emptyList(), isMatch);
         this.annotations = annotations;
         this.modifiers = modifiers;
     }

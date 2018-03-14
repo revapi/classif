@@ -14,21 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.revapi.classif.matcher;
+package org.revapi.classif.match;
 
-import static java.util.stream.Collectors.toList;
+import java.util.Collection;
 
-import java.util.List;
-import java.util.Map;
+import javax.lang.model.element.Element;
+import javax.lang.model.type.TypeMirror;
 
-import org.revapi.classif.ModelInspector;
-import org.revapi.classif.statement.AbstractMatcher;
-import org.revapi.classif.statement.AnnotationStatement;
+public final class ModifierClusterMatch extends DeclarationMatch {
+    private final Collection<ModifierMatch> modifiers;
 
-public abstract class AbstractStatementMatcher extends AbstractMatcher {
-    private final List<AbstractMatcher> annotations;
+    public ModifierClusterMatch(Collection<ModifierMatch> modifiers) {
+        this.modifiers = modifiers;
+    }
 
-    protected AbstractStatementMatcher(List<AnnotationStatement> annotations) {
-        this.annotations = annotations.stream().map(AnnotationStatement::createMatcher).collect(toList());
+    @Override
+    protected <M> boolean testDeclaration(Element declaration, TypeMirror instance, MatchContext<M> ctx) {
+        return modifiers.stream().anyMatch(m -> m.testDeclaration(declaration, instance, ctx));
     }
 }

@@ -27,13 +27,21 @@ import javax.lang.model.type.TypeMirror;
  * the conversion from and to the {@link Element} instances (to enable analysis of the elements) the implementors also
  * need to provide additional information not readily available in the {@code javax.lang.model} APIs.
  */
-public interface ModelInspector<E> {
+public interface ModelInspector<M> {
+    /**
+     * This is needed for example when matching wildcards but Classif itself doesn't have a way of obtaining elements
+     * that are not supplied to it directly. Therefore it needs to kindly ask the inspector for providing it.
+     *
+     * @return the type element of {@code java.lang.Object}
+     */
+    TypeElement getJavaLangObjectElement();
+
     /**
      * Converts the model representation to the {@link Element}.
      * @param model the model of the code element
      * @return the javax.lang.model element
      */
-    Element toElement(E model);
+    Element toElement(M model);
 
     /**
      * In case the model represents a type use, this returns the type mirror representing that use.
@@ -44,13 +52,13 @@ public interface ModelInspector<E> {
      * @param model the model of the code element
      * @return the type mirror of the code element, never null
      */
-    TypeMirror toMirror(E model);
+    TypeMirror toMirror(M model);
 
     /**
      * @param model the model representation of an element
      * @return a model representation of the element directly enclosing the provided element or null if there is none.
      */
-    E getEnclosing(E model);
+    M getEnclosing(M model);
 
     /**
      * The set of model representations of the elements directly enclosed in the provided one.
@@ -58,7 +66,7 @@ public interface ModelInspector<E> {
      * @param model the model representation of the element
      * @return the set of enclosed elements
      */
-    Set<E> getEnclosed(E model);
+    Set<M> getEnclosed(M model);
 
     /**
      * Provides the model representations of the types that are directly used by the element.
@@ -68,7 +76,7 @@ public interface ModelInspector<E> {
      * @param model the model of the element
      * @return the set of model representations of the types directly used by the provided element
      */
-    Set<E> getUses(E model);
+    Set<M> getUses(M model);
 
     /**
      * Provides the model representations of elements that directly use the provided element. The provided element
@@ -79,7 +87,7 @@ public interface ModelInspector<E> {
      * @param model the model of the element
      * @return the set of model representations of the elements that directly uses the provided type element.
      */
-    Set<E> getUseSites(E model);
+    Set<M> getUseSites(M model);
 
     /**
      * Tells whether the provided element is inherited from some super type. The method is only ever called on
@@ -88,15 +96,15 @@ public interface ModelInspector<E> {
      * @param model the model representation of the field or method element
      * @return true if the element is inherited, false otherwise
      */
-    boolean isInherited(E model);
+    boolean isInherited(M model);
 
     /**
-     * Transforms the provided type back to its model representation. The model representation must be usable by the
+     * Transforms the provided element back to its model representation. The model representation must be usable by the
      * methods of this class again (e.g. methods like {@link #getUses(Object)} still need to work on the returned
      * object).
      *
      * @param element the element to convert back to the model representation
      * @return the model representation of the element
      */
-    E fromTypeElement(TypeElement element);
+    M fromElement(Element element);
 }

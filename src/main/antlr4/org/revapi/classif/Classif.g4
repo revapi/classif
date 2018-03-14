@@ -76,7 +76,7 @@ statement
     ;
 
 typeDefinitionOrGenericStatement
-    : typeKind WS returned? resolveableTypeReference (WS typeConstraints)? WS?
+    : typeKind WS (returned | returned? resolveableTypeReference) (WS typeConstraints)? WS?
         (OPEN_BRACE elementStatement* WS? CLOSE_BRACE | end)
     | (returned | ANY) (WS genericConstraints)? end
     ;
@@ -205,13 +205,16 @@ modifier
 
 modifierCluster
     : modifier
-    | LSQPAR modifier (modifier OR)* RSQPAR
+    | LPAR modifier (WS? OR WS? modifier)* RPAR
     ;
 
 typeReference
-    : not? variable
-    | not? LSQPAR WS? variables WS? RSQPAR
-    | not? fqn typeParameters?
+    : singleTypeReference (WS? OR WS? singleTypeReference)*
+    ;
+
+singleTypeReference
+    : not? variable arrayType?
+    | not? fqn typeParameters? arrayType?
     ;
 
 resolveableTypeReference
@@ -264,4 +267,8 @@ typeParam
 typeParamWildcard
     : WILDCARD
     | WILDCARD WS (EXTENDS | SUPER) WS typeReference (WS? AND WS typeReference)*
+    ;
+
+arrayType
+    : LSQPAR RSQPAR
     ;

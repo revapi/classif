@@ -14,10 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-public class TestClass {
-    public interface Iface {}
-    public enum Enum {}
-    public @interface Anno {}
+package org.revapi.classif.match;
 
-    public void method() {}
+public final class TypeParametersMatch extends TypeInstanceMatch {
+    // TODO implement
 }

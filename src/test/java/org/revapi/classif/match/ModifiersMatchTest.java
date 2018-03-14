@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.revapi.classif;
+package org.revapi.classif.match;
 
 import static java.util.stream.Collectors.toList;
 
@@ -25,18 +25,18 @@ import java.util.stream.Stream;
 
 import javax.lang.model.element.TypeElement;
 
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.revapi.classif.statement.ModifierClusterStatement;
-import org.revapi.classif.statement.ModifierStatement;
-import org.revapi.classif.statement.ModifiersStatement;
+import org.revapi.classif.MirroringModelInspector;
 import org.revapi.testjars.CompiledJar;
 import org.revapi.testjars.junit5.CompiledJarExtension;
 import org.revapi.testjars.junit5.JarSources;
 
 @ExtendWith(CompiledJarExtension.class)
-class ModifiersStatementTest {
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class ModifiersMatchTest {
 
     @JarSources(root = "/sources/", sources = "modifiers/TestClass.java")
     private CompiledJar.Environment classes;
@@ -54,30 +54,31 @@ class ModifiersStatementTest {
 
     @ParameterizedTest
     @MethodSource("modifiers")
-    void test(ModifiersStatement statement, boolean expectedMatch) {
+    void test(ModifiersMatch statement, boolean expectedMatch) {
         TypeElement testClass = classes.elements().getTypeElement("modifiers.TestClass");
 
-        boolean matches = statement.createMatcher().test(testClass, new MirroringModelInspector(), Collections.emptyMap());
+        boolean matches = statement.test(testClass, testClass.asType(),
+                new MatchContext<>(new MirroringModelInspector(classes.elements()), Collections.emptyMap()));
 
         assertEquals(expectedMatch, matches);
     }
 
-    private static ModifiersStatement parse(String decl) {
-        return new ModifiersStatement(
+    private static ModifiersMatch parse(String decl) {
+        return new ModifiersMatch(
                 Stream.of(decl.split(" "))
-                        .map(c -> new ModifierClusterStatement(
+                        .map(c -> new ModifierClusterMatch(
                                 Stream.of(c.split("\\|"))
-                                        .map(ModifiersStatementTest::parseSingleModifier)
+                                        .map(ModifiersMatchTest::parseSingleModifier)
                                         .collect(toList())))
                         .collect(toList()));
 
     }
 
-    private static ModifierStatement parseSingleModifier(String decl) {
+    private static ModifierMatch parseSingleModifier(String decl) {
         if (decl.startsWith("!")) {
-            return new ModifierStatement(true, decl.substring(1));
+            return new ModifierMatch(true, decl.substring(1));
         } else {
-            return new ModifierStatement(false, decl);
+            return new ModifierMatch(false, decl);
         }
     }
 }

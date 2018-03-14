@@ -14,10 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.revapi.classif.matcher;
+package org.revapi.classif.match;
 
-import org.revapi.classif.statement.AbstractMatcher;
+import java.util.Collection;
 
-public final class AnnotationMatcher extends AbstractMatcher {
+import javax.lang.model.type.TypeMirror;
 
+public final class TypeReferenceMatch extends TypeInstanceMatch {
+    private final Collection<SingleTypeReferenceMatch> matches;
+
+    public TypeReferenceMatch(Collection<SingleTypeReferenceMatch> matches) {
+        this.matches = matches;
+    }
+
+    @Override
+    protected <M> boolean testInstance(TypeMirror instantiation, MatchContext<M> ctx) {
+        return matches.stream().anyMatch(m -> m.testInstance(instantiation, ctx));
+    }
 }
