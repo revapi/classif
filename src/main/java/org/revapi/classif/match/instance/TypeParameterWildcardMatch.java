@@ -20,41 +20,28 @@ import java.util.List;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.SimpleTypeVisitor8;
 
 import org.revapi.classif.match.MatchContext;
 
 public final class TypeParameterWildcardMatch extends TypeInstanceMatch {
-    private final int index;
     private final boolean isExtends;
     private final List<TypeReferenceMatch> bounds;
 
-    private final SimpleTypeVisitor8<Boolean, MatchContext<?>> visitor;
-
-    public TypeParameterWildcardMatch(int index, boolean isExtends, List<TypeReferenceMatch> bounds) {
-        this.index = index;
+    public TypeParameterWildcardMatch(boolean isExtends, List<TypeReferenceMatch> bounds) {
         this.isExtends = isExtends;
         this.bounds = bounds;
-
-        visitor = new SimpleTypeVisitor8<Boolean, MatchContext<?>>(false) {
-
-        };
     }
 
     @Override
-    protected <M> boolean defaultTest(TypeMirror instantiation, MatchContext<M> ctx) {
-        if (!(instantiation instanceof DeclaredType)) {
-            return false;
+    protected <M> boolean testWildcard(WildcardType t, MatchContext<M> matchContext) {
+        TypeMirror bound = isExtends ? t.getExtendsBound() : t.getSuperBound();
+        if (bound == null) {
+            bound = matchContext.modelInspector.getJavaLangObjectElement().asType();
         }
 
-        DeclaredType type = (DeclaredType) instantiation;
-
-        if (type.getTypeArguments().size() <= index) {
-            return false;
-        }
-
-        TypeMirror typeArg = type.getTypeArguments().get(index);
-
-        return typeArg.accept(visitor, ctx);
+        final TypeMirror b = bound;
+        return bounds.stream().allMatch(m -> m.testInstance(b, matchContext));
     }
 }

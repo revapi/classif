@@ -22,7 +22,7 @@ final class ErrorFormatter {
 
     static String formatError(String recipe, int line, int col, String errorMessage) {
         String[] lines = recipe.split("\r?\n");
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder("\n");
 
         int maxDigits = getNumberOfDigits(lines.length + 1);
         int maxLineLength = maxLineLength(lines) + maxDigits + 3;
@@ -30,7 +30,7 @@ final class ErrorFormatter {
         int curLine = 0;
         int beforeLine = line - 1;
 
-        while (curLine < beforeLine) {
+        while (curLine <= beforeLine) {
             appendLineNo(sb, curLine + 1, maxDigits);
             sb.append(lines[curLine++]).append("\n");
         }

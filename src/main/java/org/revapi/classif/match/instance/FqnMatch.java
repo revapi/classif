@@ -31,9 +31,21 @@ import org.revapi.classif.match.NameMatch;
 
 public final class FqnMatch extends TypeInstanceMatch {
     private final Pattern fqnRegex;
+    private final boolean matchAny;
+    private final boolean matchAll;
 
     public FqnMatch(List<NameMatch> names) {
         this.fqnRegex = toPattern(names);
+        matchAny = fqnRegex == null && names.get(0).isMatchAny();
+        matchAll = fqnRegex == null && names.get(0).isMatchAllRemaining();
+    }
+
+    public boolean isMatchAny() {
+        return matchAny;
+    }
+
+    public boolean isMatchAll() {
+        return matchAll;
     }
 
     @Override

@@ -28,6 +28,10 @@ public abstract class Match {
 
     }
 
+    public final <M> boolean test(M model, MatchContext<M> ctx) {
+        return test(ctx.modelInspector.toElement(model), ctx.modelInspector.toMirror(model), ctx);
+    }
+
     public final <M> boolean test(Element declaration, TypeMirror instance, MatchContext<M> ctx) {
         if (this instanceof DeclarationMatch) {
             return testDeclaration(declaration, instance, ctx);

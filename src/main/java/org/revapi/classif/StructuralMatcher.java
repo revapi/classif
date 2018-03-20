@@ -16,8 +16,11 @@
  */
 package org.revapi.classif;
 
+import static java.util.Collections.emptyList;
+
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +44,7 @@ public final class StructuralMatcher {
         this.matchers = new ArrayList<>();
         this.variables = new HashMap<>();
 
-        this.decidableInPlace = initMatchEvaluators(null, namedMatches, statements);
+        this.decidableInPlace = initMatchEvaluators(null, namedMatches == null ? emptyList() : namedMatches, statements);
     }
 
     private boolean initMatchEvaluators(ModelMatch parentMatcher, List<String> namedMatches,

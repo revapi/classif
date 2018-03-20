@@ -92,9 +92,9 @@ statement
     ;
 
 typeDefinitionOrGenericStatement
-    : typeKind WS (returned | returned? resolveableTypeReference) (WS typeConstraints)? WS?
+    : typeKind WS (returned | returned? possibleTypeAssignment) (WS typeConstraints)? WS?
         (OPEN_BRACE elementStatement* WS? CLOSE_BRACE | end)
-    | (returned | ANY) (WS genericConstraints)? end
+    | (returned | returned? not? assignment? ANY) (WS genericConstraints)? end
     ;
 
 not
@@ -229,11 +229,11 @@ typeReference
     ;
 
 singleTypeReference
-    : not? variable arrayType?
-    | not? fqn typeParameters? arrayType?
+    : not? variable arrayType*
+    | not? fqn typeParameters? arrayType*
     ;
 
-resolveableTypeReference
+possibleTypeAssignment
     : not? assignment? fqn typeParameters?
     ;
 
@@ -277,12 +277,12 @@ typeParameters
 
 typeParam
     : typeParamWildcard
-    | typeReference
+    | typeReference (WS? AND WS? typeReference)*
     ;
 
 typeParamWildcard
     : WILDCARD
-    | WILDCARD WS (EXTENDS | SUPER) WS typeReference (WS? AND WS typeReference)*
+    | WILDCARD WS (EXTENDS | SUPER) WS typeReference (WS? AND WS? typeReference)*
     ;
 
 arrayType

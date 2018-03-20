@@ -16,8 +16,11 @@
  */
 package org.revapi.classif;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -30,15 +33,22 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.antlr.v4.runtime.tree.TerminalNode;
-import org.revapi.classif.match.AnnotationMatch;
+import org.revapi.classif.match.instance.TypeParameterMatch;
+import org.revapi.classif.match.instance.TypeParameterWildcardMatch;
+import org.revapi.classif.statement.AnnotationMatch;
 import org.revapi.classif.match.NameMatch;
 import org.revapi.classif.match.declaration.ModifierClusterMatch;
 import org.revapi.classif.match.declaration.ModifierMatch;
 import org.revapi.classif.match.declaration.ModifiersMatch;
 import org.revapi.classif.match.declaration.TypeKindMatch;
+import org.revapi.classif.match.instance.FqnMatch;
+import org.revapi.classif.match.instance.SingleTypeReferenceMatch;
+import org.revapi.classif.match.instance.TypeParametersMatch;
 import org.revapi.classif.match.instance.TypeReferenceMatch;
 import org.revapi.classif.statement.AbstractStatement;
+import org.revapi.classif.statement.GenericStatement;
 import org.revapi.classif.statement.StatementStatement;
+import org.revapi.classif.statement.TypeDefinitionStatement;
 
 public final class Classif {
 
@@ -142,6 +152,15 @@ public final class Classif {
         }
     }
 
+    private static final class FqnVisitor extends ClassifBaseVisitor<FqnMatch> {
+        static final FqnVisitor INSTANCE = new FqnVisitor();
+
+        @Override
+        public FqnMatch visitFqn(ClassifParser.FqnContext ctx) {
+            return new FqnMatch(ctx.name().stream().map(NameVisitor.INSTANCE::visit).collect(toList()));
+        }
+    }
+
     private static final class StatementVisitor extends ClassifBaseVisitor<StatementStatement> {
         static final StatementVisitor INSTANCE = new StatementVisitor();
         @Override
@@ -168,13 +187,94 @@ public final class Classif {
 
     }
 
-    private static final class TypeReferenceVisitor extends ClassifBaseVisitor<TypeReferenceMatch> {
+    private static final class TypeReferenceVisitor extends ClassifBaseVisitor<ReferencedVariablesAnd<TypeReferenceMatch>> {
         static final TypeReferenceVisitor INSTANCE = new TypeReferenceVisitor();
 
         @Override
-        public TypeReferenceMatch visitTypeReference(ClassifParser.TypeReferenceContext ctx) {
-            // TODO implement
-            return null;
+        public ReferencedVariablesAnd<TypeReferenceMatch> visitTypeReference(ClassifParser.TypeReferenceContext ctx) {
+            ReferencedVariablesAnd<TypeReferenceMatch> ret = new ReferencedVariablesAnd<>();
+
+            ret.match = new TypeReferenceMatch(ctx.singleTypeReference().stream().map(sctx -> {
+                FqnMatch fqn = sctx.fqn() == null
+                        ? null
+                        : FqnVisitor.INSTANCE.visit(sctx.fqn());
+
+                ReferencedVariablesAnd<TypeParametersMatch> tps = sctx.typeParameters() == null
+                        ? null
+                        : TypeParametersVisitor.INSTANCE.visit(sctx.typeParameters());
+
+                if (tps != null) {
+                    ret.referencedVariables.addAll(tps.referencedVariables);
+                }
+
+                String variable = sctx.variable() == null
+                        ? null
+                        : VariableVisitor.INSTANCE.visit(sctx.variable());
+
+                if (variable != null) {
+                    ret.referencedVariables.add(variable);
+                }
+
+                boolean negation = sctx.not() != null;
+
+                int arrayDimension = sctx.arrayType().size();
+
+                return new SingleTypeReferenceMatch(fqn, tps == null ? null : tps.match, variable, negation,
+                        arrayDimension);
+            }).collect(toList()));
+
+            return ret;
+        }
+    }
+
+    private static final class TypeParamWildcardVisitor extends ClassifBaseVisitor<ReferencedVariablesAnd<TypeParameterWildcardMatch>> {
+        static final TypeParamWildcardVisitor INSTANCE = new TypeParamWildcardVisitor();
+
+        @Override
+        public ReferencedVariablesAnd<TypeParameterWildcardMatch> visitTypeParamWildcard(
+                ClassifParser.TypeParamWildcardContext ctx) {
+
+            ReferencedVariablesAnd<TypeParameterWildcardMatch> ret = new ReferencedVariablesAnd<>();
+
+            boolean isExtends = ctx.EXTENDS() != null;
+
+            List<TypeReferenceMatch> bounds = ctx.typeReference().stream().map(tr -> {
+                ReferencedVariablesAnd<TypeReferenceMatch> m = TypeReferenceVisitor.INSTANCE.visitTypeReference(tr);
+                ret.referencedVariables.addAll(m.referencedVariables);
+                return m.match;
+            }).collect(toList());
+
+            ret.match = new TypeParameterWildcardMatch(isExtends, bounds);
+
+            return ret;
+        }
+    }
+
+    private static final class TypeParametersVisitor extends ClassifBaseVisitor<ReferencedVariablesAnd<TypeParametersMatch>> {
+        static final TypeParametersVisitor INSTANCE = new TypeParametersVisitor();
+
+        @Override
+        public ReferencedVariablesAnd<TypeParametersMatch> visitTypeParameters(ClassifParser.TypeParametersContext ctx) {
+            ReferencedVariablesAnd<TypeParametersMatch> ret = new ReferencedVariablesAnd<>();
+
+            List<TypeParameterMatch> params = ctx.typeParam().stream().map(tp -> {
+                if (tp.typeParamWildcard() != null) {
+                    ReferencedVariablesAnd<TypeParameterWildcardMatch> w = TypeParamWildcardVisitor.INSTANCE.visitTypeParamWildcard(tp.typeParamWildcard());
+                    ret.referencedVariables.addAll(w.referencedVariables);
+
+                    return new TypeParameterMatch(w.match, emptyList());
+                } else {
+                    return new TypeParameterMatch(null, tp.typeReference().stream().map(tr -> {
+                        ReferencedVariablesAnd<TypeReferenceMatch> m = TypeReferenceVisitor.INSTANCE.visitTypeReference(tr);
+                        ret.referencedVariables.addAll(m.referencedVariables);
+                        return m.match;
+                    }).collect(toList()));
+                }
+            }).collect(toList());
+
+            ret.match = new TypeParametersMatch(params);
+
+            return ret;
         }
     }
 
@@ -194,15 +294,45 @@ public final class Classif {
             if (ctx.typeKind() != null) {
                 // type definition
                 TypeKindMatch typeKind = TypeKindVisitor.INSTANCE.visitTypeKind(ctx.typeKind());
-                // TODO implement
+                boolean isMatch = ctx.returned() != null;
+                if (ctx.possibleTypeAssignment() == null) {
+                    return new TypeDefinitionStatement(null, emptyList(), annotations, modifiers, typeKind,
+                            new FqnMatch(singletonList(NameMatch.any())), null, false, isMatch);
+                } else {
+                    FqnMatch fqn = FqnVisitor.INSTANCE.visit(ctx.possibleTypeAssignment().fqn());
+                    ReferencedVariablesAnd<TypeParametersMatch> tps = null;
+                    if (ctx.possibleTypeAssignment().typeParameters() != null) {
+                        tps = TypeParametersVisitor.INSTANCE.visit(ctx.possibleTypeAssignment().typeParameters());
+                    }
+
+                    boolean negation = ctx.possibleTypeAssignment().not() != null;
+
+                    String variable = null;
+                    if (ctx.possibleTypeAssignment().assignment() != null) {
+                        variable = ctx.possibleTypeAssignment().assignment().resolvedName().getText();
+                    }
+
+                    List<String> reffed = tps == null ? emptyList() : tps.referencedVariables;
+
+                    return new TypeDefinitionStatement(variable, reffed, annotations, modifiers, typeKind, fqn,
+                            tps == null ? null : tps.match, negation, isMatch);
+                }
+
+                // TODO handle the type constraints
             } else {
                 // generic statement
-                // TODO implement
-                int __ = 0;
+                boolean isMatch = ctx.returned() != null;
+                boolean negation = ctx.not() != null;
+                String variable = ctx.assignment() == null ? null : ctx.assignment().resolvedName().getText();
+
+                return new GenericStatement(variable, emptyList(), annotations, modifiers, isMatch, negation);
+
+                // TODO handle generic constraints
             }
-            return super.visitTypeDefinitionOrGenericStatement(ctx);
         }
     }
+
+    // TODO need to finish at least some kind of parsing so that unit tests are feasible...
 
     private static final class TypeKindVisitor extends ClassifBaseVisitor<TypeKindMatch> {
         private static final TypeKindVisitor INSTANCE = new TypeKindVisitor();
@@ -214,5 +344,10 @@ public final class Classif {
 
             return new TypeKindMatch(neg, typeKind);
         }
+    }
+
+    private static final class ReferencedVariablesAnd<T> {
+        List<String> referencedVariables = new ArrayList<>(2);
+        T match;
     }
 }

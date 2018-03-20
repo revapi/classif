@@ -16,17 +16,25 @@
  */
 package org.revapi.classif.match.instance;
 
-import java.util.Collection;
+import java.util.List;
 
 import javax.lang.model.type.TypeMirror;
 
 import org.revapi.classif.match.MatchContext;
 
 public final class TypeReferenceMatch extends TypeInstanceMatch {
-    private final Collection<SingleTypeReferenceMatch> matches;
+    private final List<SingleTypeReferenceMatch> matches;
 
-    public TypeReferenceMatch(Collection<SingleTypeReferenceMatch> matches) {
+    public TypeReferenceMatch(List<SingleTypeReferenceMatch> matches) {
         this.matches = matches;
+    }
+
+    public boolean isMatchAll() {
+        return matches.size() == 1 && matches.get(0).isMatchAll();
+    }
+
+    public boolean isMatchAny() {
+        return matches.size() == 1 && matches.get(0).isMatchAny();
     }
 
     @Override

@@ -32,14 +32,18 @@ public abstract class TreeNode<This extends TreeNode<This>> {
 
     public void setParent(This parent) {
         this.parent = parent;
-        parent._getChildren()._add(castThis());
+        if (parent != null) {
+            parent._getChildren()._add(castThis());
+        }
     }
 
-    protected void _setParent(This parent) {
+    @SuppressWarnings("WeakerAccess")
+    void _setParent(This parent) {
         this.parent = parent;
     }
 
-    protected ParentPreservingSet _getChildren() {
+    @SuppressWarnings("WeakerAccess")
+    ParentPreservingSet _getChildren() {
         return children;
     }
 

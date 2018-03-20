@@ -46,7 +46,7 @@ public final class SingleTypeReferenceMatch extends TypeInstanceMatch {
     private final TypeParametersMatch typeParameters;
     private final String variable;
     private final boolean negation;
-    private final boolean isArray;
+    private final int arrayDimension;
 
     private static final ElementVisitor<List<Element>, Void> TYPE_VARIABLE_TO_TYPE =
             new SimpleElementVisitor8<List<Element>, Void>(null) {
@@ -80,12 +80,22 @@ public final class SingleTypeReferenceMatch extends TypeInstanceMatch {
     };
 
     public SingleTypeReferenceMatch(FqnMatch fullyQualifiedName, TypeParametersMatch typeParameters,
-            String variable, boolean negation, boolean isArray) {
+            String variable, boolean negation, int arrayDimension) {
         this.fullyQualifiedName = fullyQualifiedName;
         this.typeParameters = typeParameters;
         this.variable = variable;
         this.negation = negation;
-        this.isArray = isArray;
+        this.arrayDimension = arrayDimension;
+    }
+
+    public boolean isMatchAny() {
+        return fullyQualifiedName != null && fullyQualifiedName.isMatchAny() && arrayDimension == 0 && !negation
+                && typeParameters == null;
+    }
+
+    public boolean isMatchAll() {
+        return fullyQualifiedName != null && fullyQualifiedName.isMatchAll() && arrayDimension == 0 && !negation
+                && typeParameters == null;
     }
 
     @Override
@@ -98,7 +108,15 @@ public final class SingleTypeReferenceMatch extends TypeInstanceMatch {
 
             @Override
             public Boolean visitArray(ArrayType t, Void __) {
-                return isArray && t.getComponentType().accept(this, null);
+                int dim = arrayDimension;
+
+                TypeMirror m = t;
+                while (m instanceof ArrayType) {
+                    dim--;
+                    m = ((ArrayType) m).getComponentType();
+                }
+
+                return dim == 0 && m.accept(this, null);
             }
 
             @Override

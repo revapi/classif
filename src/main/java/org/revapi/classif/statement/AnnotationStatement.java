@@ -19,7 +19,6 @@ package org.revapi.classif.statement;
 import java.util.Collections;
 import java.util.List;
 
-import org.revapi.classif.match.AnnotationMatch;
 import org.revapi.classif.match.ModelMatch;
 
 public final class AnnotationStatement extends AbstractStatement {

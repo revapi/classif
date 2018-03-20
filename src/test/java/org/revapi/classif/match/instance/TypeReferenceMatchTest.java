@@ -366,17 +366,17 @@ class TypeReferenceMatchTest {
                     }
 
                     if (s.startsWith("%")) {
-                        return new SingleTypeReferenceMatch(null, null, s.substring(1), negation, false);
+                        return new SingleTypeReferenceMatch(null, null, s.substring(1), negation, 0);
                     }
 
                     int arrayIdx = s.indexOf("[]");
-                    boolean isArray = arrayIdx > 0;
+                    int arrayDim = arrayIdx > 0 ? 1 : 0;
 
-                    if (isArray) {
+                    if (arrayDim > 0) {
                         s = s.substring(0, arrayIdx);
                     }
 
-                    return new SingleTypeReferenceMatch(new FqnMatch(parseFqn(s)), null, s, negation, isArray);
+                    return new SingleTypeReferenceMatch(new FqnMatch(parseFqn(s)), null, s, negation, arrayDim);
                 })
                 .collect(toList()));
     }
