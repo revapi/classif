@@ -35,7 +35,7 @@ import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.revapi.classif.match.instance.TypeParameterMatch;
 import org.revapi.classif.match.instance.TypeParameterWildcardMatch;
-import org.revapi.classif.statement.AnnotationMatch;
+import org.revapi.classif.match.instance.AnnotationMatch;
 import org.revapi.classif.match.NameMatch;
 import org.revapi.classif.match.declaration.ModifierClusterMatch;
 import org.revapi.classif.match.declaration.ModifierMatch;
@@ -325,7 +325,7 @@ public final class Classif {
                 boolean negation = ctx.not() != null;
                 String variable = ctx.assignment() == null ? null : ctx.assignment().resolvedName().getText();
 
-                return new GenericStatement(variable, emptyList(), annotations, modifiers, isMatch, negation);
+                return new GenericStatement(variable, annotations, modifiers, isMatch, negation);
 
                 // TODO handle generic constraints
             }

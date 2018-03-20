@@ -14,10 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.revapi.classif.statement;
+package org.revapi.classif.match.instance;
 
-import org.revapi.classif.match.ModelMatch;
-
-public final class AnnotationMatch extends ModelMatch {
+public final class AnnotationMatch extends TypeInstanceMatch {
     // TODO implement
 }

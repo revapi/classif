@@ -6,6 +6,7 @@ import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.ModelMatch;
 import org.revapi.classif.match.declaration.ModifiersMatch;
 import org.revapi.classif.match.declaration.TypeKindMatch;
+import org.revapi.classif.match.instance.AnnotationMatch;
 import org.revapi.classif.match.instance.FqnMatch;
 import org.revapi.classif.match.instance.TypeParametersMatch;
 

@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.revapi.classif.match.declaration.ModifiersMatch;
+import org.revapi.classif.match.instance.AnnotationMatch;
 
 public abstract class StatementStatement extends AbstractStatement {
     protected final List<AnnotationMatch> annotations;
