@@ -64,7 +64,7 @@ public final class StructuralMatcher {
                 this.variables.put(st.getDefinedVariable(), stMatcher);
             }
 
-            decidableInPlace = decidableInPlace && st.getReferencedVariables().isEmpty();
+            decidableInPlace = decidableInPlace && st.isDecidableInPlace();
 
             decidableInPlace = initMatchEvaluators(stMatcher, namedMatches, st.getChildren()) && decidableInPlace;
         }

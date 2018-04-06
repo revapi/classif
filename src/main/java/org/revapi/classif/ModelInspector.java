@@ -69,7 +69,11 @@ public interface ModelInspector<M> {
     Set<M> getEnclosed(M model);
 
     /**
-     * Provides the model representations of the types that are directly used by the element.
+     * Provides the model representations of the types that are directly used by the element. The provided model
+     * is guaranteed to represent a Java type.
+     *
+     * <p>The exact semantics of what types are assumed to be used by another type is left to the implementation of this
+     * interface.
      *
      * <p>This is the inverse of {@link #getUseSites(Object)}.
      *
@@ -79,7 +83,7 @@ public interface ModelInspector<M> {
     Set<M> getUses(M model);
 
     /**
-     * Provides the model representations of elements that directly use the provided element. The provided element
+     * Provides the model representations of elements that directly use the provided element. The provided model
      * is guaranteed to represent a Java type.
      *
      * <p>This is the reverse of {@link #getUses(Object)}
@@ -100,11 +104,11 @@ public interface ModelInspector<M> {
 
     /**
      * Transforms the provided element back to its model representation. The model representation must be usable by the
-     * methods of this class again (e.g. methods like {@link #getUses(Object)} still need to work on the returned
+     * methods of this class again (e.g. methods like {@link #getUseSites(Object)} still need to work on the returned
      * object).
      *
      * @param element the element to convert back to the model representation
      * @return the model representation of the element
      */
-    M fromElement(Element element);
+    M fromType(TypeElement element);
 }

@@ -25,7 +25,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 
-public final class MirroringModelInspector implements ModelInspector<Element> {
+public class MirroringModelInspector implements ModelInspector<Element> {
     private final Elements elements;
 
     public MirroringModelInspector(Elements elements) {
@@ -73,7 +73,7 @@ public final class MirroringModelInspector implements ModelInspector<Element> {
     }
 
     @Override
-    public Element fromElement(Element element) {
+    public Element fromType(TypeElement element) {
         return element;
     }
 }

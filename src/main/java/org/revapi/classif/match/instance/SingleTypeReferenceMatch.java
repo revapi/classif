@@ -16,12 +16,12 @@
  */
 package org.revapi.classif.match.instance;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
 import java.util.List;
 
-import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
@@ -49,33 +49,33 @@ public final class SingleTypeReferenceMatch extends TypeInstanceMatch implements
     private final boolean negation;
     private final int arrayDimension;
 
-    private static final ElementVisitor<List<Element>, Void> TYPE_VARIABLE_TO_TYPE =
-            new SimpleElementVisitor8<List<Element>, Void>(null) {
+    private static final ElementVisitor<List<TypeElement>, Void> TYPE_VARIABLE_TO_TYPE =
+            new SimpleElementVisitor8<List<TypeElement>, Void>(emptyList()) {
                 @Override
-                public List<Element> visitType(TypeElement e, Void __) {
+                public List<TypeElement> visitType(TypeElement e, Void __) {
                     return singletonList(e);
                 }
 
                 @Override
-                public List<Element> visitTypeParameter(TypeParameterElement e, Void __) {
-                    return e.getBounds().stream().flatMap(b -> TO_ELEMENT.visit(b, null).stream()).collect(toList());
+                public List<TypeElement> visitTypeParameter(TypeParameterElement e, Void __) {
+                    return e.getBounds().stream().flatMap(b -> TO_TYPE.visit(b, null).stream()).collect(toList());
                 }
 
             };
 
-    private static final TypeVisitor<List<Element>, Void> TO_ELEMENT = new SimpleTypeVisitor8<List<Element>, Void>(null) {
+    private static final TypeVisitor<List<TypeElement>, Void> TO_TYPE = new SimpleTypeVisitor8<List<TypeElement>, Void>(emptyList()) {
         @Override
-        public List<Element> visitDeclared(DeclaredType t, Void __) {
-            return singletonList(t.asElement());
+        public List<TypeElement> visitDeclared(DeclaredType t, Void __) {
+            return singletonList((TypeElement) t.asElement());
         }
 
         @Override
-        public List<Element> visitError(ErrorType t, Void __) {
+        public List<TypeElement> visitError(ErrorType t, Void __) {
             return visitDeclared(t, null);
         }
 
         @Override
-        public List<Element> visitTypeVariable(TypeVariable t, Void __) {
+        public List<TypeElement> visitTypeVariable(TypeVariable t, Void __) {
             return TYPE_VARIABLE_TO_TYPE.visit(t.asElement());
         }
     };
@@ -171,8 +171,8 @@ public final class SingleTypeReferenceMatch extends TypeInstanceMatch implements
         } else {
             ModelMatch match = ctx.variables.getOrDefault(variable, null);
             ret = match != null
-                    && TO_ELEMENT.visit(instance).stream()
-                    .anyMatch(e -> match.test(ctx.modelInspector.fromElement(e), ctx));
+                    && TO_TYPE.visit(instance).stream()
+                    .anyMatch(e -> match.test(ctx.modelInspector.fromType(e), ctx));
         }
 
         return negation != ret;

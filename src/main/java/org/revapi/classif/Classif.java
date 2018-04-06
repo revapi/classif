@@ -47,6 +47,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.revapi.classif.match.declaration.AnnotationAttributeMatch;
 import org.revapi.classif.match.declaration.AnnotationValueMatch;
 import org.revapi.classif.match.declaration.AnnotationMatch;
+import org.revapi.classif.match.declaration.UsesMatch;
 import org.revapi.classif.match.instance.TypeParameterMatch;
 import org.revapi.classif.match.instance.TypeParameterWildcardMatch;
 import org.revapi.classif.match.declaration.AnnotationsMatch;
@@ -657,14 +658,17 @@ public final class Classif {
                 boolean negation = ctx.not() != null;
                 String variable = ctx.assignment() == null ? null : ctx.assignment().resolvedName().getText();
 
-                return new GenericStatement(variable, annotations, modifiers, isMatch, negation);
+                ReferencedVariablesAnd<UsesMatch> uses = null;
 
-                // TODO handle generic constraints
+                if (ctx.genericConstraints() != null) {
+                    uses = GenericConstraintVisitor.INSTANCE.visit(ctx.genericConstraints());
+                }
+
+                return new GenericStatement(variable, uses == null ? emptyList() : uses.referencedVariables,
+                        annotations, modifiers, isMatch, negation, uses == null ? null : uses.match);
             }
         }
     }
-
-    // TODO need to finish at least some kind of parsing so that unit tests are feasible...
 
     private static final class TypeKindVisitor extends ClassifBaseVisitor<TypeKindMatch> {
         private static final TypeKindVisitor INSTANCE = new TypeKindVisitor();
@@ -675,6 +679,23 @@ public final class Classif {
             String typeKind = neg ? ctx.getText().substring(ctx.not().getText().length()) : ctx.getText();
 
             return new TypeKindMatch(neg, typeKind);
+        }
+    }
+
+    private static final class GenericConstraintVisitor extends ClassifBaseVisitor<ReferencedVariablesAnd<UsesMatch>> {
+        static final GenericConstraintVisitor INSTANCE = new GenericConstraintVisitor();
+
+        @Override
+        public ReferencedVariablesAnd<UsesMatch> visitGenericConstraints(ClassifParser.GenericConstraintsContext ctx) {
+            ReferencedVariablesAnd<TypeReferenceMatch> type = ctx.typeReference().accept(TypeReferenceVisitor.INSTANCE);
+
+            boolean onlyDirect = ctx.DIRECTLY() != null;
+
+            ReferencedVariablesAnd<UsesMatch> ret = new ReferencedVariablesAnd<>();
+            ret.referencedVariables = type.referencedVariables;
+            ret.match = new UsesMatch(onlyDirect, type.match);
+
+            return ret;
         }
     }
 

@@ -40,6 +40,10 @@ public abstract class AbstractStatement extends TreeNode<AbstractStatement> {
         this.isMatch = isMatch;
     }
 
+    public boolean isDecidableInPlace() {
+        return getReferencedVariables().isEmpty();
+    }
+
     public String getDefinedVariable() {
         return definedVariable;
     }

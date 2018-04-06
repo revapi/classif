@@ -128,7 +128,7 @@ annotations
     ;
 
 genericConstraints
-    : USES WS typeReference
+    : (DIRECTLY WS)? USES WS typeReference
     ;
 
 annotation
