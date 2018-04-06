@@ -10,8 +10,9 @@ import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.WildcardType;
 
 import org.revapi.classif.match.MatchContext;
+import org.revapi.classif.match.util.Globbed;
 
-public class TypeParameterMatch extends TypeInstanceMatch {
+public class TypeParameterMatch extends TypeInstanceMatch implements Globbed {
     private final TypeParameterWildcardMatch wildcard;
     private final List<TypeReferenceMatch> bounds;
 
@@ -20,6 +21,7 @@ public class TypeParameterMatch extends TypeInstanceMatch {
         this.bounds = bounds;
     }
 
+    @Override
     public boolean isMatchAny() {
         if (wildcard != null || bounds.size() != 1) {
             return false;
@@ -29,6 +31,7 @@ public class TypeParameterMatch extends TypeInstanceMatch {
         return ref.isMatchAny();
     }
 
+    @Override
     public boolean isMatchAll() {
         if (wildcard != null || bounds.size() != 1) {
             return false;

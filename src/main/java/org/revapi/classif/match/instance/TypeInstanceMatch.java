@@ -100,12 +100,12 @@ public abstract class TypeInstanceMatch extends Match {
     };
 
     @Override
-    protected final <M> boolean testDeclaration(Element declaration, TypeMirror instance, MatchContext<M> ctx) {
+    public final <M> boolean testDeclaration(Element declaration, TypeMirror instance, MatchContext<M> ctx) {
         return false;
     }
 
     @Override
-    protected <M> boolean testInstance(TypeMirror instance, MatchContext<M> ctx) {
+    public <M> boolean testInstance(TypeMirror instance, MatchContext<M> ctx) {
         return dispatcher.visit(instance, ctx);
     }
 

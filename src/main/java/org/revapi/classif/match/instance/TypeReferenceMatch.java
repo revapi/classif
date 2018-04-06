@@ -21,24 +21,27 @@ import java.util.List;
 import javax.lang.model.type.TypeMirror;
 
 import org.revapi.classif.match.MatchContext;
+import org.revapi.classif.match.util.Globbed;
 
-public final class TypeReferenceMatch extends TypeInstanceMatch {
+public final class TypeReferenceMatch extends TypeInstanceMatch implements Globbed {
     private final List<SingleTypeReferenceMatch> matches;
 
     public TypeReferenceMatch(List<SingleTypeReferenceMatch> matches) {
         this.matches = matches;
     }
 
+    @Override
     public boolean isMatchAll() {
         return matches.size() == 1 && matches.get(0).isMatchAll();
     }
 
+    @Override
     public boolean isMatchAny() {
         return matches.size() == 1 && matches.get(0).isMatchAny();
     }
 
     @Override
-    protected <M> boolean testInstance(TypeMirror instantiation, MatchContext<M> ctx) {
+    public <M> boolean testInstance(TypeMirror instantiation, MatchContext<M> ctx) {
         return matches.stream().anyMatch(m -> m.testInstance(instantiation, ctx));
     }
 }

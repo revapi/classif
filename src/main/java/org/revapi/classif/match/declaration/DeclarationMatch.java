@@ -28,7 +28,7 @@ import org.revapi.classif.match.MatchContext;
 
 public abstract class DeclarationMatch extends Match {
 
-    protected <M> boolean testDeclaration(Element declaration, TypeMirror instantiation, MatchContext<M> ctx) {
+    public <M> boolean testDeclaration(Element declaration, TypeMirror instantiation, MatchContext<M> ctx) {
         return new SimpleElementVisitor8<Boolean, Void>(false) {
             @Override
             public Boolean visitVariable(VariableElement e, Void __) {
@@ -48,7 +48,7 @@ public abstract class DeclarationMatch extends Match {
     }
 
     @Override
-    protected final <M> boolean testInstance(TypeMirror instance, MatchContext<M> ctx) {
+    public final <M> boolean testInstance(TypeMirror instance, MatchContext<M> ctx) {
         return false;
     }
 

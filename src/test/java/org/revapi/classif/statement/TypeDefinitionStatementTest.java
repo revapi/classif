@@ -40,7 +40,7 @@ class TypeDefinitionStatementTest {
         assertTrue(doTest("class ^TestClass<**, java.lang.Cloneable>;"));
         assertTrue(doTest("class ^TestClass<**, java.lang.String>;"));
         assertTrue(doTest("class ^TestClass<*, ? extends java.*.Object, **>;"));
-        assertTrue(doTest("class ^TestClass<*, *, ? extends /.*String/, **>;"));
+        assertTrue(doTest("class ^TestClass<java.*.Object, **, ? extends /.*String/, **>;"));
         assertTrue(doTest("class ^TestClass<**, ? extends /.*\\.String/ & java.lang.Cloneable>;"));
         assertTrue(doTest("public class ^TestClass;"));
         assertFalse(doTest("private class ^TestClass;"));

@@ -31,7 +31,7 @@ public final class ModifiersMatch extends DeclarationMatch {
     }
 
     @Override
-    protected <M> boolean testDeclaration(Element declaration, TypeMirror instance, MatchContext<M> ctx) {
+    public <M> boolean testDeclaration(Element declaration, TypeMirror instance, MatchContext<M> ctx) {
         return clusters.stream().allMatch(m -> m.testDeclaration(declaration, instance, ctx));
     }
 }

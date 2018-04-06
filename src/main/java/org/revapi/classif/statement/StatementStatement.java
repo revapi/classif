@@ -20,14 +20,14 @@ import java.util.Collections;
 import java.util.List;
 
 import org.revapi.classif.match.declaration.ModifiersMatch;
-import org.revapi.classif.match.instance.AnnotationMatch;
+import org.revapi.classif.match.declaration.AnnotationsMatch;
 
 public abstract class StatementStatement extends AbstractStatement {
-    protected final List<AnnotationMatch> annotations;
+    protected final AnnotationsMatch annotations;
     protected final ModifiersMatch modifiers;
 
     protected StatementStatement(String definedVariable, List<String> referencedVariables,
-            List<AnnotationMatch> annotations, ModifiersMatch modifiers, boolean isMatch) {
+            AnnotationsMatch annotations, ModifiersMatch modifiers, boolean isMatch) {
         super(definedVariable, referencedVariables, Collections.emptyList(), isMatch);
         this.annotations = annotations;
         this.modifiers = modifiers;

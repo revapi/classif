@@ -42,7 +42,7 @@ public abstract class Match {
         }
     }
 
-    protected abstract <M> boolean testDeclaration(Element declaration, TypeMirror instance, MatchContext<M> ctx);
+    public abstract <M> boolean testDeclaration(Element declaration, TypeMirror instance, MatchContext<M> ctx);
 
-    protected abstract <M> boolean testInstance(TypeMirror instance, MatchContext<M> ctx);
+    public abstract <M> boolean testInstance(TypeMirror instance, MatchContext<M> ctx);
 }

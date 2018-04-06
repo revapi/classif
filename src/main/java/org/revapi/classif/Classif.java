@@ -20,8 +20,19 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
+import static org.revapi.classif.match.util.Operator.EQ;
+import static org.revapi.classif.match.util.Operator.GE;
+import static org.revapi.classif.match.util.Operator.GT;
+import static org.revapi.classif.match.util.Operator.LE;
+import static org.revapi.classif.match.util.Operator.LT;
+import static org.revapi.classif.match.util.Operator.NE;
+
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.ParsePosition;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
@@ -33,9 +44,12 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.revapi.classif.match.declaration.AnnotationAttributeMatch;
+import org.revapi.classif.match.declaration.AnnotationValueMatch;
+import org.revapi.classif.match.declaration.AnnotationMatch;
 import org.revapi.classif.match.instance.TypeParameterMatch;
 import org.revapi.classif.match.instance.TypeParameterWildcardMatch;
-import org.revapi.classif.match.instance.AnnotationMatch;
+import org.revapi.classif.match.declaration.AnnotationsMatch;
 import org.revapi.classif.match.NameMatch;
 import org.revapi.classif.match.declaration.ModifierClusterMatch;
 import org.revapi.classif.match.declaration.ModifierMatch;
@@ -45,12 +59,21 @@ import org.revapi.classif.match.instance.FqnMatch;
 import org.revapi.classif.match.instance.SingleTypeReferenceMatch;
 import org.revapi.classif.match.instance.TypeParametersMatch;
 import org.revapi.classif.match.instance.TypeReferenceMatch;
+import org.revapi.classif.match.util.Operator;
 import org.revapi.classif.statement.AbstractStatement;
 import org.revapi.classif.statement.GenericStatement;
 import org.revapi.classif.statement.StatementStatement;
 import org.revapi.classif.statement.TypeDefinitionStatement;
 
 public final class Classif {
+
+    private static final DecimalFormat NUMBER_FORMAT = (DecimalFormat) DecimalFormat.getNumberInstance(Locale.ROOT);
+    static {
+        NUMBER_FORMAT.setGroupingUsed(true);
+        DecimalFormatSymbols symbols = NUMBER_FORMAT.getDecimalFormatSymbols();
+        symbols.setGroupingSeparator('_');
+        NUMBER_FORMAT.setDecimalFormatSymbols(symbols);
+    }
 
     private Classif() {
         throw new AssertionError("I shall not be summoned.");
@@ -75,9 +98,35 @@ public final class Classif {
     }
 
     private static Pattern toRegex(TerminalNode node) {
+        return Pattern.compile(stringContents(node));
+    }
+
+    private static Number toNumber(TerminalNode node) {
+        ParsePosition pos = new ParsePosition(0);
+        String s = node.getText();
+        Number ret = NUMBER_FORMAT.parse(s, pos);
+        if (pos.getErrorIndex() != -1 || pos.getIndex() != s.length()) {
+            throw new IllegalArgumentException("Could not parse '" + s + "' as a number");
+        }
+
+        return ret;
+    }
+
+    private static boolean toBoolean(TerminalNode node) {
+        String s = node.getText();
+        boolean val = false;
+        if ("true".equals(s)) {
+            val = true;
+        } else if (!"false".equals(s)) {
+            throw new IllegalArgumentException("Could not parse '" + s + "' as a boolean.");
+        }
+        return val;
+    }
+
+    private static String stringContents(TerminalNode node) {
         String all = node.getText();
         all = all.substring(1, all.length() - 1);
-        return Pattern.compile(all);
+        return all;
     }
 
     // basically, Optional.ofNullable(object).map(action).orElse(null) but without the Optional instantiation
@@ -163,9 +212,10 @@ public final class Classif {
 
     private static final class StatementVisitor extends ClassifBaseVisitor<StatementStatement> {
         static final StatementVisitor INSTANCE = new StatementVisitor();
+
         @Override
         public StatementStatement visitStatement(ClassifParser.StatementContext ctx) {
-            List<AnnotationMatch> annos = ctx.annotations().annotation().stream()
+            List<ReferencedVariablesAnd<AnnotationMatch>> annos = ctx.annotations().annotation().stream()
                     .map(a -> a.accept(AnnotationVisitor.INSTANCE)).collect(toList());
 
             ModifiersMatch modifiers = new ModifiersMatch(ctx.modifiers().modifierCluster().stream()
@@ -182,9 +232,284 @@ public final class Classif {
         }
     }
 
-    private static final class AnnotationVisitor extends ClassifBaseVisitor<AnnotationMatch> {
+    private static final class AnnotationVisitor extends ClassifBaseVisitor<ReferencedVariablesAnd<AnnotationMatch>> {
         static final AnnotationVisitor INSTANCE = new AnnotationVisitor();
 
+        @Override
+        public ReferencedVariablesAnd<AnnotationMatch> visitAnnotation(ClassifParser.AnnotationContext ctx) {
+            ReferencedVariablesAnd<AnnotationMatch> ret = new ReferencedVariablesAnd<>();
+
+            boolean negation = ctx.not() != null;
+
+            ReferencedVariablesAnd<TypeReferenceMatch> type = ctx.typeReference().accept(TypeReferenceVisitor.INSTANCE);
+            ret.referencedVariables.addAll(type.referencedVariables);
+
+            List<AnnotationAttributeMatch> attrs;
+            if (ctx.annotationAttributes() != null) {
+                attrs = ctx.annotationAttributes().annotationAttribute().stream()
+                        .map(attrctx -> {
+                            ReferencedVariablesAnd<AnnotationAttributeMatch> attr =
+                                    attrctx.accept(AnnotationAttributeVisitor.INSTANCE);
+
+                            ret.referencedVariables.addAll(attr.referencedVariables);
+                            return attr.match;
+                        }).collect(toList());
+            } else {
+                attrs = emptyList();
+            }
+
+            ret.match = new AnnotationMatch(negation, type.match, attrs);
+
+            return ret;
+        }
+    }
+
+    private static final class AnnotationAttributeVisitor extends ClassifBaseVisitor<ReferencedVariablesAnd<AnnotationAttributeMatch>> {
+        static final AnnotationAttributeVisitor INSTANCE = new AnnotationAttributeVisitor();
+
+        @Override
+        public ReferencedVariablesAnd<AnnotationAttributeMatch> visitAnnotationAttribute(
+                ClassifParser.AnnotationAttributeContext ctx) {
+            ReferencedVariablesAnd<AnnotationAttributeMatch> ret = new ReferencedVariablesAnd<>();
+
+            if (ctx.ANY() != null) {
+                ret.match = new AnnotationAttributeMatch(true, false, null, null);
+            } else if (ctx.ANY_NUMBER_OF_THINGS() != null) {
+                ret.match = new AnnotationAttributeMatch(false, true, null, null);
+            } else {
+                NameMatch name = ctx.name().accept(NameVisitor.INSTANCE);
+
+                Operator op;
+                if (ctx.operator().EQ() != null) {
+                    op = EQ;
+                } else if (ctx.operator().NE() != null) {
+                    op = NE;
+                } else if (ctx.operator().LT() != null) {
+                    op = LT;
+                } else if (ctx.operator().LE() != null) {
+                    op = LE;
+                } else if (ctx.operator().GT() != null) {
+                    op = GT;
+                } else if (ctx.operator().GE() != null) {
+                    op = GE;
+                } else {
+                    throw new IllegalArgumentException("Operator " + ctx.operator().getText() + " not supported.");
+                }
+
+                ReferencedVariablesAnd<AnnotationValueMatch> value
+                        = ctx.annotationValue().accept(new AnnotationValueVisitor(op));
+
+                ret.referencedVariables.addAll(value.referencedVariables);
+
+                ret.match = new AnnotationAttributeMatch(false, false, name, value.match);
+            }
+
+            return ret;
+        }
+    }
+
+    private static final class AnnotationValueVisitor extends ClassifBaseVisitor<ReferencedVariablesAnd<AnnotationValueMatch>> {
+        private final Operator operator;
+
+        private AnnotationValueVisitor(Operator operator) {
+            this.operator = operator;
+        }
+
+        @Override
+        public ReferencedVariablesAnd<AnnotationValueMatch> visitAnnotationValue(
+                ClassifParser.AnnotationValueContext ctx) {
+
+            ReferencedVariablesAnd<AnnotationValueMatch> ret = new ReferencedVariablesAnd<>();
+
+            if (ctx.STRING() != null) {
+                ret.match = AnnotationValueMatch.string(operator, stringContents(ctx.STRING()));
+            } else if (ctx.REGEX() != null) {
+                ret.match = AnnotationValueMatch.regex(operator, toRegex(ctx.REGEX()));
+            } else if (ctx.NUMBER() != null) {
+                Number n = toNumber(ctx.NUMBER());
+                ret.match = AnnotationValueMatch.number(operator, n);
+            } else if (ctx.BOOLEAN() != null) {
+                boolean val = toBoolean(ctx.BOOLEAN());
+
+                ret.match = AnnotationValueMatch.bool(operator, val);
+            } else if (ctx.ANY() != null) {
+                ret.match = AnnotationValueMatch.any(operator);
+            } else if (ctx.typeReference() != null) {
+                ReferencedVariablesAnd<TypeReferenceMatch> type
+                        = ctx.typeReference().accept(TypeReferenceVisitor.INSTANCE);
+
+                ret.referencedVariables.addAll(type.referencedVariables);
+                ret.match = AnnotationValueMatch.type(operator, type.match);
+            } else if (ctx.fqn() != null) {
+                FqnMatch fqn = ctx.fqn().accept(FqnVisitor.INSTANCE);
+                NameMatch name = ctx.name().accept(NameVisitor.INSTANCE);
+
+                ret.match = AnnotationValueMatch.enumConstant(operator, fqn, name);
+            } else if (ctx.annotation() != null) {
+                ReferencedVariablesAnd<AnnotationMatch> anno = ctx.annotation().accept(AnnotationVisitor.INSTANCE);
+                ret.referencedVariables.addAll(anno.referencedVariables);
+                ret.match = AnnotationValueMatch.annotation(operator, anno.match);
+            } else if (ctx.OPEN_BRACE() != null) {
+                if (ctx.annotationValueArrayContents() == null) {
+                    ret.match = AnnotationValueMatch.array(operator, emptyList());
+                } else {
+                    List<ReferencedVariablesAnd<AnnotationValueMatch>> contents
+                            = ctx.annotationValueArrayContents().accept(AnnotationValueArrayContentsVisitor.INSTANCE);
+
+                    List<AnnotationValueMatch> vals = new ArrayList<>(contents.size());
+                    for (ReferencedVariablesAnd<AnnotationValueMatch> m : contents) {
+                        ret.referencedVariables.addAll(m.referencedVariables);
+                        vals.add(m.match);
+                    }
+
+                    ret.match = AnnotationValueMatch.array(operator, vals);
+                }
+            }
+
+            return ret;
+        }
+    }
+
+    private static final class AnnotationValueArrayContentsVisitor extends ClassifBaseVisitor<List<ReferencedVariablesAnd<AnnotationValueMatch>>> {
+        static final AnnotationValueArrayContentsVisitor INSTANCE = new AnnotationValueArrayContentsVisitor();
+
+        @SuppressWarnings("Duplicates")
+        @Override
+        public List<ReferencedVariablesAnd<AnnotationValueMatch>> visitAnnotationValueArrayContents(
+                ClassifParser.AnnotationValueArrayContentsContext ctx) {
+            List<ReferencedVariablesAnd<AnnotationValueMatch>> ret = new ArrayList<>();
+
+            ReferencedVariablesAnd<AnnotationValueMatch> firstForRecursion = null;
+
+            if (ctx.annotationValueArray_strings() != null) {
+                ClassifParser.AnnotationValueArray_stringsContext strCtx = ctx.annotationValueArray_strings();
+                ret.add(new ReferencedVariablesAnd<>(AnnotationValueMatch.string(EQ, stringContents(strCtx.STRING()))));
+                strCtx.annotationValueArray_strings_next().forEach(n -> {
+                    if (n.STRING() != null) {
+                        ret.add(new ReferencedVariablesAnd<>(AnnotationValueMatch.string(EQ, stringContents(n.STRING()))));
+                    } else if (n.REGEX() != null) {
+                        ret.add(new ReferencedVariablesAnd<>(AnnotationValueMatch.regex(EQ, toRegex(n.REGEX()))));
+                    } else if (n.ANY() != null) {
+                        ret.add(new ReferencedVariablesAnd<>(AnnotationValueMatch.any(EQ)));
+                    } else if (n.ANY_NUMBER_OF_THINGS() != null) {
+                        ret.add(new ReferencedVariablesAnd<>(AnnotationValueMatch.all()));
+                    }
+                });
+            } else if (ctx.annotationValueArray_numbers() != null) {
+                ClassifParser.AnnotationValueArray_numbersContext numCtx = ctx.annotationValueArray_numbers();
+                Number num = toNumber(numCtx.NUMBER());
+                ret.add(new ReferencedVariablesAnd<>(AnnotationValueMatch.number(EQ, num)));
+
+                numCtx.annotationValueArray_numbers_next().forEach(n -> {
+                    if (n.NUMBER() != null) {
+                        ret.add(new ReferencedVariablesAnd<>(AnnotationValueMatch.number(EQ, toNumber(n.NUMBER()))));
+                    } else if (n.REGEX() != null) {
+                        ret.add(new ReferencedVariablesAnd<>(AnnotationValueMatch.regex(EQ, toRegex(n.REGEX()))));
+                    } else if (n.ANY() != null) {
+                        ret.add(new ReferencedVariablesAnd<>(AnnotationValueMatch.any(EQ)));
+                    } else if (n.ANY_NUMBER_OF_THINGS() != null) {
+                        ret.add(new ReferencedVariablesAnd<>(AnnotationValueMatch.all()));
+                    }
+                });
+            } else if (ctx.annotationValueArray_booleans() != null) {
+                ClassifParser.AnnotationValueArray_booleansContext boolCtx = ctx.annotationValueArray_booleans();
+                ret.add(new ReferencedVariablesAnd<>(AnnotationValueMatch.bool(EQ, toBoolean(boolCtx.BOOLEAN()))));
+
+                boolCtx.annotationValueArray_booleans_next().forEach(n -> {
+                    if (n.BOOLEAN() != null) {
+                        ret.add(new ReferencedVariablesAnd<>(AnnotationValueMatch.bool(EQ, toBoolean(n.BOOLEAN()))));
+                    } else if (n.REGEX() != null) {
+                        ret.add(new ReferencedVariablesAnd<>(AnnotationValueMatch.regex(EQ, toRegex(n.REGEX()))));
+                    } else if (n.ANY() != null) {
+                        ret.add(new ReferencedVariablesAnd<>(AnnotationValueMatch.any(EQ)));
+                    } else if (n.ANY_NUMBER_OF_THINGS() != null) {
+                        ret.add(new ReferencedVariablesAnd<>(AnnotationValueMatch.all()));
+                    }
+                });
+            } else if (ctx.annotationValueArray_types() != null) {
+                ClassifParser.AnnotationValueArray_typesContext typeCtx = ctx.annotationValueArray_types();
+                ReferencedVariablesAnd<TypeReferenceMatch> m = typeCtx.typeReference()
+                        .accept(TypeReferenceVisitor.INSTANCE);
+                ReferencedVariablesAnd<AnnotationValueMatch> am = new ReferencedVariablesAnd<>();
+                am.referencedVariables.addAll(m.referencedVariables);
+                am.match = AnnotationValueMatch.type(EQ, m.match);
+
+                ret.add(am);
+
+                typeCtx.annotationValueArray_types_next().forEach(n -> {
+                    if (n.typeReference() != null) {
+                        ReferencedVariablesAnd<TypeReferenceMatch> nm = n.typeReference().accept(TypeReferenceVisitor.INSTANCE);
+                        ReferencedVariablesAnd<AnnotationValueMatch> nam = new ReferencedVariablesAnd<>();
+                        nam.referencedVariables.addAll(nm.referencedVariables);
+                        nam.match = AnnotationValueMatch.type(EQ, nm.match);
+
+                        ret.add(nam);
+                    } else if (n.ANY() != null) {
+                        ret.add(new ReferencedVariablesAnd<>(AnnotationValueMatch.any(EQ)));
+                    } else if (n.ANY_NUMBER_OF_THINGS() != null) {
+                        ret.add(new ReferencedVariablesAnd<>(AnnotationValueMatch.all()));
+                    }
+                });
+            } else if (ctx.annotationValueArray_enums() != null) {
+                ClassifParser.AnnotationValueArray_enumsContext eCtx = ctx.annotationValueArray_enums();
+                FqnMatch fqn = eCtx.fqn().accept(FqnVisitor.INSTANCE);
+                NameMatch name = eCtx.name().accept(NameVisitor.INSTANCE);
+
+                ret.add(new ReferencedVariablesAnd<>(AnnotationValueMatch.enumConstant(EQ, fqn, name)));
+
+                eCtx.annotationValueArray_enums_next().forEach(n -> {
+                    if (n.fqn() != null) {
+                        FqnMatch nextFqn = n.fqn().accept(FqnVisitor.INSTANCE);
+                        NameMatch nextName = n.name().accept(NameVisitor.INSTANCE);
+                        ret.add(new ReferencedVariablesAnd<>(AnnotationValueMatch.enumConstant(EQ, nextFqn, nextName)));
+                    } else if (n.ANY() != null) {
+                        ret.add(new ReferencedVariablesAnd<>(AnnotationValueMatch.any(EQ)));
+                    } else if (n.ANY_NUMBER_OF_THINGS() != null) {
+                        ret.add(new ReferencedVariablesAnd<>(AnnotationValueMatch.all()));
+                    }
+                });
+            } else if (ctx.annotationValueArray_annotations() != null) {
+                ClassifParser.AnnotationValueArray_annotationsContext annoCtx = ctx.annotationValueArray_annotations();
+                ReferencedVariablesAnd<AnnotationMatch> m = annoCtx.annotation().accept(AnnotationVisitor.INSTANCE);
+                ReferencedVariablesAnd<AnnotationValueMatch> am = new ReferencedVariablesAnd<>();
+                am.referencedVariables.addAll(m.referencedVariables);
+                am.match = AnnotationValueMatch.annotation(EQ, m.match);
+
+                ret.add(am);
+
+                annoCtx.annotationValueArray_annotations_next().forEach(n -> {
+                    if (n.annotation() != null) {
+                        ReferencedVariablesAnd<AnnotationMatch> nm = n.annotation().accept(AnnotationVisitor.INSTANCE);
+                        ReferencedVariablesAnd<AnnotationValueMatch> nam = new ReferencedVariablesAnd<>();
+                        nam.referencedVariables.addAll(nm.referencedVariables);
+                        nam.match = AnnotationValueMatch.annotation(EQ, nm.match);
+
+                        ret.add(nam);
+                    } else if (n.ANY() != null) {
+                        ret.add(new ReferencedVariablesAnd<>(AnnotationValueMatch.any(EQ)));
+                    } else if (n.ANY_NUMBER_OF_THINGS() != null) {
+                        ret.add(new ReferencedVariablesAnd<>(AnnotationValueMatch.all()));
+                    }
+                });
+            } else if (ctx.REGEX() != null) {
+                firstForRecursion = new ReferencedVariablesAnd<>(AnnotationValueMatch.regex(EQ, toRegex(ctx.REGEX())));
+            } else if (ctx.ANY() != null) {
+                firstForRecursion = new ReferencedVariablesAnd<>(AnnotationValueMatch.any(EQ));
+            } else if (ctx.ANY_NUMBER_OF_THINGS() != null) {
+                firstForRecursion = new ReferencedVariablesAnd<>(AnnotationValueMatch.all());
+            }
+
+            if (firstForRecursion != null) {
+                ret.add(firstForRecursion);
+
+                if (ctx.annotationValueArrayContents() != null) {
+                    List<ReferencedVariablesAnd<AnnotationValueMatch>> tail = ctx.annotationValueArrayContents().accept(this);
+                    ret.addAll(tail);
+                }
+            }
+
+            return ret;
+        }
     }
 
     private static final class TypeReferenceVisitor extends ClassifBaseVisitor<ReferencedVariablesAnd<TypeReferenceMatch>> {
@@ -279,12 +604,17 @@ public final class Classif {
     }
 
     private static final class TypeDefinitionOrGenericStatementVisitor extends ClassifBaseVisitor<StatementStatement> {
-        private final List<AnnotationMatch> annotations;
+        private final AnnotationsMatch annotations;
         private final ModifiersMatch modifiers;
+        private final List<String> referenced;
 
         private TypeDefinitionOrGenericStatementVisitor(
-                List<AnnotationMatch> annotations, ModifiersMatch modifiers) {
-            this.annotations = annotations;
+                List<ReferencedVariablesAnd<AnnotationMatch>> annotations, ModifiersMatch modifiers) {
+            this.referenced = new ArrayList<>();
+            this.annotations = new AnnotationsMatch(annotations.stream().map(a -> {
+                referenced.addAll(a.referencedVariables);
+                return a.match;
+            }).collect(toList()));
             this.modifiers = modifiers;
         }
 
@@ -296,7 +626,7 @@ public final class Classif {
                 TypeKindMatch typeKind = TypeKindVisitor.INSTANCE.visitTypeKind(ctx.typeKind());
                 boolean isMatch = ctx.returned() != null;
                 if (ctx.possibleTypeAssignment() == null) {
-                    return new TypeDefinitionStatement(null, emptyList(), annotations, modifiers, typeKind,
+                    return new TypeDefinitionStatement(null, referenced, annotations, modifiers, typeKind,
                             new FqnMatch(singletonList(NameMatch.any())), null, false, isMatch);
                 } else {
                     FqnMatch fqn = FqnVisitor.INSTANCE.visit(ctx.possibleTypeAssignment().fqn());
@@ -312,7 +642,9 @@ public final class Classif {
                         variable = ctx.possibleTypeAssignment().assignment().resolvedName().getText();
                     }
 
-                    List<String> reffed = tps == null ? emptyList() : tps.referencedVariables;
+                    List<String> reffed = tps == null ? new ArrayList<>() : tps.referencedVariables;
+
+                    reffed.addAll(referenced);
 
                     return new TypeDefinitionStatement(variable, reffed, annotations, modifiers, typeKind, fqn,
                             tps == null ? null : tps.match, negation, isMatch);
@@ -349,5 +681,13 @@ public final class Classif {
     private static final class ReferencedVariablesAnd<T> {
         List<String> referencedVariables = new ArrayList<>(2);
         T match;
+
+        ReferencedVariablesAnd() {
+
+        }
+
+        ReferencedVariablesAnd(T match) {
+            this.match = match;
+        }
     }
 }

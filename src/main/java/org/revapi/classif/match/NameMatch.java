@@ -18,15 +18,19 @@ package org.revapi.classif.match;
 
 import java.util.regex.Pattern;
 
-public abstract class NameMatch {
+import org.revapi.classif.match.util.Globbed;
+
+public abstract class NameMatch implements Globbed {
     private NameMatch() {
 
     }
 
-    public boolean isMatchAllRemaining() {
+    @Override
+    public boolean isMatchAll() {
         return false;
     }
 
+    @Override
     public boolean isMatchAny() {
         return false;
     }
@@ -113,7 +117,7 @@ public abstract class NameMatch {
         }
 
         @Override
-        public boolean isMatchAllRemaining() {
+        public boolean isMatchAll() {
             return true;
         }
     }

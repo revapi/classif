@@ -62,7 +62,9 @@ ABSTRACT: 'abstract';
 RETURN: '^';
 DOUBLE_COLON: '::';
 AT: '@';
-NUMBER: DIGIT+ (DOT DIGIT+)?;
+PLUS: '+';
+MINUS: '-';
+NUMBER: (PLUS | MINUS)? DIGIT+ (DOT DIGIT+)?;
 BOOLEAN: 'true' | 'false';
 THROWS: 'throws';
 OVERRIDES: 'overrides';
@@ -130,7 +132,7 @@ genericConstraints
     ;
 
 annotation
-    : returned? assignment? not? AT typeReference (LPAR WS? annotationAttributes? WS? RPAR)?
+    : not? AT typeReference (LPAR WS? annotationAttributes? WS? RPAR)?
     ;
 
 annotationAttributes
@@ -154,18 +156,75 @@ annotationValue
     | BOOLEAN
     | ANY
     | typeReference DOT CLASS
+    | fqn DOT name
     | annotation
-    | LSQPAR annotationValueArrayContents? RSQPAR
+    | OPEN_BRACE annotationValueArrayContents? CLOSE_BRACE
     ;
 
 annotationValueArrayContents
-    : STRING (WS? COMMA WS? (STRING | REGEX))*
-    | NUMBER (WS? COMMA WS? (NUMBER | REGEX))*
-    | BOOLEAN (WS? COMMA WS? (BOOLEAN | REGEX))*
-    | typeReference DOT CLASS (WS? COMMA WS? typeReference DOT CLASS)*
-    | annotation (WS? COMMA WS? annotation)*
+    : annotationValueArray_strings
+    | annotationValueArray_numbers
+    | annotationValueArray_booleans
+    | annotationValueArray_types
+    | annotationValueArray_enums
+    | annotationValueArray_annotations
     | REGEX (WS? COMMA WS? annotationValueArrayContents)?
     | ANY (WS? COMMA WS? annotationValueArrayContents)?
+    | ANY_NUMBER_OF_THINGS (WS? COMMA WS? annotationValueArrayContents)?
+    ;
+
+annotationValueArray_strings
+    : STRING (WS? COMMA WS? annotationValueArray_strings_next)*
+    ;
+
+annotationValueArray_strings_next
+    : STRING | REGEX | ANY | ANY_NUMBER_OF_THINGS
+    ;
+
+annotationValueArray_numbers
+    : NUMBER (WS? COMMA WS? annotationValueArray_numbers_next)*
+    ;
+
+annotationValueArray_numbers_next
+    : NUMBER | REGEX | ANY | ANY_NUMBER_OF_THINGS
+    ;
+
+annotationValueArray_booleans
+    : BOOLEAN (WS? COMMA WS? annotationValueArray_booleans_next)*
+    ;
+
+annotationValueArray_booleans_next
+    : BOOLEAN | REGEX | ANY | ANY_NUMBER_OF_THINGS
+    ;
+
+annotationValueArray_types
+    : typeReference DOT CLASS (WS? COMMA WS? annotationValueArray_types_next)*
+    ;
+
+annotationValueArray_types_next
+    : typeReference DOT CLASS
+    | ANY
+    | ANY_NUMBER_OF_THINGS
+    ;
+
+annotationValueArray_enums
+    : fqn DOT name (WS? COMMA WS? annotationValueArray_enums_next)*
+    ;
+
+annotationValueArray_enums_next
+    : fqn DOT name
+    | ANY
+    | ANY_NUMBER_OF_THINGS
+    ;
+
+annotationValueArray_annotations
+    : annotation (WS? COMMA WS? annotationValueArray_annotations_next)*
+    ;
+
+annotationValueArray_annotations_next
+    : annotation
+    | ANY
+    | ANY_NUMBER_OF_THINGS
     ;
 
 elementStatement

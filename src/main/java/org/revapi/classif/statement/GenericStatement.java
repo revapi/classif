@@ -2,21 +2,19 @@ package org.revapi.classif.statement;
 
 import static java.util.Collections.emptyList;
 
-import java.util.List;
-
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
 
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.ModelMatch;
 import org.revapi.classif.match.declaration.ModifiersMatch;
-import org.revapi.classif.match.instance.AnnotationMatch;
+import org.revapi.classif.match.declaration.AnnotationsMatch;
 
 public final class GenericStatement extends StatementStatement {
     private final boolean negation;
 
     public GenericStatement(String definedVariable,
-            List<AnnotationMatch> annotations, ModifiersMatch modifiers,
+            AnnotationsMatch annotations, ModifiersMatch modifiers,
             boolean isMatch, boolean negation) {
         super(definedVariable, emptyList(), annotations, modifiers, isMatch);
         this.negation = negation;
@@ -30,7 +28,7 @@ public final class GenericStatement extends StatementStatement {
                 Element el = ctx.modelInspector.toElement(model);
                 TypeMirror inst = ctx.modelInspector.toMirror(model);
 
-                boolean ret = modifiers.test(el, inst, ctx) && annotations.stream().allMatch(m -> m.test(el, inst, ctx));
+                boolean ret = modifiers.test(el, inst, ctx) && annotations.test(el, inst, ctx);
 
                 return negation != ret;
             }

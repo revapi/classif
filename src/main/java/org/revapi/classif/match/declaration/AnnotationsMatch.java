@@ -16,22 +16,27 @@
  */
 package org.revapi.classif.match.declaration;
 
-import java.util.Collection;
+import java.util.List;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
 
 import org.revapi.classif.match.MatchContext;
+import org.revapi.classif.match.instance.TypeInstanceMatch;
 
-public final class ModifierClusterMatch extends DeclarationMatch {
-    private final Collection<ModifierMatch> modifiers;
+public final class AnnotationsMatch extends DeclarationMatch {
+    private final List<AnnotationMatch> annotations;
 
-    public ModifierClusterMatch(Collection<ModifierMatch> modifiers) {
-        this.modifiers = modifiers;
+    public AnnotationsMatch(List<AnnotationMatch> annotations) {
+        this.annotations = annotations;
     }
 
     @Override
-    public <M> boolean testDeclaration(Element declaration, TypeMirror instance, MatchContext<M> ctx) {
-        return modifiers.stream().anyMatch(m -> m.testDeclaration(declaration, instance, ctx));
+    protected <M> boolean defaultTest(Element e, TypeMirror inst, MatchContext<M> matchContext) {
+        return annotations.stream().reduce(
+                true,
+                (res, next) -> res && e.getAnnotationMirrors().stream().anyMatch(a -> next.test(a, matchContext)),
+                Boolean::logicalAnd);
     }
+
 }

@@ -40,8 +40,9 @@ import javax.lang.model.util.SimpleTypeVisitor8;
 
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.ModelMatch;
+import org.revapi.classif.match.util.Globbed;
 
-public final class SingleTypeReferenceMatch extends TypeInstanceMatch {
+public final class SingleTypeReferenceMatch extends TypeInstanceMatch implements Globbed {
     private final FqnMatch fullyQualifiedName;
     private final TypeParametersMatch typeParameters;
     private final String variable;
@@ -88,18 +89,20 @@ public final class SingleTypeReferenceMatch extends TypeInstanceMatch {
         this.arrayDimension = arrayDimension;
     }
 
+    @Override
     public boolean isMatchAny() {
         return fullyQualifiedName != null && fullyQualifiedName.isMatchAny() && arrayDimension == 0 && !negation
                 && typeParameters == null;
     }
 
+    @Override
     public boolean isMatchAll() {
         return fullyQualifiedName != null && fullyQualifiedName.isMatchAll() && arrayDimension == 0 && !negation
                 && typeParameters == null;
     }
 
     @Override
-    protected <M> boolean testInstance(TypeMirror instance, MatchContext<M> ctx) {
+    public <M> boolean testInstance(TypeMirror instance, MatchContext<M> ctx) {
         return instance.accept(new SimpleTypeVisitor8<Boolean, Void>(false) {
             @Override
             public Boolean visitPrimitive(PrimitiveType t, Void __) {

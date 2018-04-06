@@ -28,8 +28,9 @@ import javax.lang.model.type.TypeMirror;
 
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.NameMatch;
+import org.revapi.classif.match.util.Globbed;
 
-public final class FqnMatch extends TypeInstanceMatch {
+public final class FqnMatch extends TypeInstanceMatch implements Globbed {
     private final Pattern fqnRegex;
     private final boolean matchAny;
     private final boolean matchAll;
@@ -37,19 +38,21 @@ public final class FqnMatch extends TypeInstanceMatch {
     public FqnMatch(List<NameMatch> names) {
         this.fqnRegex = toPattern(names);
         matchAny = fqnRegex == null && names.get(0).isMatchAny();
-        matchAll = fqnRegex == null && names.get(0).isMatchAllRemaining();
+        matchAll = fqnRegex == null && names.get(0).isMatchAll();
     }
 
+    @Override
     public boolean isMatchAny() {
         return matchAny;
     }
 
+    @Override
     public boolean isMatchAll() {
         return matchAll;
     }
 
     @Override
-    protected <M> boolean testInstance(TypeMirror instantiation, MatchContext<M> ctx) {
+    public <M> boolean testInstance(TypeMirror instantiation, MatchContext<M> ctx) {
         if (fqnRegex == null) {
             // special case - to save us from needlessly compare the fqn when we match everything anyway, the
             // regex is null in this case
@@ -76,7 +79,7 @@ public final class FqnMatch extends TypeInstanceMatch {
 
     private static Pattern toPattern(List<NameMatch> names) {
         // special case - a lone single star means "everything"
-        if (names.size() == 1 && (names.get(0).isMatchAny() || names.get(0).isMatchAllRemaining())) {
+        if (names.size() == 1 && (names.get(0).isMatchAny() || names.get(0).isMatchAll())) {
             return null;
         }
 
@@ -85,7 +88,7 @@ public final class FqnMatch extends TypeInstanceMatch {
         for (NameMatch st : names) {
             if (st.isMatchAny()) {
                 sb.append("[^.]+");
-            } else if (st.isMatchAllRemaining()) {
+            } else if (st.isMatchAll()) {
                 sb.append(".+");
             } else if (st.getExactMatch() != null) {
                 sb.append(Pattern.quote(st.getExactMatch()));

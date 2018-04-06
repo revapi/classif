@@ -6,7 +6,7 @@ import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.ModelMatch;
 import org.revapi.classif.match.declaration.ModifiersMatch;
 import org.revapi.classif.match.declaration.TypeKindMatch;
-import org.revapi.classif.match.instance.AnnotationMatch;
+import org.revapi.classif.match.declaration.AnnotationsMatch;
 import org.revapi.classif.match.instance.FqnMatch;
 import org.revapi.classif.match.instance.TypeParametersMatch;
 
@@ -17,7 +17,7 @@ public class TypeDefinitionStatement extends StatementStatement {
     private final boolean negation;
 
     public TypeDefinitionStatement(String definedVariable, List<String> referencedVariables,
-            List<AnnotationMatch> annotations,
+            AnnotationsMatch annotations,
             ModifiersMatch modifiers,
             TypeKindMatch typeKind,
             FqnMatch fqn,
@@ -36,7 +36,7 @@ public class TypeDefinitionStatement extends StatementStatement {
         return new ModelMatch() {
             @Override
             public <M> boolean testType(M type, MatchContext<M> ctx) {
-                boolean ret = annotations.stream().allMatch(m -> m.test(type, ctx))
+                boolean ret = annotations.test(type, ctx)
                         && modifiers.test(type, ctx)
                         && typeKind.test(type, ctx)
                         && fqn.test(type, ctx);
