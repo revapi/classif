@@ -18,10 +18,8 @@ package org.revapi.classif.match.instance;
 
 import java.util.List;
 
-import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.WildcardType;
-import javax.lang.model.util.SimpleTypeVisitor8;
 
 import org.revapi.classif.match.MatchContext;
 
