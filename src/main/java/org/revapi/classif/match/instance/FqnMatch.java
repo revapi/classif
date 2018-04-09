@@ -16,8 +16,8 @@
  */
 package org.revapi.classif.match.instance;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -28,17 +28,22 @@ import javax.lang.model.type.TypeMirror;
 
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.NameMatch;
+import org.revapi.classif.match.util.Glob;
 import org.revapi.classif.match.util.Globbed;
 
 public final class FqnMatch extends TypeInstanceMatch implements Globbed {
-    private final Pattern fqnRegex;
     private final boolean matchAny;
     private final boolean matchAll;
+    private final Glob<NameMatch> glob;
 
     public FqnMatch(List<NameMatch> names) {
-        this.fqnRegex = toPattern(names);
-        matchAny = fqnRegex == null && names.get(0).isMatchAny();
-        matchAll = fqnRegex == null && names.get(0).isMatchAll();
+        matchAny = names.size() == 1 && names.get(0).isMatchAny();
+        matchAll = names.size() == 1 && names.get(0).isMatchAll();
+        if (!matchAny && !matchAll) {
+            glob = new Glob<>(names);
+        } else {
+            glob = null;
+        }
     }
 
     @Override
@@ -53,9 +58,8 @@ public final class FqnMatch extends TypeInstanceMatch implements Globbed {
 
     @Override
     public <M> boolean testInstance(TypeMirror instantiation, MatchContext<M> ctx) {
-        if (fqnRegex == null) {
-            // special case - to save us from needlessly compare the fqn when we match everything anyway, the
-            // regex is null in this case
+        // special case - * or ** are considered equal for the fqns...
+        if (glob == null) {
             return true;
         }
 
@@ -74,34 +78,29 @@ public final class FqnMatch extends TypeInstanceMatch implements Globbed {
             return false;
         }
 
-        return fqnRegex.matcher(fqn).matches();
+        return glob.test(NameMatch::matches, split(fqn));
     }
 
-    private static Pattern toPattern(List<NameMatch> names) {
-        // special case - a lone single star means "everything"
-        if (names.size() == 1 && (names.get(0).isMatchAny() || names.get(0).isMatchAll())) {
-            return null;
+    private static List<String> split(String fqn) {
+        int from = 0;
+        int to;
+
+        List<String> ret = new ArrayList<>(8);
+
+        while ((to = fqn.indexOf('.', from)) != -1) {
+            ret.add(fqn.substring(from, to));
+            from = to + 1;
         }
 
-        StringBuilder sb = new StringBuilder("^");
-
-        for (NameMatch st : names) {
-            if (st.isMatchAny()) {
-                sb.append("[^.]+");
-            } else if (st.isMatchAll()) {
-                sb.append(".+");
-            } else if (st.getExactMatch() != null) {
-                sb.append(Pattern.quote(st.getExactMatch()));
-            } else if (st.getPattern() != null) {
-                sb.append(st.getPattern().pattern());
+        if (from == 0) {
+            ret.add(fqn);
+        } else {
+            if (from < fqn.length()) {
+                ret.add(fqn.substring(from));
             }
-            sb.append("\\.");
         }
 
-        if (sb.length() > 1) {
-            sb.replace(sb.length() - 2, sb.length(), "$");
-        }
 
-        return Pattern.compile(sb.toString());
+        return ret;
     }
 }
