@@ -102,7 +102,7 @@ class TypeDefinitionStatementTest {
         assertTrue(doTest(constraints, InheritedImpl, "type ^ exactly implements Implements.Iface, java.lang.Cloneable;"));
 
         assertTrue(doTest(constraints, Iface, "type *.Impl implements %i; interface ^%i=*;"));
-        assertTrue(doTest(constraints, GenericIface, "match %i; type *./Impl.+$/ implements %i; interface %i=*;"));
+        assertTrue(doTest(constraints, GenericIface, "match %i; type *./^Impl.+$/ implements %i; interface %i=*;"));
     }
 
     private boolean doTest(CompiledJar.Environment env, Element el, String recipe) {
