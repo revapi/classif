@@ -77,6 +77,7 @@ NATIVE: 'native';
 TRANSIENT: 'transient';
 SYNCHRONIZED: 'synchronized';
 USED_BY: 'usedby';
+EXACTLY: 'exactly';
 
 //needs to be the last
 WORD: LETTER (LETTER | DIGIT)*;
@@ -259,7 +260,7 @@ methodRestStatement
 
 resolvedName
     // everything that is not a Java keyword
-    : MATCH | TYPE | USES | PACKAGE_PRIVATE | OVERRIDES | DIRECTLY | USED_BY | WORD
+    : MATCH | TYPE | USES | PACKAGE_PRIVATE | OVERRIDES | DIRECTLY | USED_BY | EXACTLY | WORD
     ;
 
 name
@@ -326,7 +327,7 @@ typeConstraints
 typeConstraint
     : (DIRECTLY WS)? USES WS typeReference
     | (DIRECTLY WS)? USED_BY WS typeReference
-    | (DIRECTLY WS)? IMPLEMENTS WS typeReference (WS? COMMA WS? typeReference)*
+    | (DIRECTLY WS)? (EXACTLY WS)? IMPLEMENTS WS typeReference (WS? COMMA WS? typeReference)*
     | (DIRECTLY WS)? EXTENDS WS typeReference
     ;
 

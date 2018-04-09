@@ -489,7 +489,7 @@ class GenericStatementTest {
     }
 
     private boolean doTest(Element expected, String recipe) {
-        ModelInspector<Element> insp = new MirroringModelInspector(environment.elements());
+        ModelInspector<Element> insp = new MirroringModelInspector(environment.elements(), environment.types());
 
         StructuralMatcher matcher = Classif.compile(recipe);
 

@@ -18,18 +18,22 @@ package org.revapi.classif;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 
 public class MirroringModelInspector implements ModelInspector<Element> {
     private final Elements elements;
+    private final Types types;
 
-    public MirroringModelInspector(Elements elements) {
+    public MirroringModelInspector(Elements elements, Types types) {
         this.elements = elements;
+        this.types = types;
     }
 
     @Override
@@ -75,5 +79,10 @@ public class MirroringModelInspector implements ModelInspector<Element> {
     @Override
     public Element fromType(TypeElement element) {
         return element;
+    }
+
+    @Override
+    public List<? extends TypeMirror> directSupertypes(TypeMirror type) {
+        return types.directSupertypes(type);
     }
 }

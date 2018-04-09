@@ -59,7 +59,7 @@ class TypeKindMatchTest {
         DeclarationMatch annos = new TypeKindMatch(false, "@interface");
         DeclarationMatch types = new TypeKindMatch(false, "type");
 
-        ModelInspector<Element> inspector = new MirroringModelInspector(environment.elements());
+        ModelInspector<Element> inspector = new MirroringModelInspector(environment.elements(), environment.types());
         Map<String, ModelMatch> vars = Collections.emptyMap();
 
         MatchContext<Element> ctx = new MatchContext<>(inspector, vars);

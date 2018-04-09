@@ -16,6 +16,7 @@
  */
 package org.revapi.classif;
 
+import java.util.List;
 import java.util.Set;
 
 import javax.lang.model.element.Element;
@@ -111,4 +112,12 @@ public interface ModelInspector<M> {
      * @return the model representation of the element
      */
     M fromType(TypeElement element);
+
+    /**
+     * This is assumed to be equivalent to {@link javax.lang.model.util.Types#directSupertypes(TypeMirror)}.
+     *
+     * @param type the type to get the supertypes of
+     * @return the same as the above mentioned method would return
+     */
+    List<? extends TypeMirror> directSupertypes(TypeMirror type);
 }

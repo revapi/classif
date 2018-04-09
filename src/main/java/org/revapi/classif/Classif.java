@@ -47,6 +47,8 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.revapi.classif.match.declaration.AnnotationAttributeMatch;
 import org.revapi.classif.match.declaration.AnnotationValueMatch;
 import org.revapi.classif.match.declaration.AnnotationMatch;
+import org.revapi.classif.match.declaration.ImplementsMatch;
+import org.revapi.classif.match.declaration.TypeConstraintsMatch;
 import org.revapi.classif.match.declaration.UsesMatch;
 import org.revapi.classif.match.instance.TypeParameterMatch;
 import org.revapi.classif.match.instance.TypeParameterWildcardMatch;
@@ -626,9 +628,20 @@ public final class Classif {
                 // type definition
                 TypeKindMatch typeKind = TypeKindVisitor.INSTANCE.visitTypeKind(ctx.typeKind());
                 boolean isMatch = ctx.returned() != null;
+                List<String> reffed = new ArrayList<>(2);
+
+                TypeConstraintsMatch constraints = null;
+
+                if (ctx.typeConstraints() != null) {
+                    ReferencedVariablesAnd<TypeConstraintsMatch> constrs =
+                            TypeConstraintsVisitor.INSTANCE.visit(ctx.typeConstraints());
+                    reffed.addAll(constrs.referencedVariables);
+                    constraints = constrs.match;
+                }
+
                 if (ctx.possibleTypeAssignment() == null) {
                     return new TypeDefinitionStatement(null, referenced, annotations, modifiers, typeKind,
-                            new FqnMatch(singletonList(NameMatch.any())), null, false, isMatch);
+                            new FqnMatch(singletonList(NameMatch.any())), null, constraints, false, isMatch);
                 } else {
                     FqnMatch fqn = FqnVisitor.INSTANCE.visit(ctx.possibleTypeAssignment().fqn());
                     ReferencedVariablesAnd<TypeParametersMatch> tps = null;
@@ -643,15 +656,15 @@ public final class Classif {
                         variable = ctx.possibleTypeAssignment().assignment().resolvedName().getText();
                     }
 
-                    List<String> reffed = tps == null ? new ArrayList<>() : tps.referencedVariables;
+                    if (tps != null) {
+                        reffed.addAll(tps.referencedVariables);
+                    }
 
                     reffed.addAll(referenced);
 
                     return new TypeDefinitionStatement(variable, reffed, annotations, modifiers, typeKind, fqn,
-                            tps == null ? null : tps.match, negation, isMatch);
+                            tps == null ? null : tps.match, constraints, negation, isMatch);
                 }
-
-                // TODO handle the type constraints
             } else {
                 // generic statement
                 boolean isMatch = ctx.returned() != null;
@@ -695,6 +708,44 @@ public final class Classif {
             ret.referencedVariables = type.referencedVariables;
             ret.match = new UsesMatch(onlyDirect, type.match);
 
+            return ret;
+        }
+    }
+
+    private static final class TypeConstraintsVisitor extends ClassifBaseVisitor<ReferencedVariablesAnd<TypeConstraintsMatch>> {
+        static final TypeConstraintsVisitor INSTANCE = new TypeConstraintsVisitor();
+
+        @Override
+        public ReferencedVariablesAnd<TypeConstraintsMatch> visitTypeConstraints(
+                ClassifParser.TypeConstraintsContext ctx) {
+
+            ReferencedVariablesAnd<TypeConstraintsMatch> ret = new ReferencedVariablesAnd<>();
+            List<ImplementsMatch> implemented = new ArrayList<>(2);
+            List<UsesMatch> uses = new ArrayList<>(2);
+
+            ctx.typeConstraint().forEach(constraintCtx -> {
+                if (constraintCtx.IMPLEMENTS() != null) {
+                    boolean onlyDirect = constraintCtx.DIRECTLY() != null;
+                    boolean exact = constraintCtx.EXACTLY() != null;
+                    List<TypeReferenceMatch> types = constraintCtx.typeReference().stream().map(typeRef -> {
+                        ReferencedVariablesAnd<TypeReferenceMatch> m = TypeReferenceVisitor.INSTANCE.visit(typeRef);
+                        ret.referencedVariables.addAll(m.referencedVariables);
+                        return m.match;
+                    }).collect(toList());
+
+                    implemented.add(new ImplementsMatch(onlyDirect, exact, types));
+                } else if (constraintCtx.USES() != null) {
+                    boolean onlyDirect = constraintCtx.DIRECTLY() != null;
+                    ReferencedVariablesAnd<TypeReferenceMatch> type =
+                            constraintCtx.typeReference().get(0).accept(TypeReferenceVisitor.INSTANCE);
+
+                    ret.referencedVariables.addAll(type.referencedVariables);
+                    uses.add(new UsesMatch(onlyDirect, type.match));
+                }
+                // TODO add the rest of the constraints
+            });
+
+            ret.match = new TypeConstraintsMatch(implemented, uses);
             return ret;
         }
     }

@@ -23,7 +23,6 @@ import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,39 +38,78 @@ import org.revapi.testjars.junit5.JarSources;
 @ExtendWith(CompiledJarExtension.class)
 class TypeDefinitionStatementTest {
     @JarSources(root = "/sources/typeParameters/", sources = "TestClass.java")
-    private CompiledJar.Environment environment;
+    private CompiledJar.Environment typeParams;
 
-    private TypeElement TestClass;
+    @JarSources(root = "/sources/constraints/", sources = {"Implements.java", "Extends.java", "Uses.java",
+            "UsedBy.java"})
+    private CompiledJar.Environment constraints;
 
-    @BeforeAll
-    void setup() {
-        TestClass = environment.elements().getTypeElement("TestClass");
+    @Test
+    void testTypeParameters() {
+        TypeElement testClass = typeParams.elements().getTypeElement("TestClass");
+        assertTrue(doTest(typeParams, testClass, "class ^TestClass<**>;"));
+        assertTrue(doTest(typeParams, testClass, "class ^TestClass<*, **>;"));
+        assertTrue(doTest(typeParams, testClass, "class ^TestClass<java.*.Object, **>;"));
+        assertTrue(doTest(typeParams, testClass, "class ^TestClass<**, java.lang.Cloneable>;"));
+        assertTrue(doTest(typeParams, testClass, "class ^TestClass<**, java.lang.String>;"));
+        assertTrue(doTest(typeParams, testClass, "class ^TestClass<*, ? extends java.*.Object, **>;"));
+        assertTrue(doTest(typeParams, testClass, "class ^TestClass<java.*.Object, **, ? extends /.*String/, **>;"));
+        assertTrue(doTest(typeParams, testClass, "class ^TestClass<**, ? extends /.*\\.String/ & java.lang.Cloneable>;"));
+        assertTrue(doTest(typeParams, testClass, "public class ^TestClass;"));
+        assertFalse(doTest(typeParams, testClass, "private class ^TestClass;"));
+        assertTrue(doTest(typeParams, testClass, "public type ^TestClass;"));
+        assertFalse(doTest(typeParams, testClass, "public type ^TestClass<*>;"));
     }
 
     @Test
-    void test() {
-        assertTrue(doTest("class ^TestClass<**>;"));
-        assertTrue(doTest("class ^TestClass<*, **>;"));
-        assertTrue(doTest("class ^TestClass<java.*.Object, **>;"));
-        assertTrue(doTest("class ^TestClass<**, java.lang.Cloneable>;"));
-        assertTrue(doTest("class ^TestClass<**, java.lang.String>;"));
-        assertTrue(doTest("class ^TestClass<*, ? extends java.*.Object, **>;"));
-        assertTrue(doTest("class ^TestClass<java.*.Object, **, ? extends /.*String/, **>;"));
-        assertTrue(doTest("class ^TestClass<**, ? extends /.*\\.String/ & java.lang.Cloneable>;"));
-        assertTrue(doTest("public class ^TestClass;"));
-        assertFalse(doTest("private class ^TestClass;"));
-        assertTrue(doTest("public type ^TestClass;"));
-        assertFalse(doTest("public type ^TestClass<*>;"));
-
-        // TODO add annotations
-        // TODO add type constraints
+    void testAnnotations() {
+        // TODO implement
     }
 
-    private boolean doTest(String recipe) {
-        ModelInspector<Element> insp = new MirroringModelInspector(environment.elements());
+    @Test
+    void testConstraints() {
+        TypeElement Iface = constraints.elements().getTypeElement("Implements.Iface");
+        TypeElement GenericIface = constraints.elements().getTypeElement("Implements.GenericIface");
+        TypeElement Impl = constraints.elements().getTypeElement("Implements.Impl");
+        TypeElement InheritedImpl = constraints.elements().getTypeElement("Implements.InheritedImpl");
+        TypeElement GenericImplGeneric = constraints.elements().getTypeElement("Implements.GenericImplGeneric");
+        TypeElement GenericImplConcrete = constraints.elements().getTypeElement("Implements.GenericImplConcrete");
+
+        assertTrue(doTest(constraints, Impl, "type ^ implements Implements.Iface;"));
+        assertTrue(doTest(constraints, InheritedImpl, "type ^ implements Implements.Iface;"));
+        assertFalse(doTest(constraints, GenericImplGeneric, "type ^ implements Implements.Iface;"));
+        assertTrue(doTest(constraints, GenericImplConcrete, "type ^!* implements Implements.Iface;"));
+
+        assertTrue(doTest(constraints, Impl, "type ^ directly implements Implements.Iface;"));
+        assertFalse(doTest(constraints, InheritedImpl, "type ^ directly implements Implements.Iface;"));
+        assertFalse(doTest(constraints, GenericImplGeneric, "type ^ directly implements Implements.Iface;"));
+        assertTrue(doTest(constraints, GenericImplConcrete, "type ^!* directly implements Implements.Iface;"));
+
+        assertFalse(doTest(constraints, Impl, "type ^ implements Implements.GenericIface;"));
+        assertTrue(doTest(constraints, GenericImplGeneric, "type ^ implements Implements.GenericIface;"));
+        assertTrue(doTest(constraints, GenericImplConcrete, "type ^ implements Implements.GenericIface;"));
+
+        assertFalse(doTest(constraints, Impl, "type ^ implements Implements.GenericIface<java.lang.String, java.lang.String>;"));
+        assertTrue(doTest(constraints, GenericImplGeneric, "type ^ implements Implements.GenericIface<java.lang.String, java.lang.String>;"));
+        assertFalse(doTest(constraints, GenericImplConcrete, "type ^ implements Implements.GenericIface<java.lang.String, java.lang.String>;"));
+
+        assertFalse(doTest(constraints, Impl, "type ^ implements Implements.GenericIface<java.lang.Object, java.lang.String>;"));
+        assertFalse(doTest(constraints, GenericImplGeneric, "type ^ implements Implements.GenericIface<java.lang.Object, java.lang.String>;"));
+        assertTrue(doTest(constraints, GenericImplConcrete, "type ^ implements Implements.GenericIface<java.lang.Object, java.lang.String>;"));
+
+        assertFalse(doTest(constraints, InheritedImpl, "type ^ exactly implements Implements.Iface;"));
+        assertTrue(doTest(constraints, InheritedImpl, "type ^ exactly implements java.lang.Cloneable, Implements.Iface;"));
+        assertTrue(doTest(constraints, InheritedImpl, "type ^ exactly implements Implements.Iface, java.lang.Cloneable;"));
+
+        assertTrue(doTest(constraints, Iface, "type *.Impl implements %i; interface ^%i=*;"));
+        assertTrue(doTest(constraints, GenericIface, "match %i; type *./Impl.+$/ implements %i; interface %i=*;"));
+    }
+
+    private boolean doTest(CompiledJar.Environment env, Element el, String recipe) {
+        ModelInspector<Element> insp = new MirroringModelInspector(env.elements(), env.types());
 
         StructuralMatcher matcher = Classif.compile(recipe);
 
-        return matcher.test(TestClass, insp);
+        return matcher.test(el, insp);
     }
 }

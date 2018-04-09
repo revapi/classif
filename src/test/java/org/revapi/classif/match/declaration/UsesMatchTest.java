@@ -54,7 +54,7 @@ class UsesMatchTest {
                 .stream().filter(m -> m.getSimpleName().contentEquals("userMethod")).findFirst().get();
 
 
-        MirroringModelInspector insp = new MirroringModelInspector(environment.elements()) {
+        MirroringModelInspector insp = new MirroringModelInspector(environment.elements(), environment.types()) {
             @Override
             public Set<Element> getUses(Element model) {
                 return ElementFilter.methodsIn(model.getEnclosedElements()).stream()
@@ -78,7 +78,7 @@ class UsesMatchTest {
                 .stream().filter(m -> m.getSimpleName().contentEquals("cycleMethod")).findFirst().get();
 
 
-        MirroringModelInspector insp = new MirroringModelInspector(environment.elements()) {
+        MirroringModelInspector insp = new MirroringModelInspector(environment.elements(), environment.types()) {
             @Override
             public Set<Element> getUses(Element model) {
                 return ElementFilter.methodsIn(model.getEnclosedElements()).stream()

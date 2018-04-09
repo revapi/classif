@@ -71,7 +71,8 @@ class TypeParametersMatchTest {
     }
 
     private boolean doTest(TypeMirror t, TypeParametersMatch match) {
-        MatchContext<Element> ctx = new MatchContext<>(new MirroringModelInspector(environment.elements()), emptyMap());
+        MatchContext<Element> ctx = new MatchContext<>(new MirroringModelInspector(environment.elements(),
+                environment.types()), emptyMap());
         return match.testInstance(t, ctx);
     }
 }

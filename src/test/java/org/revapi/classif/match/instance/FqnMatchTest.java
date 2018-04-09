@@ -68,7 +68,8 @@ class FqnMatchTest {
         TypeElement testClass = fqnClasses.elements().getTypeElement("fqn.pkg.TestClass");
 
         boolean matches = matcher.test(testClass, testClass.asType(),
-                new MatchContext<>(new MirroringModelInspector(fqnClasses.elements()), Collections.emptyMap()));
+                new MatchContext<>(new MirroringModelInspector(fqnClasses.elements(), fqnClasses.types()),
+                        Collections.emptyMap()));
 
         assertEquals(expectedMatch, matches);
     }

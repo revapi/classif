@@ -90,7 +90,7 @@ class TypeReferenceMatchTest {
 
     @BeforeAll
     void setup() {
-        ctx = new MatchContext<>(new MirroringModelInspector(environment.elements()), emptyMap());
+        ctx = new MatchContext<>(new MirroringModelInspector(environment.elements(), environment.types()), emptyMap());
         TestClass = environment.elements().getTypeElement("TestClass");
         Generic = environment.elements().getTypeElement("TestClass.Generic");
         Wildcard = environment.elements().getTypeElement("TestClass.Wildcard");

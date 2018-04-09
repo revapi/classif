@@ -20,9 +20,10 @@ import java.util.List;
 
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.ModelMatch;
-import org.revapi.classif.match.declaration.ModifiersMatch;
-import org.revapi.classif.match.declaration.TypeKindMatch;
 import org.revapi.classif.match.declaration.AnnotationsMatch;
+import org.revapi.classif.match.declaration.ModifiersMatch;
+import org.revapi.classif.match.declaration.TypeConstraintsMatch;
+import org.revapi.classif.match.declaration.TypeKindMatch;
 import org.revapi.classif.match.instance.FqnMatch;
 import org.revapi.classif.match.instance.TypeParametersMatch;
 
@@ -30,6 +31,7 @@ public class TypeDefinitionStatement extends StatementStatement {
     private final TypeKindMatch typeKind;
     private final FqnMatch fqn;
     private final TypeParametersMatch typeParameters;
+    private final TypeConstraintsMatch constraints;
     private final boolean negation;
 
     public TypeDefinitionStatement(String definedVariable, List<String> referencedVariables,
@@ -38,13 +40,20 @@ public class TypeDefinitionStatement extends StatementStatement {
             TypeKindMatch typeKind,
             FqnMatch fqn,
             TypeParametersMatch typeParameters,
+            TypeConstraintsMatch constraints,
             boolean negation,
             boolean isMatch) {
         super(definedVariable, referencedVariables, annotations, modifiers, isMatch);
         this.typeKind = typeKind;
         this.fqn = fqn;
         this.typeParameters = typeParameters;
+        this.constraints = constraints;
         this.negation = negation;
+    }
+
+    @Override
+    public boolean isDecidableInPlace() {
+        return super.isDecidableInPlace() && (constraints == null || constraints.isDecidableInPlace());
     }
 
     @Override
@@ -59,6 +68,10 @@ public class TypeDefinitionStatement extends StatementStatement {
 
                 if (typeParameters != null) {
                     ret = typeParameters.test(type, ctx);
+                }
+
+                if (constraints != null) {
+                    ret = constraints.test(type, ctx);
                 }
 
                 return negation != ret;

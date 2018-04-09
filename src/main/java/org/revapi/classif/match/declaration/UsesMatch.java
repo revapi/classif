@@ -39,7 +39,7 @@ import org.revapi.classif.ModelInspector;
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.instance.TypeReferenceMatch;
 
-public class UsesMatch extends DeclarationMatch {
+public final class UsesMatch extends DeclarationMatch {
 
     private final boolean onlyDirect;
     private final TypeReferenceMatch type;

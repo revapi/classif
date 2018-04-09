@@ -59,7 +59,7 @@ class ModifiersMatchTest {
         TypeElement testClass = classes.elements().getTypeElement("modifiers.TestClass");
 
         boolean matches = statement.test(testClass, testClass.asType(),
-                new MatchContext<>(new MirroringModelInspector(classes.elements()), Collections.emptyMap()));
+                new MatchContext<>(new MirroringModelInspector(classes.elements(), classes.types()), Collections.emptyMap()));
 
         assertEquals(expectedMatch, matches);
     }
