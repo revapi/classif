@@ -21,12 +21,14 @@ import java.util.List;
 
 import org.revapi.classif.match.declaration.ModifiersMatch;
 import org.revapi.classif.match.declaration.AnnotationsMatch;
+import org.revapi.classif.util.Nullable;
 
 public abstract class StatementStatement extends AbstractStatement {
     protected final AnnotationsMatch annotations;
     protected final ModifiersMatch modifiers;
 
-    protected StatementStatement(String definedVariable, List<String> referencedVariables,
+    @SuppressWarnings("WeakerAccess")
+    protected StatementStatement(@Nullable String definedVariable, List<String> referencedVariables,
             AnnotationsMatch annotations, ModifiersMatch modifiers, boolean isMatch) {
         super(definedVariable, referencedVariables, Collections.emptyList(), isMatch);
         this.annotations = annotations;

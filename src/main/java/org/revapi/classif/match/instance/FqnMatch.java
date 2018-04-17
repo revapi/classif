@@ -30,11 +30,12 @@ import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.NameMatch;
 import org.revapi.classif.util.Glob;
 import org.revapi.classif.util.Globbed;
+import org.revapi.classif.util.Nullable;
 
 public final class FqnMatch extends TypeInstanceMatch implements Globbed {
     private final boolean matchAny;
     private final boolean matchAll;
-    private final Glob<NameMatch> glob;
+    private final @Nullable Glob<NameMatch> glob;
 
     public FqnMatch(List<NameMatch> names) {
         matchAny = names.size() == 1 && names.get(0).isMatchAny();

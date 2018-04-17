@@ -41,10 +41,11 @@ import javax.lang.model.util.SimpleTypeVisitor8;
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.ModelMatch;
 import org.revapi.classif.util.Globbed;
+import org.revapi.classif.util.Nullable;
 
 public final class SingleTypeReferenceMatch extends TypeInstanceMatch implements Globbed {
     private final FqnMatch fullyQualifiedName;
-    private final TypeParametersMatch typeParameters;
+    private final @Nullable TypeParametersMatch typeParameters;
     private final String variable;
     private final boolean negation;
     private final int arrayDimension;
@@ -80,7 +81,7 @@ public final class SingleTypeReferenceMatch extends TypeInstanceMatch implements
         }
     };
 
-    public SingleTypeReferenceMatch(FqnMatch fullyQualifiedName, TypeParametersMatch typeParameters,
+    public SingleTypeReferenceMatch(FqnMatch fullyQualifiedName, @Nullable TypeParametersMatch typeParameters,
             String variable, boolean negation, int arrayDimension) {
         this.fullyQualifiedName = fullyQualifiedName;
         this.typeParameters = typeParameters;

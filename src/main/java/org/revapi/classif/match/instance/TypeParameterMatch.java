@@ -27,12 +27,13 @@ import javax.lang.model.type.WildcardType;
 
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.util.Globbed;
+import org.revapi.classif.util.Nullable;
 
 public class TypeParameterMatch extends TypeInstanceMatch implements Globbed {
-    private final TypeParameterWildcardMatch wildcard;
+    private final @Nullable TypeParameterWildcardMatch wildcard;
     private final List<TypeReferenceMatch> bounds;
 
-    public TypeParameterMatch(TypeParameterWildcardMatch wildcard, List<TypeReferenceMatch> bounds) {
+    public TypeParameterMatch(@Nullable TypeParameterWildcardMatch wildcard, List<TypeReferenceMatch> bounds) {
         this.wildcard = wildcard;
         this.bounds = bounds;
     }

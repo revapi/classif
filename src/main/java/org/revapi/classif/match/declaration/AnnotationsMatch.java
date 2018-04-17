@@ -37,5 +37,4 @@ public final class AnnotationsMatch extends DeclarationMatch {
                 (res, next) -> res && e.getAnnotationMirrors().stream().anyMatch(a -> next.test(a, matchContext)),
                 Boolean::logicalAnd);
     }
-
 }

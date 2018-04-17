@@ -26,21 +26,22 @@ import org.revapi.classif.match.declaration.TypeConstraintsMatch;
 import org.revapi.classif.match.declaration.TypeKindMatch;
 import org.revapi.classif.match.instance.FqnMatch;
 import org.revapi.classif.match.instance.TypeParametersMatch;
+import org.revapi.classif.util.Nullable;
 
 public class TypeDefinitionStatement extends StatementStatement {
     private final TypeKindMatch typeKind;
     private final FqnMatch fqn;
-    private final TypeParametersMatch typeParameters;
-    private final TypeConstraintsMatch constraints;
+    private final @Nullable TypeParametersMatch typeParameters;
+    private final @Nullable TypeConstraintsMatch constraints;
     private final boolean negation;
 
-    public TypeDefinitionStatement(String definedVariable, List<String> referencedVariables,
+    public TypeDefinitionStatement(@Nullable String definedVariable, List<String> referencedVariables,
             AnnotationsMatch annotations,
             ModifiersMatch modifiers,
             TypeKindMatch typeKind,
             FqnMatch fqn,
-            TypeParametersMatch typeParameters,
-            TypeConstraintsMatch constraints,
+            @Nullable TypeParametersMatch typeParameters,
+            @Nullable TypeConstraintsMatch constraints,
             boolean negation,
             boolean isMatch) {
         super(definedVariable, referencedVariables, annotations, modifiers, isMatch);

@@ -21,6 +21,7 @@ import java.util.List;
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
 
+import org.revapi.classif.util.Nullable;
 import org.revapi.classif.util.TreeNode;
 import org.revapi.classif.match.Match;
 import org.revapi.classif.match.MatchContext;
@@ -32,7 +33,7 @@ public abstract class AbstractStatement extends TreeNode<AbstractStatement> {
     private final List<Match> innerMatchers;
     private final boolean isMatch;
 
-    protected AbstractStatement(String definedVariable, List<String> referencedVariables,
+    protected AbstractStatement(@Nullable String definedVariable, List<String> referencedVariables,
             List<Match> innerMatchers, boolean isMatch) {
         this.definedVariable = definedVariable;
         this.referencedVariables = referencedVariables;
