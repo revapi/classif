@@ -18,7 +18,7 @@ package org.revapi.classif.match;
 
 import java.util.regex.Pattern;
 
-import org.revapi.classif.match.util.Globbed;
+import org.revapi.classif.util.Globbed;
 
 public abstract class NameMatch implements Globbed {
     private NameMatch() {

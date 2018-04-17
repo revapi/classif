@@ -40,7 +40,7 @@ import javax.lang.model.util.SimpleTypeVisitor8;
 
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.ModelMatch;
-import org.revapi.classif.match.util.Globbed;
+import org.revapi.classif.util.Globbed;
 
 public final class SingleTypeReferenceMatch extends TypeInstanceMatch implements Globbed {
     private final FqnMatch fullyQualifiedName;

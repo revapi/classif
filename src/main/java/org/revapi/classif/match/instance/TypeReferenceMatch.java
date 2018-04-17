@@ -21,7 +21,7 @@ import java.util.List;
 import javax.lang.model.type.TypeMirror;
 
 import org.revapi.classif.match.MatchContext;
-import org.revapi.classif.match.util.Globbed;
+import org.revapi.classif.util.Globbed;
 
 public final class TypeReferenceMatch extends TypeInstanceMatch implements Globbed {
     private final List<SingleTypeReferenceMatch> matches;

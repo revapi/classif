@@ -28,7 +28,7 @@ import javax.lang.model.util.ElementFilter;
 
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.instance.TypeReferenceMatch;
-import org.revapi.classif.match.util.Glob;
+import org.revapi.classif.util.Glob;
 
 public final class AnnotationMatch {
     private final boolean negation;

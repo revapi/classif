@@ -26,7 +26,7 @@ import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.WildcardType;
 
 import org.revapi.classif.match.MatchContext;
-import org.revapi.classif.match.util.Globbed;
+import org.revapi.classif.util.Globbed;
 
 public class TypeParameterMatch extends TypeInstanceMatch implements Globbed {
     private final TypeParameterWildcardMatch wildcard;

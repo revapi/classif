@@ -23,7 +23,7 @@ import javax.lang.model.element.ExecutableElement;
 
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.NameMatch;
-import org.revapi.classif.match.util.Globbed;
+import org.revapi.classif.util.Globbed;
 
 public final class AnnotationAttributeMatch implements Globbed {
     private final boolean isAny;

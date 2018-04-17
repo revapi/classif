@@ -20,12 +20,12 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
-import static org.revapi.classif.match.util.Operator.EQ;
-import static org.revapi.classif.match.util.Operator.GE;
-import static org.revapi.classif.match.util.Operator.GT;
-import static org.revapi.classif.match.util.Operator.LE;
-import static org.revapi.classif.match.util.Operator.LT;
-import static org.revapi.classif.match.util.Operator.NE;
+import static org.revapi.classif.util.Operator.EQ;
+import static org.revapi.classif.util.Operator.GE;
+import static org.revapi.classif.util.Operator.GT;
+import static org.revapi.classif.util.Operator.LE;
+import static org.revapi.classif.util.Operator.LT;
+import static org.revapi.classif.util.Operator.NE;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -62,7 +62,7 @@ import org.revapi.classif.match.instance.FqnMatch;
 import org.revapi.classif.match.instance.SingleTypeReferenceMatch;
 import org.revapi.classif.match.instance.TypeParametersMatch;
 import org.revapi.classif.match.instance.TypeReferenceMatch;
-import org.revapi.classif.match.util.Operator;
+import org.revapi.classif.util.Operator;
 import org.revapi.classif.statement.AbstractStatement;
 import org.revapi.classif.statement.GenericStatement;
 import org.revapi.classif.statement.StatementStatement;

@@ -21,7 +21,7 @@ import java.util.List;
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
 
-import org.revapi.classif.TreeNode;
+import org.revapi.classif.util.TreeNode;
 import org.revapi.classif.match.Match;
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.ModelMatch;
@@ -41,7 +41,7 @@ public abstract class AbstractStatement extends TreeNode<AbstractStatement> {
     }
 
     public boolean isDecidableInPlace() {
-        return getReferencedVariables().isEmpty();
+        return  getParent() == null && getReferencedVariables().isEmpty() && getChildren().isEmpty();
     }
 
     public String getDefinedVariable() {

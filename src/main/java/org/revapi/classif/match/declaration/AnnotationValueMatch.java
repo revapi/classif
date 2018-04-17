@@ -16,8 +16,8 @@
  */
 package org.revapi.classif.match.declaration;
 
-import static org.revapi.classif.match.util.Operator.EQ;
-import static org.revapi.classif.match.util.Operator.NE;
+import static org.revapi.classif.util.Operator.EQ;
+import static org.revapi.classif.util.Operator.NE;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -33,9 +33,9 @@ import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.NameMatch;
 import org.revapi.classif.match.instance.FqnMatch;
 import org.revapi.classif.match.instance.TypeReferenceMatch;
-import org.revapi.classif.match.util.Glob;
-import org.revapi.classif.match.util.Globbed;
-import org.revapi.classif.match.util.Operator;
+import org.revapi.classif.util.Glob;
+import org.revapi.classif.util.Globbed;
+import org.revapi.classif.util.Operator;
 
 public abstract class AnnotationValueMatch implements Globbed {
     final Operator operator;

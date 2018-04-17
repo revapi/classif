@@ -26,7 +26,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.SimpleElementVisitor8;
 
-import org.revapi.classif.TreeNode;
+import org.revapi.classif.util.TreeNode;
 
 public abstract class ModelMatch extends TreeNode<ModelMatch> {
     private final IdentityHashMap<Object, Boolean> decisionCache = new IdentityHashMap<>();

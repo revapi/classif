@@ -13,7 +13,7 @@ import javax.lang.model.type.TypeMirror;
 import org.revapi.classif.ModelInspector;
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.instance.TypeReferenceMatch;
-import org.revapi.classif.match.util.Glob;
+import org.revapi.classif.util.Glob;
 
 public final class ImplementsMatch extends DeclarationMatch {
     private final boolean onlyDirect;

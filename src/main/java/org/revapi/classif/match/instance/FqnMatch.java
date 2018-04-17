@@ -28,8 +28,8 @@ import javax.lang.model.type.TypeMirror;
 
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.NameMatch;
-import org.revapi.classif.match.util.Glob;
-import org.revapi.classif.match.util.Globbed;
+import org.revapi.classif.util.Glob;
+import org.revapi.classif.util.Globbed;
 
 public final class FqnMatch extends TypeInstanceMatch implements Globbed {
     private final boolean matchAny;
