@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.revapi.classif.Classif;
+import org.revapi.classif.MatchingProgress;
 import org.revapi.classif.MirroringModelInspector;
 import org.revapi.classif.ModelInspector;
 import org.revapi.classif.StructuralMatcher;
@@ -110,6 +111,6 @@ class TypeDefinitionStatementTest {
 
         StructuralMatcher matcher = Classif.compile(recipe);
 
-        return matcher.test(el, insp);
+        return matcher.start(insp).test(el).toBoolean(false);
     }
 }

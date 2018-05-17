@@ -34,7 +34,7 @@ public final class GenericStatement extends StatementStatement {
 
     public GenericStatement(@Nullable String definedVariable, List<String> referencedVariables,
             AnnotationsMatch annotations, ModifiersMatch modifiers,
-            boolean isMatch, boolean negation, UsesMatch usesMatch) {
+            boolean isMatch, boolean negation, @Nullable UsesMatch usesMatch) {
         super(definedVariable, referencedVariables, annotations, modifiers, isMatch);
         this.negation = negation;
         this.usesMatch = usesMatch;

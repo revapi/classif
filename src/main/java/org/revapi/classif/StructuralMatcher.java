@@ -16,59 +16,28 @@
  */
 package org.revapi.classif;
 
-import static java.util.Collections.emptyList;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import org.revapi.classif.match.MatchContext;
-import org.revapi.classif.match.ModelMatch;
 import org.revapi.classif.statement.AbstractStatement;
+import org.revapi.classif.util.DependencyGraph;
+import org.revapi.classif.util.MatchNode;
+import org.revapi.classif.util.MatchTree;
+import org.revapi.classif.util.ProcessedMatch;
 
 /**
  * The main entry point for matching the elements against a recipe. An instance of this class can be obtained from
  * {@link Classif#compile(String)}.
  *
- * @see #test(Object, ModelInspector)
+ * @see #start(ModelInspector)
  */
 public final class StructuralMatcher {
-    private final List<ModelMatch> matchers;
-    private final Map<String, ModelMatch> variables;
     private final boolean decidableInPlace;
+    private final ProcessedMatch matchTree;
 
     StructuralMatcher(List<String> namedMatches, List<AbstractStatement> statements) {
-        this.matchers = new ArrayList<>();
-        this.variables = new HashMap<>();
+        this.matchTree = MatchTree.unwind(new DependencyGraph(namedMatches, statements));
 
-        this.decidableInPlace = initMatchEvaluators(null, namedMatches == null ? emptyList() : namedMatches, statements);
-    }
-
-    private boolean initMatchEvaluators(ModelMatch parentMatcher, List<String> namedMatches,
-            Collection<AbstractStatement> statements) {
-
-        boolean decidableInPlace = true;
-
-        for (AbstractStatement st : statements) {
-            ModelMatch stMatcher = st.createMatcher();
-            stMatcher.setParent(parentMatcher);
-
-            if (st.isMatch() || namedMatches.contains(st.getDefinedVariable())) {
-                this.matchers.add(stMatcher);
-            }
-
-            if (st.getDefinedVariable() != null) {
-                this.variables.put(st.getDefinedVariable(), stMatcher);
-            }
-
-            decidableInPlace = decidableInPlace && st.isDecidableInPlace();
-
-            decidableInPlace = initMatchEvaluators(stMatcher, namedMatches, st.getChildren()) && decidableInPlace;
-        }
-
-        return decidableInPlace;
+        this.decidableInPlace = determineInPlaceDecidability(matchTree);
     }
 
     /**
@@ -79,20 +48,14 @@ public final class StructuralMatcher {
         return decidableInPlace;
     }
 
-    /**
-     * Tests whether this matcher matches given model element.
-     *
-     * @param model     the model representing some Java construct
-     * @param inspector the inspector of the model elements
-     * @param <M>       the type of the model
-     * @return a match describing the result of the test
-     */
-    public <M> boolean test(M model, ModelInspector<M> inspector) {
-        MatchContext<M> ctx = new MatchContext<>(inspector, variables);
+    public <M> MatchingProgress<M> start(ModelInspector<M> inspector) {
+        MatchNode<M> matcher = matchTree.freeze(inspector);
 
-        return matchers.stream().reduce(
-                false,
-                (prior, unevaluated) -> prior || unevaluated.test(model, ctx),
-                (a, b) -> a || b);
+        return new MatchingProgress<>(matcher);
+    }
+
+    private static boolean determineInPlaceDecidability(ProcessedMatch tree) {
+        // TODO Implement
+        return true;
     }
 }

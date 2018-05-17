@@ -493,6 +493,6 @@ class GenericStatementTest {
 
         StructuralMatcher matcher = Classif.compile(recipe);
 
-        return matcher.test(expected, insp);
+        return matcher.start(insp).test(expected).toBoolean(false);
     }
 }
