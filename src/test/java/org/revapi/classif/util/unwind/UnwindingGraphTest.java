@@ -1,8 +1,12 @@
 package org.revapi.classif.util.unwind;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -22,14 +26,14 @@ class UnwindingGraphTest {
         n2.out().add(n3);
         n3.in().add(n2);
 
-        Set<Node<Void>> nodes = new HashSet<>();
+        List<Node<Void>> nodes = new ArrayList<>();
         nodes.add(n1);
         nodes.add(n2);
         nodes.add(n3);
 
         UnwindingGraph<Void> g = new UnwindingGraph<>(nodes);
 
-        Set<Node<Void>> newNodes = g.unwind(n -> null);
+        List<Node<Void>> newNodes = g.unwind(n -> null);
 
         assertEquals(nodes, newNodes);
     }
@@ -49,14 +53,14 @@ class UnwindingGraphTest {
         n3.out().add(n2);
         n3.out().add(n1);
 
-        Set<Node<Integer>> nodes = new HashSet<>();
+        List<Node<Integer>> nodes = new ArrayList<>();
         nodes.add(n1);
         nodes.add(n2);
         nodes.add(n3);
 
-        UnwindingGraph<Integer> g = new UnwindingGraph<>(new HashSet<>(nodes));
+        UnwindingGraph<Integer> g = new UnwindingGraph<>(new ArrayList<>(nodes));
 
-        Set<Node<Integer>> newNodes = g.unwind(Node::getObject);
+        List<Node<Integer>> newNodes = g.unwind(Node::getObject);
         Set<SplitGroup<Integer>> groups = bySplitGroups(newNodes);
 
         assertEquals(3, groups.size());
@@ -70,11 +74,11 @@ class UnwindingGraphTest {
         assertEquals(1, threes.getSplits().size());
 
         for (Node<Integer> n : ones.getSplits()) {
-            assertEquals(1, n.out().size());
+            assertTrue(n.out().size() <= 1);
         }
 
         for (Node<Integer> n : twos.getSplits()) {
-            assertEquals(1, n.out().size());
+            assertTrue(n.out().size() <= 1);
         }
     }
 
@@ -85,26 +89,22 @@ class UnwindingGraphTest {
         n1.out().add(n1);
         n1.in().add(n1);
 
-        Set<Node<Integer>> nodes = new HashSet<>();
+        List<Node<Integer>> nodes = new ArrayList<>();
         nodes.add(n1);
 
-        UnwindingGraph<Integer> g = new UnwindingGraph<>(new HashSet<>(nodes));
+        UnwindingGraph<Integer> g = new UnwindingGraph<>(new ArrayList<>(nodes));
 
-        Set<Node<Integer>> newNodes = g.unwind(Node::getObject);
+        List<Node<Integer>> newNodes = g.unwind(Node::getObject);
         Set<SplitGroup<Integer>> groups = bySplitGroups(newNodes);
 
-        assertEquals(3, groups.size());
+        assertEquals(1, groups.size());
 
         SplitGroup<Integer> ones = firstWithObject(1, groups);
-        SplitGroup<Integer> twos = firstWithObject(2, groups);
-        SplitGroup<Integer> threes = firstWithObject(3, groups);
 
-        assertEquals(2, ones.getSplits().size());
-        assertEquals(2, twos.getSplits().size());
-        assertEquals(2, threes.getSplits().size());
+        assertEquals(3, ones.getSplits().size());
     }
 
-    private static <T> Set<SplitGroup<T>> bySplitGroups(Set<Node<T>> nodes) {
+    private static <T> Set<SplitGroup<T>> bySplitGroups(Collection<Node<T>> nodes) {
         Set<SplitGroup<T>> ret = new HashSet<>();
         nodes.forEach(n -> ret.add(n.getSplitGroup()));
         return ret;

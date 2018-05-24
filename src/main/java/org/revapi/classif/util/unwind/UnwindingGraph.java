@@ -17,13 +17,13 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class UnwindingGraph<T> {
-    private final Set<Node<T>> nodes;
+    private final List<Node<T>> nodes;
 
-    public UnwindingGraph(Set<Node<T>> graph) {
+    public UnwindingGraph(List<Node<T>> graph) {
         this.nodes = graph;
     }
 
-    public Set<Node<T>> unwind(Function<Node<T>, T> splitFunction) {
+    public List<Node<T>> unwind(Function<Node<T>, T> splitFunction) {
         Set<Cycle<T>> cycles = new HashSet<>();
 
         detectCycles(cycles);
@@ -37,17 +37,22 @@ public class UnwindingGraph<T> {
         Cycle<T> cyc = tmp;
 
         while (cyc != null) {
-            // ok, we're looking at a cycle here. First we need to find a node in the cycle that has not been split yet
-            // and split it...
-            int splitIdx = -1;
-            for (int i = 0; i < cyc.size(); ++i) {
-                if (cyc.get(i).getSplitGroup().isUnsplit()) {
-                    splitIdx = i;
-                    break;
+            if (cyc.size() == 1) {
+                // a self loop
+                splitSelfLoop(cyc.get(0), splitFunction);
+            } else {
+                // ok, we're looking at a cycle here. First we need to find a node in the cycle that has not been split yet
+                // and split it...
+                int splitIdx = -1;
+                for (int i = 0; i < cyc.size(); ++i) {
+                    if (cyc.get(i).getSplitGroup().isUnsplit()) {
+                        splitIdx = i;
+                        break;
+                    }
                 }
-            }
 
-            splitNode(cyc.get(splitIdx), cyc, splitFunction);
+                splitNode(cyc.get(splitIdx), cyc, splitFunction);
+            }
 
             // XXX is there a more efficient way to rebuild the list of the cycles after a single split?
             cycles.clear();
@@ -59,6 +64,27 @@ public class UnwindingGraph<T> {
                 .collect(Collectors.toList()));
 
         return nodes;
+    }
+
+    private void splitSelfLoop(Node<T> node, Function<Node<T>, T> splitFunction) {
+        Node<T> start = new Node<>(splitFunction.apply(node), node.getSplitGroup());
+        Node<T> intermediary = new Node<>(splitFunction.apply(node), node.getSplitGroup());
+        Node<T> end = new Node<>(splitFunction.apply(node), node.getSplitGroup());
+
+        nodes.remove(node);
+        nodes.add(start);
+        nodes.add(intermediary);
+        nodes.add(end);
+
+        node.getSplitGroup().getSplits().remove(node);
+        node.getSplitGroup().getSplits().add(start);
+        node.getSplitGroup().getSplits().add(intermediary);
+        node.getSplitGroup().getSplits().add(end);
+
+        start.out().add(intermediary);
+        intermediary.in().add(start);
+        intermediary.out().add(end);
+        end.in().add(intermediary);
     }
 
     private void splitNode(Node<T> node, List<Node<T>> cycle, Function<Node<T>, T> splitFunction) {
