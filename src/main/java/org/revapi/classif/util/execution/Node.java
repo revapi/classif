@@ -1,9 +1,9 @@
-package org.revapi.classif.util.unwind;
+package org.revapi.classif.util.execution;
 
 import java.util.HashSet;
 import java.util.Set;
 
-final class Node<T> {
+public final class Node<T> implements Cloneable {
     private final T object;
     private final Set<Node<T>> in = new HashSet<>(4);
     private final Set<Node<T>> out = new HashSet<>(4);
@@ -19,20 +19,29 @@ final class Node<T> {
         this.group = group;
     }
 
-    T getObject() {
+    public T getObject() {
         return object;
     }
 
-    SplitGroup<T> getSplitGroup() {
+    public SplitGroup<T> getSplitGroup() {
         return group;
     }
 
-    Set<Node<T>> in() {
+    public Set<Node<T>> in() {
         return in;
     }
 
-    Set<Node<T>> out() {
+    public Set<Node<T>> out() {
         return out;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Node<T> clone() {
+        try {
+            return (Node<T>) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError("Cloneable is implemented by failed.");
+        }
     }
 
     @Override

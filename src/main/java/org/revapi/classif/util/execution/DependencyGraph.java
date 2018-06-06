@@ -1,33 +1,31 @@
-package org.revapi.classif.util;
+package org.revapi.classif.util.execution;
 
 import static java.util.Collections.emptyList;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.revapi.classif.match.ModelMatch;
 import org.revapi.classif.statement.AbstractStatement;
 
 public final class DependencyGraph {
-    private final Collection<Node<UnprocessedMatch>> allNodes;
+    private final Collection<Node<MatchExecutionContext>> allNodes;
 
     public DependencyGraph(List<String> namedMatches, List<AbstractStatement> statements) {
         allNodes = initMatches(namedMatches == null ? emptyList() : namedMatches,
                 statements, new HashMap<>(), new HashMap<>());
     }
 
-    public Collection<Node<UnprocessedMatch>> getAllNodes() {
+    public Collection<Node<MatchExecutionContext>> getAllNodes() {
         return allNodes;
     }
 
-    private static Collection<Node<UnprocessedMatch>> initMatches(List<String> namedMatches,
-            Collection<AbstractStatement> statements, Map<String, UnprocessedMatch> definers,
-            Map<String, List<UnprocessedMatch>> referencers) {
+    private static Collection<Node<MatchExecutionContext>> initMatches(List<String> namedMatches,
+            Collection<AbstractStatement> statements, Map<String, MatchExecutionContext> definers,
+            Map<String, List<MatchExecutionContext>> referencers) {
 
         collectVariables(namedMatches, statements, definers, referencers);
 
@@ -35,12 +33,12 @@ public final class DependencyGraph {
     }
 
     private static void collectVariables(List<String> namedMatches, Collection<AbstractStatement> statements,
-            Map<String, UnprocessedMatch> definers, Map<String, List<UnprocessedMatch>> referencers) {
+            Map<String, MatchExecutionContext> definers, Map<String, List<MatchExecutionContext>> referencers) {
 
         for (AbstractStatement st : statements) {
             ModelMatch stMatcher = st.createMatcher();
 
-            UnprocessedMatch match = new UnprocessedMatch(st.getDefinedVariable(),
+            MatchExecutionContext match = new MatchExecutionContext(st.getDefinedVariable(),
                     st.getReferencedVariables(), st.isMatch() || namedMatches.contains(st.getDefinedVariable()),
                     stMatcher);
 
@@ -55,33 +53,21 @@ public final class DependencyGraph {
         }
     }
 
-    private static Collection<Node<UnprocessedMatch>> createGraph(Map<String, UnprocessedMatch> definers,
-            Map<String, List<UnprocessedMatch>> referencers) {
+    private static Collection<Node<MatchExecutionContext>> createGraph(Map<String, MatchExecutionContext> definers,
+            Map<String, List<MatchExecutionContext>> referencers) {
 
-        Map<UnprocessedMatch, Node<UnprocessedMatch>> cache = new HashMap<>();
+        Map<MatchExecutionContext, Node<MatchExecutionContext>> cache = new HashMap<>();
 
         definers.forEach((name, match) -> {
-            Node<UnprocessedMatch> node = cache.computeIfAbsent(match, Node::new);
+            Node<MatchExecutionContext> node = cache.computeIfAbsent(match, Node::new);
 
             referencers.getOrDefault(name, emptyList()).forEach(ref -> {
-                Node<UnprocessedMatch> refNode = cache.computeIfAbsent(ref, Node::new);
-                node.out.add(refNode);
-                refNode.in.add(node);
+                Node<MatchExecutionContext> refNode = cache.computeIfAbsent(ref, Node::new);
+                node.out().add(refNode);
+                refNode.in().add(node);
             });
         });
 
         return cache.values();
-    }
-
-    static final class Node<T> {
-        final T node;
-        final Set<Node<T>> out;
-        final Set<Node<T>> in;
-
-        Node(T node) {
-            this.node = node;
-            out = new HashSet<>();
-            in = new HashSet<>();
-        }
     }
 }

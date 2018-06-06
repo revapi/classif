@@ -1,4 +1,4 @@
-package org.revapi.classif.util.unwind;
+package org.revapi.classif.util.execution;
 
 import static java.util.Collections.emptySet;
 
@@ -13,17 +13,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class UnwindingGraph<T> {
-    private final List<Node<T>> nodes;
+class UnwindingGraph<T> {
+    private final Collection<Node<T>> nodes;
 
-    public UnwindingGraph(List<Node<T>> graph) {
+    public UnwindingGraph(Collection<Node<T>> graph) {
         this.nodes = graph;
     }
 
-    public List<Node<T>> unwind(Function<Node<T>, T> splitFunction) {
+    public Collection<Node<T>> unwind() {
         Set<Cycle<T>> cycles = new HashSet<>();
 
         detectCycles(cycles);
@@ -39,7 +38,7 @@ public class UnwindingGraph<T> {
         while (cyc != null) {
             if (cyc.size() == 1) {
                 // a self loop
-                splitSelfLoop(cyc.get(0), splitFunction);
+                splitSelfLoop(cyc.get(0));
             } else {
                 // ok, we're looking at a cycle here. First we need to find a node in the cycle that has not been split yet
                 // and split it...
@@ -51,7 +50,7 @@ public class UnwindingGraph<T> {
                     }
                 }
 
-                splitNode(cyc.get(splitIdx), cyc, splitFunction);
+                splitNode(cyc.get(splitIdx), cyc);
             }
 
             // XXX is there a more efficient way to rebuild the list of the cycles after a single split?
@@ -60,16 +59,16 @@ public class UnwindingGraph<T> {
             cyc = firstOrNull(cycles);
         }
 
-        nodes.addAll(nodes.stream().flatMap(n -> restoreOutCardinality(n, splitFunction).stream())
+        nodes.addAll(nodes.stream().flatMap(n -> restoreOutCardinality(n).stream())
                 .collect(Collectors.toList()));
 
         return nodes;
     }
 
-    private void splitSelfLoop(Node<T> node, Function<Node<T>, T> splitFunction) {
-        Node<T> start = new Node<>(splitFunction.apply(node), node.getSplitGroup());
-        Node<T> intermediary = new Node<>(splitFunction.apply(node), node.getSplitGroup());
-        Node<T> end = new Node<>(splitFunction.apply(node), node.getSplitGroup());
+    private void splitSelfLoop(Node<T> node) {
+        Node<T> start = node.clone();
+        Node<T> intermediary = node.clone();
+        Node<T> end = node.clone();
 
         nodes.remove(node);
         nodes.add(start);
@@ -87,10 +86,10 @@ public class UnwindingGraph<T> {
         end.in().add(intermediary);
     }
 
-    private void splitNode(Node<T> node, List<Node<T>> cycle, Function<Node<T>, T> splitFunction) {
+    private void splitNode(Node<T> node, List<Node<T>> cycle) {
         //split the node in two, sharing the same SplitGroup. The original node is removed.
-        Node<T> inheritIncoming = new Node<>(splitFunction.apply(node), node.getSplitGroup());
-        Node<T> inheritOutGoing = new Node<>(splitFunction.apply(node), node.getSplitGroup());
+        Node<T> inheritIncoming = node.clone();
+        Node<T> inheritOutGoing = node.clone();
 
         nodes.add(inheritIncoming);
         nodes.add(inheritOutGoing);
@@ -127,7 +126,7 @@ public class UnwindingGraph<T> {
         }
     }
 
-    private Set<Node<T>> restoreOutCardinality(Node<T> node, Function<Node<T>, T> splitFunction) {
+    private Set<Node<T>> restoreOutCardinality(Node<T> node) {
         int newRequired = 0;
         Map<SplitGroup<T>, List<Node<T>>> outHistogram = new IdentityHashMap<>();
         for (Node<T> out : node.out()) {
@@ -157,7 +156,7 @@ public class UnwindingGraph<T> {
             }
 
             for (int i = 1; i < outInSameSplitGroup.size(); ++i) {
-                Node<T> copy = new Node<>(splitFunction.apply(node), node.getSplitGroup());
+                Node<T> copy = node.clone();
                 copy.getSplitGroup().getSplits().add(copy);
 
                 ret.add(copy);

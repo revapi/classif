@@ -1,4 +1,4 @@
-package org.revapi.classif.util;
+package org.revapi.classif.util.execution;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.revapi.classif.match.declaration.AnnotationsMatch;
 import org.revapi.classif.match.declaration.ModifiersMatch;
 import org.revapi.classif.statement.GenericStatement;
+import org.revapi.classif.util.Nullable;
 
 public class DependencyGraphTest {
     @Test

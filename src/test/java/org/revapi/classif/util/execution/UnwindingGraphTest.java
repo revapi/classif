@@ -1,4 +1,4 @@
-package org.revapi.classif.util.unwind;
+package org.revapi.classif.util.execution;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 class UnwindingGraphTest {
@@ -33,7 +32,7 @@ class UnwindingGraphTest {
 
         UnwindingGraph<Void> g = new UnwindingGraph<>(nodes);
 
-        List<Node<Void>> newNodes = g.unwind(n -> null);
+        Collection<Node<Void>> newNodes = g.unwind();
 
         assertEquals(nodes, newNodes);
     }
@@ -60,7 +59,7 @@ class UnwindingGraphTest {
 
         UnwindingGraph<Integer> g = new UnwindingGraph<>(new ArrayList<>(nodes));
 
-        List<Node<Integer>> newNodes = g.unwind(Node::getObject);
+        Collection<Node<Integer>> newNodes = g.unwind();
         Set<SplitGroup<Integer>> groups = bySplitGroups(newNodes);
 
         assertEquals(3, groups.size());
@@ -94,7 +93,7 @@ class UnwindingGraphTest {
 
         UnwindingGraph<Integer> g = new UnwindingGraph<>(new ArrayList<>(nodes));
 
-        List<Node<Integer>> newNodes = g.unwind(Node::getObject);
+        Collection<Node<Integer>> newNodes = g.unwind();
         Set<SplitGroup<Integer>> groups = bySplitGroups(newNodes);
 
         assertEquals(1, groups.size());

@@ -19,10 +19,9 @@ package org.revapi.classif;
 import java.util.List;
 
 import org.revapi.classif.statement.AbstractStatement;
-import org.revapi.classif.util.DependencyGraph;
-import org.revapi.classif.util.MatchNode;
-import org.revapi.classif.util.MatchTree;
-import org.revapi.classif.util.ProcessedMatch;
+import org.revapi.classif.util.execution.DependencyGraph;
+import org.revapi.classif.util.execution.MatchExecution;
+import org.revapi.classif.util.execution.MatchGraph;
 
 /**
  * The main entry point for matching the elements against a recipe. An instance of this class can be obtained from
@@ -31,13 +30,10 @@ import org.revapi.classif.util.ProcessedMatch;
  * @see #start(ModelInspector)
  */
 public final class StructuralMatcher {
-    private final boolean decidableInPlace;
-    private final ProcessedMatch matchTree;
+    private final MatchExecution matchTree;
 
     StructuralMatcher(List<String> namedMatches, List<AbstractStatement> statements) {
-        this.matchTree = MatchTree.unwind(new DependencyGraph(namedMatches, statements));
-
-        this.decidableInPlace = determineInPlaceDecidability(matchTree);
+        this.matchTree = MatchGraph.unwind(new DependencyGraph(namedMatches, statements));
     }
 
     /**
@@ -45,17 +41,11 @@ public final class StructuralMatcher {
      * to crawl around the element graph to establish the match.
      */
     public boolean isDecidableInPlace() {
-        return decidableInPlace;
+        //TODO is this even needed?
+        return false;
     }
 
     public <M> MatchingProgress<M> start(ModelInspector<M> inspector) {
-        MatchNode<M> matcher = matchTree.freeze(inspector);
-
-        return new MatchingProgress<>(matcher);
-    }
-
-    private static boolean determineInPlaceDecidability(ProcessedMatch tree) {
-        // TODO Implement
-        return true;
+        return new MatchingProgress<>(matchTree, inspector);
     }
 }
