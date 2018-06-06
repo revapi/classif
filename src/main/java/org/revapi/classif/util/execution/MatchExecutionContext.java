@@ -1,5 +1,6 @@
 package org.revapi.classif.util.execution;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.revapi.classif.match.MatchContext;
@@ -14,7 +15,7 @@ public final class MatchExecutionContext {
     MatchExecutionContext(String definedVariable, List<String> referencedVariables, boolean isReturn,
             ModelMatch match) {
         this.definedVariable = definedVariable;
-        this.referencedVariables = referencedVariables;
+        this.referencedVariables = Collections.unmodifiableList(referencedVariables);
         this.isReturn = isReturn;
         this.match = match;
     }

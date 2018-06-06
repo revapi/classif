@@ -2,11 +2,11 @@ package org.revapi.classif.util.execution;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.revapi.classif.match.declaration.AnnotationsMatch;
 import org.revapi.classif.match.declaration.ModifiersMatch;
@@ -24,38 +24,30 @@ public class DependencyGraphTest {
         assertEquals(3, g.getAllNodes().size());
 
         assertTrue(g.getAllNodes().stream().anyMatch(n ->
-                n.in.isEmpty() && "a".equals(n.node.definedVariable) && n.node.referencedVariables.isEmpty()
-                        && n.out.size() == 1));
+                n.in().isEmpty() && "a".equals(n.getObject().definedVariable) && n.getObject().referencedVariables.isEmpty()
+                        && n.out().size() == 1));
 
         assertTrue(g.getAllNodes().stream().anyMatch(n ->
-                n.in.isEmpty() && "b".equals(n.node.definedVariable) && n.node.referencedVariables.isEmpty()
-                        && n.out.size() == 1));
+                n.in().isEmpty() && "b".equals(n.getObject().definedVariable) && n.getObject().referencedVariables.isEmpty()
+                        && n.out().size() == 1));
 
         assertTrue(g.getAllNodes().stream().anyMatch(n ->
-                n.in.size() == 2 && n.node.definedVariable == null && n.node.referencedVariables.equals(asList("a", "b"))
-                        && n.out.isEmpty()));
+                n.in().size() == 2 && n.getObject().definedVariable == null && n.getObject().referencedVariables.equals(asList("a", "b"))
+                        && n.out().isEmpty()));
     }
 
     @Test
     void testCyclicStatement() {
-        DependencyGraph g = new DependencyGraph(emptyList(), asList(
-                statement("a", "b"),
-                statement("b", "c"),
-                statement("c", "a", "b")));
+        try {
+            new DependencyGraph(emptyList(), asList(
+                    statement("a", "b"),
+                    statement("b", "c"),
+                    statement("c", "a", "b")));
 
-        assertEquals(3, g.getAllNodes().size());
-
-        assertTrue(g.getAllNodes().stream().anyMatch(n ->
-                n.in.size() == 1 && "a".equals(n.node.definedVariable) && n.node.referencedVariables.equals(singletonList("b"))
-                        && n.out.size() == 1));
-
-        assertTrue(g.getAllNodes().stream().anyMatch(n ->
-                n.in.size() == 1 && "b".equals(n.node.definedVariable) && n.node.referencedVariables.equals(singletonList("c"))
-                        && n.out.size() == 2));
-
-        assertTrue(g.getAllNodes().stream().anyMatch(n ->
-                n.in.size() == 2 && "c".equals(n.node.definedVariable) && n.node.referencedVariables.equals(asList("a", "b"))
-                        && n.out.size() == 1));
+            Assertions.fail("Should not be able to create a cyclic graph");
+        } catch (IllegalArgumentException e) {
+            //good
+        }
     }
 
     private static GenericStatement statement(@Nullable String definedVariable, String... referencedVariables) {

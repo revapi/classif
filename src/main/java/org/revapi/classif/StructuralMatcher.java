@@ -20,8 +20,6 @@ import java.util.List;
 
 import org.revapi.classif.statement.AbstractStatement;
 import org.revapi.classif.util.execution.DependencyGraph;
-import org.revapi.classif.util.execution.MatchExecution;
-import org.revapi.classif.util.execution.MatchGraph;
 
 /**
  * The main entry point for matching the elements against a recipe. An instance of this class can be obtained from
@@ -30,10 +28,10 @@ import org.revapi.classif.util.execution.MatchGraph;
  * @see #start(ModelInspector)
  */
 public final class StructuralMatcher {
-    private final MatchExecution matchTree;
+    private final DependencyGraph matchTree;
 
     StructuralMatcher(List<String> namedMatches, List<AbstractStatement> statements) {
-        this.matchTree = MatchGraph.unwind(new DependencyGraph(namedMatches, statements));
+        this.matchTree = new DependencyGraph(namedMatches, statements);
     }
 
     /**
