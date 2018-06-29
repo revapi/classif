@@ -1,5 +1,13 @@
+#Maven
 target/
+
+#Intellij
 *.iml
 *.ipr
 *.iws
 .idea/
+
+#Eclipse
+.classpath
+.project
+.settings/
