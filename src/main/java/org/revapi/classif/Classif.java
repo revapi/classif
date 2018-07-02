@@ -68,6 +68,9 @@ import org.revapi.classif.statement.GenericStatement;
 import org.revapi.classif.statement.StatementStatement;
 import org.revapi.classif.statement.TypeDefinitionStatement;
 
+/**
+ * Classif is a structural matcher for Java declarations. It supports variables and nested statements and is cool.
+ */
 public final class Classif {
 
     private static final DecimalFormat NUMBER_FORMAT = (DecimalFormat) DecimalFormat.getNumberInstance(Locale.ROOT);
@@ -82,6 +85,12 @@ public final class Classif {
         throw new AssertionError("I shall not be summoned.");
     }
 
+    /**
+     * Compile a textural structural match into a matcher object.
+     *
+     * @param program a textual structural match "program" to be compiled into a matcher
+     * @return a structural matcher to be used to match model elements against the provided program
+     */
     public static StructuralMatcher compile(String program) {
         ANTLRErrorListener errorListener = new BaseErrorListener() {
             @Override

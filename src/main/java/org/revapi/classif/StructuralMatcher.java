@@ -25,7 +25,7 @@ import org.revapi.classif.util.execution.DependencyGraph;
  * The main entry point for matching the elements against a recipe. An instance of this class can be obtained from
  * {@link Classif#compile(String)}.
  *
- * @see #start(ModelInspector)
+ * @see #with(ModelInspector)
  */
 public final class StructuralMatcher {
     private final DependencyGraph matchTree;
@@ -43,7 +43,14 @@ public final class StructuralMatcher {
         return false;
     }
 
-    public <M> MatchingProgress<M> start(ModelInspector<M> inspector) {
+    /**
+     * Starts a matching progress using the provided model inspector.
+     *
+     * @param inspector the model inspector used when matching the model elements
+     * @param <M> the type of the model elements
+     * @return a matching progress
+     */
+    public <M> MatchingProgress<M> with(ModelInspector<M> inspector) {
         return new MatchingProgress<>(matchTree, inspector);
     }
 }

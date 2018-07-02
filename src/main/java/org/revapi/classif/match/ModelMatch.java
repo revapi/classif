@@ -29,27 +29,28 @@ import javax.lang.model.util.SimpleElementVisitor8;
 import org.revapi.classif.util.TreeNode;
 
 public abstract class ModelMatch extends TreeNode<ModelMatch> {
-    private final IdentityHashMap<Object, Boolean> decisionCache = new IdentityHashMap<>();
+//    private final IdentityHashMap<Object, Boolean> decisionCache = new IdentityHashMap<>();
 
     public final <M> boolean test(M model, MatchContext<M> ctx) {
         model = requireNonNull(model);
         ctx = requireNonNull(ctx);
 
-        Boolean match = decisionCache.get(model);
-        if (match == null) {
-            match = dispatchTest(model, ctx);
-
-            if (match) {
-                ModelMatch parent = getParent();
-                if (parent != null) {
-                    match = parent.test(ctx.modelInspector.getEnclosing(model), ctx);
-                }
-            }
-
-            decisionCache.put(model, match);
-        }
-
-        return match;
+//        Boolean match = decisionCache.get(model);
+//        if (match == null) {
+//            match = dispatchTest(model, ctx);
+//
+//            if (match) {
+//                ModelMatch parent = getParent();
+//                if (parent != null) {
+//                    match = parent.test(ctx.modelInspector.getEnclosing(model), ctx);
+//                }
+//            }
+//
+//            decisionCache.put(model, match);
+//        }
+//
+//        return match;
+        return dispatchTest(model, ctx);
     }
 
     public final <M> boolean dispatchTest(M model, MatchContext<M> ctx) {

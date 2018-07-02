@@ -38,7 +38,6 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.revapi.classif.Classif;
 import org.revapi.classif.MirroringModelInspector;
-import org.revapi.classif.TestResult;
 import org.revapi.testjars.CompiledJar;
 import org.revapi.testjars.junit5.CompiledJarExtension;
 import org.revapi.testjars.junit5.JarSources;
@@ -68,10 +67,10 @@ class UsesMatchTest {
             }
         };
 
-        assertSame(Classif.compile("^ uses TestClass.Used;").start(insp).test(userMethod), PASSED);
-        assertSame(Classif.compile("^ directly uses TestClass.Used;").start(insp).test(userMethod), PASSED);
-        assertSame(Classif.compile("^ uses TestClass.UsedInDistance2;").start(insp).test(userMethod), PASSED);
-        assertNotSame(Classif.compile("^ directly uses TestClass.UsedInDistance2;").start(insp).test(userMethod), NOT_PASSED);
+        assertSame(Classif.compile("^ uses TestClass.Used;").with(insp).start(userMethod), PASSED);
+        assertSame(Classif.compile("^ directly uses TestClass.Used;").with(insp).start(userMethod), PASSED);
+        assertSame(Classif.compile("^ uses TestClass.UsedInDistance2;").with(insp).start(userMethod), PASSED);
+        assertSame(Classif.compile("^ directly uses TestClass.UsedInDistance2;").with(insp).start(userMethod), NOT_PASSED);
     }
 
     @Test
@@ -92,9 +91,9 @@ class UsesMatchTest {
             }
         };
 
-        assertSame(Classif.compile("^ uses TestClass.UseCycleStart;").start(insp).test(userMethod), PASSED);
-        assertSame(Classif.compile("^ uses TestClass.UseCycleEnd;").start(insp).test(userMethod), PASSED);
-        assertSame(Classif.compile("^ directly uses TestClass.UseCycleStart;").start(insp).test(userMethod), PASSED);
-        assertNotSame(Classif.compile("^ directly uses TestClass.UseCycleEnd;").start(insp).test(userMethod), NOT_PASSED);
+        assertSame(Classif.compile("^ uses TestClass.UseCycleStart;").with(insp).start(userMethod), PASSED);
+        assertSame(Classif.compile("^ uses TestClass.UseCycleEnd;").with(insp).start(userMethod), PASSED);
+        assertSame(Classif.compile("^ directly uses TestClass.UseCycleStart;").with(insp).start(userMethod), PASSED);
+        assertSame(Classif.compile("^ directly uses TestClass.UseCycleEnd;").with(insp).start(userMethod), NOT_PASSED);
     }
 }

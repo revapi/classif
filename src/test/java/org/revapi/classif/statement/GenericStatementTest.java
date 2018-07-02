@@ -362,11 +362,11 @@ class GenericStatementTest {
         assertTrue(doTest(SingleParam_string, "@TestClass.My(stringValue = /a[bc]/) ^;"));
         assertTrue(doTest(SingleParam_string, "@TestClass.My(stringValue != /abc/) ^;"));
 
-        assertTrue(doTest(SingleParam_annotation, "@TestClass.My(annotationValue = @/.*Target/(**)) ^;"));
-        assertTrue(doTest(SingleParam_annotation, "@TestClass.My(annotationValue != @/.*Retention/) ^;"));
+        assertTrue(doTest(SingleParam_annotation, "@TestClass.My(annotationValue = @**.Target(**)) ^;"));
+        assertTrue(doTest(SingleParam_annotation, "@TestClass.My(annotationValue != @**.Retention) ^;"));
 
-        assertTrue(doTest(SingleParam_class, "@TestClass.My(classValue = /.*String$/.class) ^;"));
-        assertTrue(doTest(SingleParam_class, "@TestClass.My(classValue != /whatever/.class) ^;"));
+        assertTrue(doTest(SingleParam_class, "@TestClass.My(classValue = **.String.class) ^;"));
+        assertTrue(doTest(SingleParam_class, "@TestClass.My(classValue != whatever.class) ^;"));
 
         assertTrue(doTest(SingleParam_class, "@TestClass.My(* = /.*/) ^;"));
     }
@@ -493,6 +493,6 @@ class GenericStatementTest {
 
         StructuralMatcher matcher = Classif.compile(recipe);
 
-        return matcher.start(insp).test(expected).toBoolean(false);
+        return matcher.with(insp).start(expected).toBoolean(false);
     }
 }

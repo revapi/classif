@@ -1,3 +1,19 @@
+/*
+ * Copyright 2018 Lukas Krejci
+ * and other contributors as indicated by the @author tags.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.revapi.classif.util.execution;
 
 import static java.util.Collections.emptyList;
@@ -13,6 +29,11 @@ import java.util.Set;
 import org.revapi.classif.match.ModelMatch;
 import org.revapi.classif.statement.AbstractStatement;
 
+/**
+ * This is a support class for {@link org.revapi.classif.StructuralMatcher} and
+ * {@link org.revapi.classif.MatchingProgress} that converts the variables and statements of a structural match into
+ * a graph of dependent nodes.
+ */
 public final class DependencyGraph {
     private final Collection<Node<MatchExecutionContext>> allNodes;
 
@@ -23,7 +44,8 @@ public final class DependencyGraph {
      * @param statements the statements of the structural match
      * @throws IllegalArgumentException if the statements contain dependency cycles (dependencies are caused by variables)
      */
-    public DependencyGraph(List<String> namedMatches, List<AbstractStatement> statements) throws IllegalArgumentException {
+    public DependencyGraph(List<String> namedMatches, List<AbstractStatement> statements)
+            throws IllegalArgumentException {
         allNodes = initMatches(namedMatches == null ? emptyList() : namedMatches,
                 statements, new HashMap<>(), new HashMap<>());
     }
@@ -36,12 +58,14 @@ public final class DependencyGraph {
     }
 
     private static Collection<Node<MatchExecutionContext>> initMatches(List<String> namedMatches,
-            Collection<AbstractStatement> statements, Map<String, MatchExecutionContext> definers,
-            Map<String, List<MatchExecutionContext>> referencers) {
+            Collection<AbstractStatement> statements, Map<String, Node<MatchExecutionContext>> definers,
+            Map<String, List<Node<MatchExecutionContext>>> referencers) {
 
-        collectVariables(namedMatches, statements, definers, referencers);
+        List<Node<MatchExecutionContext>> rootNodes = new ArrayList<>(4);
 
-        Collection<Node<MatchExecutionContext>> ret = createGraph(definers, referencers);
+        collectVariables(namedMatches, null, statements, rootNodes, definers, referencers);
+
+        Collection<Node<MatchExecutionContext>> ret = createGraph(rootNodes, definers, referencers);
 
         if (isCyclic(ret)) {
             throw new IllegalArgumentException("The statements' variables create a cyclic graph. This is not supported.");
@@ -74,8 +98,10 @@ public final class DependencyGraph {
         return ret;
     }
 
-    private static void collectVariables(List<String> namedMatches, Collection<AbstractStatement> statements,
-            Map<String, MatchExecutionContext> definers, Map<String, List<MatchExecutionContext>> referencers) {
+    private static void collectVariables(List<String> namedMatches, Node<MatchExecutionContext> parent,
+            Collection<AbstractStatement> statements, List<Node<MatchExecutionContext>> rootNodes,
+            Map<String, Node<MatchExecutionContext>> definers,
+            Map<String, List<Node<MatchExecutionContext>>> referencers) {
 
         for (AbstractStatement st : statements) {
             ModelMatch stMatcher = st.createMatcher();
@@ -84,32 +110,47 @@ public final class DependencyGraph {
                     st.getReferencedVariables(), st.isMatch() || namedMatches.contains(st.getDefinedVariable()),
                     stMatcher);
 
+            Node<MatchExecutionContext> node = new Node<>(match);
+
+            node.setParent(parent);
+            if (parent == null) {
+                rootNodes.add(node);
+            }
+
             if (st.getDefinedVariable() != null) {
-                definers.put(st.getDefinedVariable(), match);
+                definers.put(st.getDefinedVariable(), node);
             }
 
             st.getReferencedVariables()
-                    .forEach(v -> referencers.computeIfAbsent(v, __ -> new ArrayList<>()).add(match));
+                    .forEach(v -> referencers.computeIfAbsent(v, __ -> new ArrayList<>()).add(node));
 
-            collectVariables(namedMatches, st.getChildren(), definers, referencers);
+            collectVariables(namedMatches, node, st.getChildren(), rootNodes, definers, referencers);
         }
     }
 
-    private static Collection<Node<MatchExecutionContext>> createGraph(Map<String, MatchExecutionContext> definers,
-            Map<String, List<MatchExecutionContext>> referencers) {
+    private static Collection<Node<MatchExecutionContext>> createGraph(List<Node<MatchExecutionContext>> rootNodes,
+            Map<String, Node<MatchExecutionContext>> definers,
+            Map<String, List<Node<MatchExecutionContext>>> referencers) {
 
-        Map<MatchExecutionContext, Node<MatchExecutionContext>> cache = new HashMap<>();
-
-        definers.forEach((name, match) -> {
-            Node<MatchExecutionContext> node = cache.computeIfAbsent(match, Node::new);
-
-            referencers.getOrDefault(name, emptyList()).forEach(ref -> {
-                Node<MatchExecutionContext> refNode = cache.computeIfAbsent(ref, Node::new);
+        // establish the dependencies caused by the variable references
+        definers.forEach((name, node) -> {
+            referencers.getOrDefault(name, emptyList()).forEach(refNode -> {
                 node.out().add(refNode);
                 refNode.in().add(node);
             });
         });
 
-        return cache.values();
+        // and now just collect the whole graph into the resulting collection
+        Set<Node<MatchExecutionContext>> ret = new HashSet<>();
+        addAllRecursively(rootNodes, ret);
+
+        return ret;
+    }
+
+    private static <T> void addAllRecursively(Collection<Node<T>> nodes, Collection<Node<T>> all) {
+        for (Node<T> n : nodes) {
+            all.add(n);
+            addAllRecursively(n.getChildren(), all);
+        }
     }
 }

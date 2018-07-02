@@ -31,6 +31,7 @@ import org.revapi.classif.MatchingProgress;
 import org.revapi.classif.MirroringModelInspector;
 import org.revapi.classif.ModelInspector;
 import org.revapi.classif.StructuralMatcher;
+import org.revapi.classif.TestResult;
 import org.revapi.testjars.CompiledJar;
 import org.revapi.testjars.junit5.CompiledJarExtension;
 import org.revapi.testjars.junit5.JarSources;
@@ -102,15 +103,33 @@ class TypeDefinitionStatementTest {
         assertTrue(doTest(constraints, InheritedImpl, "type ^ exactly implements java.lang.Cloneable, Implements.Iface;"));
         assertTrue(doTest(constraints, InheritedImpl, "type ^ exactly implements Implements.Iface, java.lang.Cloneable;"));
 
-        assertTrue(doTest(constraints, Iface, "type *.Impl implements %i; interface ^%i=*;"));
-        assertTrue(doTest(constraints, GenericIface, "match %i; type *./^Impl.+$/ implements %i; interface %i=*;"));
+        assertTrue(doTest(constraints, Iface, "type *.Impl implements %i; interface ^%i=*;", Impl));
+        assertTrue(doTest(constraints, Impl, "type ^*.Impl implements %i; interface %i=*;", Iface));
+        assertTrue(doTest(constraints, GenericIface, "match %i; type *./^Impl.+$/ implements %i; interface %i=*;", GenericImplConcrete));
     }
 
-    private boolean doTest(CompiledJar.Environment env, Element el, String recipe) {
+    private boolean doTest(CompiledJar.Environment env, Element el, String recipe, Element... nextElements) {
         ModelInspector<Element> insp = new MirroringModelInspector(env.elements(), env.types());
 
         StructuralMatcher matcher = Classif.compile(recipe);
 
-        return matcher.start(insp).test(el).toBoolean(false);
+        MatchingProgress<Element> progress = matcher.with(insp);
+
+        boolean res = progress.start(el).toBoolean(false);
+        if (res) {
+            return true;
+        }
+
+        res = progress.finish(el).toBoolean(false);
+        if (res) {
+            return true;
+        }
+
+        for (Element e : nextElements) {
+            progress.start(e);
+            progress.finish(e);
+        }
+
+        return progress.finish().getOrDefault(el, TestResult.NOT_PASSED).toBoolean(false);
     }
 }

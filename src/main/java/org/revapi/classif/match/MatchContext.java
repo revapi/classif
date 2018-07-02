@@ -19,6 +19,7 @@ package org.revapi.classif.match;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Objects.requireNonNull;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.revapi.classif.ModelInspector;
@@ -31,5 +32,11 @@ public final class MatchContext<M> {
     public MatchContext(ModelInspector<M> modelInspector, Map<String, ModelMatch> variables) {
         this.modelInspector = requireNonNull(modelInspector);
         this.variables = unmodifiableMap(requireNonNull(variables));
+    }
+
+    public MatchContext<M> replace(String variable, ModelMatch modelMatch) {
+        Map<String, ModelMatch> newVars = new HashMap<>(variables);
+        newVars.put(variable, modelMatch);
+        return new MatchContext<>(modelInspector, newVars);
     }
 }

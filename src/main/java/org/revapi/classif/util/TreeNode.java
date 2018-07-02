@@ -21,7 +21,13 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-public abstract class TreeNode<This extends TreeNode<This>> {
+/**
+ * A tree node with automatic management of parent-child relationship. This is an abstract base class to be extended
+ * by a concrete type, {@link This}.
+ *
+ * @param <This> the type of the concrete subclass extending this base class
+ */
+public abstract class TreeNode<This extends TreeNode<This>> implements Cloneable {
 
     private This parent;
     private ParentPreservingSet children = new ParentPreservingSet();
@@ -52,11 +58,21 @@ public abstract class TreeNode<This extends TreeNode<This>> {
     }
 
     @SuppressWarnings("unchecked")
+    @Override
+    public This clone() {
+        try {
+            return (This) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError("Cloneable is implemented by failed.");
+        }
+    }
+
+    @SuppressWarnings("unchecked")
     private This castThis() {
         return (This) this;
     }
 
-    private class ParentPreservingSet implements Set<This> {
+    private class ParentPreservingSet implements Set<This>, Cloneable {
         private Set<This> actual = new HashSet<>();
 
         @Override
