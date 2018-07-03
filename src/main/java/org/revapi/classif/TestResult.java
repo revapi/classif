@@ -38,6 +38,10 @@ public enum TestResult {
         }
     }
 
+    public TestResult define(boolean undecidedValue) {
+        return fromBoolean(toBoolean(undecidedValue));
+    }
+
     public TestResult and(TestResult other) {
         switch (this) {
             case PASSED:

@@ -254,7 +254,7 @@ public final class MatchingProgress<M> {
                 .filter(n -> n.getObject().executionContext.isReturn)
                 .flatMap(n -> n.getObject().resolutionCache.entrySet().stream())
                 .filter(e -> deferredModels.contains(e.getKey()))
-                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+                .collect(toMap(Map.Entry::getKey, e -> e.getValue().define(false)));
 
         deferredModels.forEach(m -> {
             if (!ret.containsKey(m)) {
@@ -270,11 +270,15 @@ public final class MatchingProgress<M> {
      */
     public void reset() {
         deferredModels.clear();
+        resolutionStack.clear();
+        modelStack.clear();
         potentialMatches.clear();
         potentialMatches.add(allSteps.stream()
                 .peek(n -> {
                     n.getObject().independentlyMatchingModels.clear();
                     n.getObject().resolutionCache.clear();
+                    n.getObject().dependentsResolutionCache.clear();
+                    n.getObject().dependenciesResolutionCache.clear();
                 })
                 .filter(n -> n.getParent() == null)
                 .collect(toList()));

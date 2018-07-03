@@ -21,6 +21,8 @@ import static org.revapi.classif.TestResult.DEFERRED;
 import static org.revapi.classif.TestResult.NOT_PASSED;
 import static org.revapi.classif.TestResult.PASSED;
 
+import java.util.Map;
+
 import javax.lang.model.element.Element;
 
 import org.revapi.testjars.CompiledJar;
@@ -45,6 +47,20 @@ public class Tester {
         }
 
         return progress.finish().getOrDefault(el, res);
+    }
+
+    public static Map<Element, TestResult> testRest(CompiledJar.Environment env, Element el, String recipe, Element... nextElements) {
+        MatchingProgress<Element> progress = startProgress(env, recipe);
+
+        progress.start(el);
+        progress.finish(el);
+
+        for (Element e : nextElements) {
+            progress.start(e);
+            progress.finish(e);
+        }
+
+        return progress.finish();
     }
 
     public static TestResult testProgressStart(CompiledJar.Environment env, Element el, String recipe) {

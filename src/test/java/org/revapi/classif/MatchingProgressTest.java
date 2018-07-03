@@ -16,58 +16,88 @@
  */
 package org.revapi.classif;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
+import static org.revapi.classif.Tester.assertDeferred;
+import static org.revapi.classif.Tester.assertNotPassed;
+import static org.revapi.classif.Tester.assertPassed;
+import static org.revapi.classif.Tester.test;
+import static org.revapi.classif.Tester.testProgressStart;
+import static org.revapi.classif.Tester.testRest;
+
+import java.util.Map;
+
+import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
+
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.revapi.testjars.CompiledJar;
+import org.revapi.testjars.junit5.CompiledJarExtension;
 import org.revapi.testjars.junit5.JarSources;
 
+@TestInstance(PER_CLASS)
+@ExtendWith(CompiledJarExtension.class)
 class MatchingProgressTest {
-    @JarSources(root = "/sources/progress/", sources = "SingleNodeMatch.java")
-    private CompiledJar.Environment singleNode;
+    @JarSources(root = "/sources/progress/", sources = {"SingleNodeMatch.java", "Dependencies.java"})
+    private CompiledJar.Environment env;
 
     @Test
     void testSingleNodeMatchesTrivially() {
-        //TypeElement type = singleNode.elements().getTypeElement("SingleNodeMatch");
-
-        // TODO implement
+        TypeElement type = env.elements().getTypeElement("SingleNodeMatch");
+        assertPassed(testProgressStart(env, type, "type ^SingleNodeMatch;"));
     }
 
     @Test
     void testDependenciesInfluenceMatchResult() {
-        // TODO implement
+        TypeElement A = env.elements().getTypeElement("Dependencies.A");
+        TypeElement B = env.elements().getTypeElement("Dependencies.B");
+
+        String recipe = "type ^B extends %x; class %x=* directly extends java.lang.Object;";
+        assertPassed(test(env, B, recipe, A));
+        assertDeferred(testProgressStart(env, B, recipe));
+        assertNotPassed(test(env, B, recipe));
     }
 
     @Test
     void testDependentsInfluenceMatchResult() {
-        // TODO implement
+        TypeElement A = env.elements().getTypeElement("Dependencies.A");
+        TypeElement B = env.elements().getTypeElement("Dependencies.B");
+
+        String recipe = "type B extends %x; class ^%x=* directly extends java.lang.Object;";
+
+        assertPassed(test(env, A, recipe, B));
+        assertDeferred(testProgressStart(env, A, recipe));
+        assertNotPassed(test(env, A, recipe));
     }
 
     @Test
     void testDependenciesAndDependentsMustAllMatch() {
-        // TODO implement
-    }
+        TypeElement A = env.elements().getTypeElement("Dependencies.A");
+        TypeElement B = env.elements().getTypeElement("Dependencies.B");
+        TypeElement C = env.elements().getTypeElement("Dependencies.C");
 
-    @Test
-    void testOnlyContributingDependenciesMarkedOnSuccess() {
-        // TODO implement
-    }
+        String recipe = "type ^%y=B extends %x; class %x=* directly extends java.lang.Object; class * extends %y;";
 
-    @Test
-    void testOnlyContributingDependentsMarkedOnSuccess() {
-        // TODO implement
-    }
-
-    @Test
-    void testOnlyContributingDependenciesAndDependentsMarkedOnSuccess() {
-        // TODO implement
-    }
-
-    @Test
-    void testChildrenCanChangeOutcomeOfFinish() {
-        // TODO implement
+        assertDeferred(testProgressStart(env, B, recipe));
+        assertNotPassed(test(env, B, recipe, A));
+        assertPassed(test(env, B, recipe, A, C));
     }
 
     @Test
     void onlyReturningNodesReportedByMatchProgressFinish() {
-        // TODO implement
+        TypeElement A = env.elements().getTypeElement("Dependencies.A");
+        TypeElement B = env.elements().getTypeElement("Dependencies.B");
+        TypeElement C = env.elements().getTypeElement("Dependencies.C");
+
+        String recipe = "type ^%y=B extends %x; class %x=* directly extends java.lang.Object; class * extends %y;";
+
+        Map<Element, TestResult> rest = testRest(env, A, recipe, C, B);
+
+        assertEquals(2, rest.size());
+        assertNotPassed(rest.get(A));
+        assertNotPassed(rest.get(C));
     }
 }
