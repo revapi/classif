@@ -25,10 +25,12 @@ import org.revapi.classif.match.MatchContext;
 
 public final class TypeConstraintsMatch extends DeclarationMatch {
     private final List<ImplementsMatch> implemented;
+    private final ExtendsMatch extended;
     private final List<UsesMatch> uses;
 
-    public TypeConstraintsMatch(List<ImplementsMatch> implemented, List<UsesMatch> uses) {
+    public TypeConstraintsMatch(List<ImplementsMatch> implemented, ExtendsMatch extended, List<UsesMatch> uses) {
         this.implemented = implemented;
+        this.extended = extended;
         this.uses = uses;
     }
 
@@ -40,6 +42,7 @@ public final class TypeConstraintsMatch extends DeclarationMatch {
     public <M> boolean testDeclaration(Element declaration, TypeMirror instantiation, MatchContext<M> ctx) {
         // TODO add the rest of the type constraints
         return implemented.stream().allMatch(m -> m.testDeclaration(declaration, instantiation, ctx))
-                && uses.stream().allMatch(m -> m.testDeclaration(declaration, instantiation, ctx));
+                && uses.stream().allMatch(m -> m.testDeclaration(declaration, instantiation, ctx))
+                && (extended == null || extended.testDeclaration(declaration, instantiation, ctx));
     }
 }

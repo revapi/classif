@@ -47,6 +47,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.revapi.classif.match.declaration.AnnotationAttributeMatch;
 import org.revapi.classif.match.declaration.AnnotationValueMatch;
 import org.revapi.classif.match.declaration.AnnotationMatch;
+import org.revapi.classif.match.declaration.ExtendsMatch;
 import org.revapi.classif.match.declaration.ImplementsMatch;
 import org.revapi.classif.match.declaration.TypeConstraintsMatch;
 import org.revapi.classif.match.declaration.UsesMatch;
@@ -731,6 +732,7 @@ public final class Classif {
             ReferencedVariablesAnd<TypeConstraintsMatch> ret = new ReferencedVariablesAnd<>();
             List<ImplementsMatch> implemented = new ArrayList<>(2);
             List<UsesMatch> uses = new ArrayList<>(2);
+            ExtendsMatch[] extended = new ExtendsMatch[1];
 
             ctx.typeConstraint().forEach(constraintCtx -> {
                 if (constraintCtx.IMPLEMENTS() != null) {
@@ -750,11 +752,20 @@ public final class Classif {
 
                     ret.referencedVariables.addAll(type.referencedVariables);
                     uses.add(new UsesMatch(onlyDirect, type.match));
+                } else if (constraintCtx.EXTENDS() != null) {
+                    boolean onlyDirect = constraintCtx.DIRECTLY() != null;
+                    ReferencedVariablesAnd<TypeReferenceMatch> type =
+                            constraintCtx.typeReference().get(0).accept(TypeReferenceVisitor.INSTANCE);
+
+                    ret.referencedVariables.addAll(type.referencedVariables);
+                    extended[0] = new ExtendsMatch(onlyDirect, type.match);
+                } else if (constraintCtx.USED_BY() != null) {
+                    // TODO implement
+                    throw new UnsupportedOperationException("'usedby' not yet implemented!.");
                 }
-                // TODO add the rest of the constraints
             });
 
-            ret.match = new TypeConstraintsMatch(implemented, uses);
+            ret.match = new TypeConstraintsMatch(implemented, extended[0], uses);
             return ret;
         }
     }

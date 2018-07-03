@@ -16,4 +16,15 @@
  */
 public class Extends {
 
+    public static class A {}
+
+    public static class B extends A {}
+
+    public static class GA<T> {}
+
+    public static class GB extends GA<String> {}
+
+    public static class GC<T extends Number> extends GA<T> {}
+
+    public static class GD extends GC<Integer> {}
 }

@@ -16,22 +16,16 @@
  */
 package org.revapi.classif.statement;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
+import static org.revapi.classif.Tester.assertNotPassed;
+import static org.revapi.classif.Tester.assertPassed;
+import static org.revapi.classif.Tester.test;
 
-import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.revapi.classif.Classif;
-import org.revapi.classif.MatchingProgress;
-import org.revapi.classif.MirroringModelInspector;
-import org.revapi.classif.ModelInspector;
-import org.revapi.classif.StructuralMatcher;
-import org.revapi.classif.TestResult;
 import org.revapi.testjars.CompiledJar;
 import org.revapi.testjars.junit5.CompiledJarExtension;
 import org.revapi.testjars.junit5.JarSources;
@@ -49,18 +43,18 @@ class TypeDefinitionStatementTest {
     @Test
     void testTypeParameters() {
         TypeElement testClass = typeParams.elements().getTypeElement("TestClass");
-        assertTrue(doTest(typeParams, testClass, "class ^TestClass<**>;"));
-        assertTrue(doTest(typeParams, testClass, "class ^TestClass<*, **>;"));
-        assertTrue(doTest(typeParams, testClass, "class ^TestClass<java.*.Object, **>;"));
-        assertTrue(doTest(typeParams, testClass, "class ^TestClass<**, java.lang.Cloneable>;"));
-        assertTrue(doTest(typeParams, testClass, "class ^TestClass<**, java.lang.String>;"));
-        assertTrue(doTest(typeParams, testClass, "class ^TestClass<*, ? extends java.*.Object, **>;"));
-        assertTrue(doTest(typeParams, testClass, "class ^TestClass<java.*.Object, **, ? extends /.*String/, **>;"));
-        assertTrue(doTest(typeParams, testClass, "class ^TestClass<**, ? extends /.*\\.String/ & java.lang.Cloneable>;"));
-        assertTrue(doTest(typeParams, testClass, "public class ^TestClass;"));
-        assertFalse(doTest(typeParams, testClass, "private class ^TestClass;"));
-        assertTrue(doTest(typeParams, testClass, "public type ^TestClass;"));
-        assertFalse(doTest(typeParams, testClass, "public type ^TestClass<*>;"));
+        assertPassed(test(typeParams, testClass, "class ^TestClass<**>;"));
+        assertPassed(test(typeParams, testClass, "class ^TestClass<*, **>;"));
+        assertPassed(test(typeParams, testClass, "class ^TestClass<java.*.Object, **>;"));
+        assertPassed(test(typeParams, testClass, "class ^TestClass<**, java.lang.Cloneable>;"));
+        assertPassed(test(typeParams, testClass, "class ^TestClass<**, java.lang.String>;"));
+        assertPassed(test(typeParams, testClass, "class ^TestClass<*, ? extends java.*.Object, **>;"));
+        assertPassed(test(typeParams, testClass, "class ^TestClass<java.*.Object, **, ? extends /.*String/, **>;"));
+        assertPassed(test(typeParams, testClass, "class ^TestClass<**, ? extends /.*\\.String/ & java.lang.Cloneable>;"));
+        assertPassed(test(typeParams, testClass, "public class ^TestClass;"));
+        assertNotPassed(test(typeParams, testClass, "private class ^TestClass;"));
+        assertPassed(test(typeParams, testClass, "public type ^TestClass;"));
+        assertNotPassed(test(typeParams, testClass, "public type ^TestClass<*>;"));
     }
 
     @Test
@@ -69,7 +63,7 @@ class TypeDefinitionStatementTest {
     }
 
     @Test
-    void testConstraints() {
+    void testImplements() {
         TypeElement Iface = constraints.elements().getTypeElement("Implements.Iface");
         TypeElement GenericIface = constraints.elements().getTypeElement("Implements.GenericIface");
         TypeElement Impl = constraints.elements().getTypeElement("Implements.Impl");
@@ -77,59 +71,56 @@ class TypeDefinitionStatementTest {
         TypeElement GenericImplGeneric = constraints.elements().getTypeElement("Implements.GenericImplGeneric");
         TypeElement GenericImplConcrete = constraints.elements().getTypeElement("Implements.GenericImplConcrete");
 
-        assertTrue(doTest(constraints, Impl, "type ^ implements Implements.Iface;"));
-        assertTrue(doTest(constraints, InheritedImpl, "type ^ implements Implements.Iface;"));
-        assertFalse(doTest(constraints, GenericImplGeneric, "type ^ implements Implements.Iface;"));
-        assertTrue(doTest(constraints, GenericImplConcrete, "type ^!* implements Implements.Iface;"));
+        assertPassed(test(constraints, Impl, "type ^ implements Implements.Iface;"));
+        assertPassed(test(constraints, InheritedImpl, "type ^ implements Implements.Iface;"));
+        assertNotPassed(test(constraints, GenericImplGeneric, "type ^ implements Implements.Iface;"));
+        assertPassed(test(constraints, GenericImplConcrete, "type ^!* implements Implements.Iface;"));
 
-        assertTrue(doTest(constraints, Impl, "type ^ directly implements Implements.Iface;"));
-        assertFalse(doTest(constraints, InheritedImpl, "type ^ directly implements Implements.Iface;"));
-        assertFalse(doTest(constraints, GenericImplGeneric, "type ^ directly implements Implements.Iface;"));
-        assertTrue(doTest(constraints, GenericImplConcrete, "type ^!* directly implements Implements.Iface;"));
+        assertPassed(test(constraints, Impl, "type ^ directly implements Implements.Iface;"));
+        assertNotPassed(test(constraints, InheritedImpl, "type ^ directly implements Implements.Iface;"));
+        assertNotPassed(test(constraints, GenericImplGeneric, "type ^ directly implements Implements.Iface;"));
+        assertPassed(test(constraints, GenericImplConcrete, "type ^!* directly implements Implements.Iface;"));
 
-        assertFalse(doTest(constraints, Impl, "type ^ implements Implements.GenericIface;"));
-        assertTrue(doTest(constraints, GenericImplGeneric, "type ^ implements Implements.GenericIface;"));
-        assertTrue(doTest(constraints, GenericImplConcrete, "type ^ implements Implements.GenericIface;"));
+        assertNotPassed(test(constraints, Impl, "type ^ implements Implements.GenericIface;"));
+        assertPassed(test(constraints, GenericImplGeneric, "type ^ implements Implements.GenericIface;"));
+        assertPassed(test(constraints, GenericImplConcrete, "type ^ implements Implements.GenericIface;"));
 
-        assertFalse(doTest(constraints, Impl, "type ^ implements Implements.GenericIface<java.lang.String, java.lang.String>;"));
-        assertTrue(doTest(constraints, GenericImplGeneric, "type ^ implements Implements.GenericIface<java.lang.String, java.lang.String>;"));
-        assertFalse(doTest(constraints, GenericImplConcrete, "type ^ implements Implements.GenericIface<java.lang.String, java.lang.String>;"));
+        assertNotPassed(test(constraints, Impl, "type ^ implements Implements.GenericIface<java.lang.String, java.lang.String>;"));
+        assertPassed(test(constraints, GenericImplGeneric, "type ^ implements Implements.GenericIface<java.lang.String, java.lang.String>;"));
+        assertNotPassed(test(constraints, GenericImplConcrete, "type ^ implements Implements.GenericIface<java.lang.String, java.lang.String>;"));
 
-        assertFalse(doTest(constraints, Impl, "type ^ implements Implements.GenericIface<java.lang.Object, java.lang.String>;"));
-        assertFalse(doTest(constraints, GenericImplGeneric, "type ^ implements Implements.GenericIface<java.lang.Object, java.lang.String>;"));
-        assertTrue(doTest(constraints, GenericImplConcrete, "type ^ implements Implements.GenericIface<java.lang.Object, java.lang.String>;"));
+        assertNotPassed(test(constraints, Impl, "type ^ implements Implements.GenericIface<java.lang.Object, java.lang.String>;"));
+        assertNotPassed(test(constraints, GenericImplGeneric, "type ^ implements Implements.GenericIface<java.lang.Object, java.lang.String>;"));
+        assertPassed(test(constraints, GenericImplConcrete, "type ^ implements Implements.GenericIface<java.lang.Object, java.lang.String>;"));
 
-        assertFalse(doTest(constraints, InheritedImpl, "type ^ exactly implements Implements.Iface;"));
-        assertTrue(doTest(constraints, InheritedImpl, "type ^ exactly implements java.lang.Cloneable, Implements.Iface;"));
-        assertTrue(doTest(constraints, InheritedImpl, "type ^ exactly implements Implements.Iface, java.lang.Cloneable;"));
+        assertNotPassed(test(constraints, InheritedImpl, "type ^ exactly implements Implements.Iface;"));
+        assertPassed(test(constraints, InheritedImpl, "type ^ exactly implements java.lang.Cloneable, Implements.Iface;"));
+        assertPassed(test(constraints, InheritedImpl, "type ^ exactly implements Implements.Iface, java.lang.Cloneable;"));
 
-        assertTrue(doTest(constraints, Iface, "type *.Impl implements %i; interface ^%i=*;", Impl));
-        assertTrue(doTest(constraints, Impl, "type ^*.Impl implements %i; interface %i=*;", Iface));
-        assertTrue(doTest(constraints, GenericIface, "match %i; type *./^Impl.+$/ implements %i; interface %i=*;", GenericImplConcrete));
+        assertPassed(test(constraints, Iface, "type *.Impl implements %i; interface ^%i=*;", Impl));
+        assertPassed(test(constraints, Impl, "type ^*.Impl implements %i; interface %i=*;", Iface));
+        assertPassed(test(constraints, GenericIface, "match %i; type *./^Impl.+$/ implements %i; interface %i=*;", GenericImplConcrete));
     }
 
-    private boolean doTest(CompiledJar.Environment env, Element el, String recipe, Element... nextElements) {
-        ModelInspector<Element> insp = new MirroringModelInspector(env.elements(), env.types());
+    @Test
+    void testExtends() {
+        TypeElement A = constraints.elements().getTypeElement("Extends.A");
+        TypeElement B = constraints.elements().getTypeElement("Extends.B");
+        TypeElement GA = constraints.elements().getTypeElement("Extends.GA");
+        TypeElement GB = constraints.elements().getTypeElement("Extends.GB");
+        TypeElement GC = constraints.elements().getTypeElement("Extends.GC");
+        TypeElement GD = constraints.elements().getTypeElement("Extends.GD");
 
-        StructuralMatcher matcher = Classif.compile(recipe);
+        assertPassed(test(constraints, B, "type ^ extends java.lang.Object;"));
+        assertPassed(test(constraints, B, "type ^ extends Extends.A;"));
+        assertNotPassed(test(constraints, B, "type ^ directly extends java.lang.Object;"));
+        assertPassed(test(constraints, B, "type ^ directly extends Extends.A;"));
 
-        MatchingProgress<Element> progress = matcher.with(insp);
-
-        boolean res = progress.start(el).toBoolean(false);
-        if (res) {
-            return true;
-        }
-
-        res = progress.finish(el).toBoolean(false);
-        if (res) {
-            return true;
-        }
-
-        for (Element e : nextElements) {
-            progress.start(e);
-            progress.finish(e);
-        }
-
-        return progress.finish().getOrDefault(el, TestResult.NOT_PASSED).toBoolean(false);
+        assertPassed(test(constraints, GB, "type ^ extends Extends.GA<java.lang.String>;"));
+        assertPassed(test(constraints, GC, "type ^ directly extends Extends.GA<? extends java.lang.Number>;"));
+        assertPassed(test(constraints, GC, "type ^ directly extends Extends.GA<java.lang.Number>;"));
+        assertPassed(test(constraints, GD, "type ^ extends Extends.GA<java.lang.Integer>;"));
+        assertPassed(test(constraints, GD, "type ^ directly extends Extends.GC<java.lang.Integer>;"));
+        assertPassed(test(constraints, GD, "type ^ directly extends Extends.GC<? extends java.lang.Integer>;"));
     }
 }

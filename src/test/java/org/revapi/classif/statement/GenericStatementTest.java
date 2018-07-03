@@ -18,18 +18,16 @@ package org.revapi.classif.statement;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
+import static org.revapi.classif.Tester.assertPassed;
+import static org.revapi.classif.Tester.test;
 
-import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.revapi.classif.Classif;
-import org.revapi.classif.MirroringModelInspector;
-import org.revapi.classif.ModelInspector;
-import org.revapi.classif.StructuralMatcher;
+import org.revapi.classif.Tester;
 import org.revapi.testjars.CompiledJar;
 import org.revapi.testjars.junit5.CompiledJarExtension;
 import org.revapi.testjars.junit5.JarSources;
@@ -141,358 +139,350 @@ class GenericStatementTest {
 
     @Test
     void testModifiers() {
-        assertTrue(doTest(TestClass, "^;"));
-        assertTrue(doTest(TestClass, "public ^;"));
-        assertTrue(doTest(TestClass, "public ^*;"));
-        assertTrue(doTest(TestClass, "private ^!*;"));
-        assertTrue(doTest(TestClass, "packageprivate ^!*;"));
+        assertPassed(test(environment, TestClass, "^;"));
+        assertPassed(test(environment, TestClass, "public ^;"));
+        assertPassed(test(environment, TestClass, "public ^*;"));
+        assertPassed(test(environment, TestClass, "private ^!*;"));
+        assertPassed(test(environment, TestClass, "packageprivate ^!*;"));
     }
 
     @Test
     void testAnnotations_concreteValues() {
-        assertTrue(doTest(Empty, "@TestClass.My ^;"));
+        assertPassed(test(environment, Empty, "@TestClass.My ^;"));
 
-        assertTrue(doTest(SingleParam_boolean, "@TestClass.My(booleanValue = true) ^;"));
-        assertTrue(doTest(SingleParam_boolean, "@TestClass.My(booleanValue != false) ^;"));
+        assertPassed(test(environment, SingleParam_boolean, "@TestClass.My(booleanValue = true) ^;"));
+        assertPassed(test(environment, SingleParam_boolean, "@TestClass.My(booleanValue != false) ^;"));
 
-        assertTrue(doTest(SingleParam_byte, "@TestClass.My(byteValue = 1) ^;"));
-        assertTrue(doTest(SingleParam_byte, "@TestClass.My(byteValue != 0) ^;"));
-        assertTrue(doTest(SingleParam_byte, "@TestClass.My(byteValue >= 0) ^;"));
-        assertTrue(doTest(SingleParam_byte, "@TestClass.My(byteValue > 0) ^;"));
-        assertTrue(doTest(SingleParam_byte, "@TestClass.My(byteValue <= 2) ^;"));
-        assertTrue(doTest(SingleParam_byte, "@TestClass.My(byteValue < 2) ^;"));
+        assertPassed(test(environment, SingleParam_byte, "@TestClass.My(byteValue = 1) ^;"));
+        assertPassed(test(environment, SingleParam_byte, "@TestClass.My(byteValue != 0) ^;"));
+        assertPassed(test(environment, SingleParam_byte, "@TestClass.My(byteValue >= 0) ^;"));
+        assertPassed(test(environment, SingleParam_byte, "@TestClass.My(byteValue > 0) ^;"));
+        assertPassed(test(environment, SingleParam_byte, "@TestClass.My(byteValue <= 2) ^;"));
+        assertPassed(test(environment, SingleParam_byte, "@TestClass.My(byteValue < 2) ^;"));
 
-        assertTrue(doTest(SingleParam_short, "@TestClass.My(shortValue = 1) ^;"));
-        assertTrue(doTest(SingleParam_short, "@TestClass.My(shortValue != 0) ^;"));
-        assertTrue(doTest(SingleParam_short, "@TestClass.My(shortValue >= 0) ^;"));
-        assertTrue(doTest(SingleParam_short, "@TestClass.My(shortValue > 0) ^;"));
-        assertTrue(doTest(SingleParam_short, "@TestClass.My(shortValue <= 2) ^;"));
-        assertTrue(doTest(SingleParam_short, "@TestClass.My(shortValue < 2) ^;"));
+        assertPassed(test(environment, SingleParam_short, "@TestClass.My(shortValue = 1) ^;"));
+        assertPassed(test(environment, SingleParam_short, "@TestClass.My(shortValue != 0) ^;"));
+        assertPassed(test(environment, SingleParam_short, "@TestClass.My(shortValue >= 0) ^;"));
+        assertPassed(test(environment, SingleParam_short, "@TestClass.My(shortValue > 0) ^;"));
+        assertPassed(test(environment, SingleParam_short, "@TestClass.My(shortValue <= 2) ^;"));
+        assertPassed(test(environment, SingleParam_short, "@TestClass.My(shortValue < 2) ^;"));
 
-        assertTrue(doTest(SingleParam_int, "@TestClass.My(intValue = 1) ^;"));
-        assertTrue(doTest(SingleParam_int, "@TestClass.My(intValue != 0) ^;"));
-        assertTrue(doTest(SingleParam_int, "@TestClass.My(intValue >= 0) ^;"));
-        assertTrue(doTest(SingleParam_int, "@TestClass.My(intValue > 0) ^;"));
-        assertTrue(doTest(SingleParam_int, "@TestClass.My(intValue <= 2) ^;"));
-        assertTrue(doTest(SingleParam_int, "@TestClass.My(intValue < 2) ^;"));
+        assertPassed(test(environment, SingleParam_int, "@TestClass.My(intValue = 1) ^;"));
+        assertPassed(test(environment, SingleParam_int, "@TestClass.My(intValue != 0) ^;"));
+        assertPassed(test(environment, SingleParam_int, "@TestClass.My(intValue >= 0) ^;"));
+        assertPassed(test(environment, SingleParam_int, "@TestClass.My(intValue > 0) ^;"));
+        assertPassed(test(environment, SingleParam_int, "@TestClass.My(intValue <= 2) ^;"));
+        assertPassed(test(environment, SingleParam_int, "@TestClass.My(intValue < 2) ^;"));
 
-        assertTrue(doTest(SingleParam_long, "@TestClass.My(longValue = 1) ^;"));
-        assertTrue(doTest(SingleParam_long, "@TestClass.My(longValue != 0) ^;"));
-        assertTrue(doTest(SingleParam_long, "@TestClass.My(longValue >= 0) ^;"));
-        assertTrue(doTest(SingleParam_long, "@TestClass.My(longValue > 0) ^;"));
-        assertTrue(doTest(SingleParam_long, "@TestClass.My(longValue <= 2) ^;"));
-        assertTrue(doTest(SingleParam_long, "@TestClass.My(longValue < 2) ^;"));
+        assertPassed(test(environment, SingleParam_long, "@TestClass.My(longValue = 1) ^;"));
+        assertPassed(test(environment, SingleParam_long, "@TestClass.My(longValue != 0) ^;"));
+        assertPassed(test(environment, SingleParam_long, "@TestClass.My(longValue >= 0) ^;"));
+        assertPassed(test(environment, SingleParam_long, "@TestClass.My(longValue > 0) ^;"));
+        assertPassed(test(environment, SingleParam_long, "@TestClass.My(longValue <= 2) ^;"));
+        assertPassed(test(environment, SingleParam_long, "@TestClass.My(longValue < 2) ^;"));
 
-        assertTrue(doTest(SingleParam_float, "@TestClass.My(floatValue = 1) ^;"));
-        assertTrue(doTest(SingleParam_float, "@TestClass.My(floatValue != 0) ^;"));
-        assertTrue(doTest(SingleParam_float, "@TestClass.My(floatValue >= 0) ^;"));
-        assertTrue(doTest(SingleParam_float, "@TestClass.My(floatValue > 0) ^;"));
-        assertTrue(doTest(SingleParam_float, "@TestClass.My(floatValue <= 2) ^;"));
-        assertTrue(doTest(SingleParam_float, "@TestClass.My(floatValue < 2) ^;"));
+        assertPassed(test(environment, SingleParam_float, "@TestClass.My(floatValue = 1) ^;"));
+        assertPassed(test(environment, SingleParam_float, "@TestClass.My(floatValue != 0) ^;"));
+        assertPassed(test(environment, SingleParam_float, "@TestClass.My(floatValue >= 0) ^;"));
+        assertPassed(test(environment, SingleParam_float, "@TestClass.My(floatValue > 0) ^;"));
+        assertPassed(test(environment, SingleParam_float, "@TestClass.My(floatValue <= 2) ^;"));
+        assertPassed(test(environment, SingleParam_float, "@TestClass.My(floatValue < 2) ^;"));
 
-        assertTrue(doTest(SingleParam_double, "@TestClass.My(doubleValue = 1) ^;"));
-        assertTrue(doTest(SingleParam_double, "@TestClass.My(doubleValue != 0) ^;"));
-        assertTrue(doTest(SingleParam_double, "@TestClass.My(doubleValue >= 0) ^;"));
-        assertTrue(doTest(SingleParam_double, "@TestClass.My(doubleValue > 0) ^;"));
-        assertTrue(doTest(SingleParam_double, "@TestClass.My(doubleValue <= 2) ^;"));
-        assertTrue(doTest(SingleParam_double, "@TestClass.My(doubleValue < 2) ^;"));
+        assertPassed(test(environment, SingleParam_double, "@TestClass.My(doubleValue = 1) ^;"));
+        assertPassed(test(environment, SingleParam_double, "@TestClass.My(doubleValue != 0) ^;"));
+        assertPassed(test(environment, SingleParam_double, "@TestClass.My(doubleValue >= 0) ^;"));
+        assertPassed(test(environment, SingleParam_double, "@TestClass.My(doubleValue > 0) ^;"));
+        assertPassed(test(environment, SingleParam_double, "@TestClass.My(doubleValue <= 2) ^;"));
+        assertPassed(test(environment, SingleParam_double, "@TestClass.My(doubleValue < 2) ^;"));
 
-        assertTrue(doTest(SingleParam_char, "@TestClass.My(charValue = 'a') ^;"));
-        assertTrue(doTest(SingleParam_char, "@TestClass.My(charValue != 'b') ^;"));
+        assertPassed(test(environment, SingleParam_char, "@TestClass.My(charValue = 'a') ^;"));
+        assertPassed(test(environment, SingleParam_char, "@TestClass.My(charValue != 'b') ^;"));
 
-        assertTrue(doTest(SingleParam_string, "@TestClass.My(stringValue = 'ab') ^;"));
-        assertTrue(doTest(SingleParam_string, "@TestClass.My(stringValue != 'abc') ^;"));
+        assertPassed(test(environment, SingleParam_string, "@TestClass.My(stringValue = 'ab') ^;"));
+        assertPassed(test(environment, SingleParam_string, "@TestClass.My(stringValue != 'abc') ^;"));
 
-        assertTrue(doTest(SingleParam_annotation, "@TestClass.My(annotationValue = @java.lang.annotation.Target(**)) ^;"));
-        assertTrue(doTest(SingleParam_annotation, "@TestClass.My(annotationValue != @java.lang.annotation.Target) ^;"));
+        assertPassed(test(environment, SingleParam_annotation, "@TestClass.My(annotationValue = @java.lang.annotation.Target(**)) ^;"));
+        assertPassed(test(environment, SingleParam_annotation, "@TestClass.My(annotationValue != @java.lang.annotation.Target) ^;"));
 
-        assertTrue(doTest(SingleParam_class, "@TestClass.My(classValue = java.lang.String.class) ^;"));
-        assertTrue(doTest(SingleParam_class, "@TestClass.My(classValue != whatever.class) ^;"));
+        assertPassed(test(environment, SingleParam_class, "@TestClass.My(classValue = java.lang.String.class) ^;"));
+        assertPassed(test(environment, SingleParam_class, "@TestClass.My(classValue != whatever.class) ^;"));
 
-        assertTrue(doTest(SingleParam_class, "@TestClass.My(* = java.lang.String.class) ^;"));
-        assertTrue(doTest(SingleParam_class, "@TestClass.My(* = *) ^;"));
+        assertPassed(test(environment, SingleParam_class, "@TestClass.My(* = java.lang.String.class) ^;"));
+        assertPassed(test(environment, SingleParam_class, "@TestClass.My(* = *) ^;"));
     }
 
     @Test
     void testAnnotations_defaultValues() {
-        assertTrue(doTest(SingleParam_boolean, "@TestClass.My(booleanValue = true, byteValue = 0) ^;"));
-        assertTrue(doTest(SingleParam_boolean, "@TestClass.My(booleanValue != false, byteValue != 1) ^;"));
+        assertPassed(test(environment, SingleParam_boolean, "@TestClass.My(booleanValue = true, byteValue = 0) ^;"));
+        assertPassed(test(environment, SingleParam_boolean, "@TestClass.My(booleanValue != false, byteValue != 1) ^;"));
 
-        assertTrue(doTest(SingleParam_byte, "@TestClass.My(byteValue = 1, shortValue = 0) ^;"));
-        assertTrue(doTest(SingleParam_byte, "@TestClass.My(byteValue != 0, shortValue != 1) ^;"));
-        assertTrue(doTest(SingleParam_byte, "@TestClass.My(byteValue >= 0, shortValue >= -1) ^;"));
-        assertTrue(doTest(SingleParam_byte, "@TestClass.My(byteValue > 0, shortValue > -1) ^;"));
-        assertTrue(doTest(SingleParam_byte, "@TestClass.My(byteValue <= 2, shortValue <= 1) ^;"));
-        assertTrue(doTest(SingleParam_byte, "@TestClass.My(byteValue < 2, shortValue < 1) ^;"));
+        assertPassed(test(environment, SingleParam_byte, "@TestClass.My(byteValue = 1, shortValue = 0) ^;"));
+        assertPassed(test(environment, SingleParam_byte, "@TestClass.My(byteValue != 0, shortValue != 1) ^;"));
+        assertPassed(test(environment, SingleParam_byte, "@TestClass.My(byteValue >= 0, shortValue >= -1) ^;"));
+        assertPassed(test(environment, SingleParam_byte, "@TestClass.My(byteValue > 0, shortValue > -1) ^;"));
+        assertPassed(test(environment, SingleParam_byte, "@TestClass.My(byteValue <= 2, shortValue <= 1) ^;"));
+        assertPassed(test(environment, SingleParam_byte, "@TestClass.My(byteValue < 2, shortValue < 1) ^;"));
 
-        assertTrue(doTest(SingleParam_short, "@TestClass.My(shortValue = 1, intValue = 0) ^;"));
-        assertTrue(doTest(SingleParam_short, "@TestClass.My(shortValue != 0, intValue != 1) ^;"));
-        assertTrue(doTest(SingleParam_short, "@TestClass.My(shortValue >= 0, intValue >= 0) ^;"));
-        assertTrue(doTest(SingleParam_short, "@TestClass.My(shortValue > 0, intValue > -1) ^;"));
-        assertTrue(doTest(SingleParam_short, "@TestClass.My(shortValue <= 2, intValue <= 1) ^;"));
-        assertTrue(doTest(SingleParam_short, "@TestClass.My(shortValue < 2, intValue < 1) ^;"));
+        assertPassed(test(environment, SingleParam_short, "@TestClass.My(shortValue = 1, intValue = 0) ^;"));
+        assertPassed(test(environment, SingleParam_short, "@TestClass.My(shortValue != 0, intValue != 1) ^;"));
+        assertPassed(test(environment, SingleParam_short, "@TestClass.My(shortValue >= 0, intValue >= 0) ^;"));
+        assertPassed(test(environment, SingleParam_short, "@TestClass.My(shortValue > 0, intValue > -1) ^;"));
+        assertPassed(test(environment, SingleParam_short, "@TestClass.My(shortValue <= 2, intValue <= 1) ^;"));
+        assertPassed(test(environment, SingleParam_short, "@TestClass.My(shortValue < 2, intValue < 1) ^;"));
 
-        assertTrue(doTest(SingleParam_int, "@TestClass.My(intValue = 1, longValue = 0) ^;"));
-        assertTrue(doTest(SingleParam_int, "@TestClass.My(intValue != 0, longValue != 1) ^;"));
-        assertTrue(doTest(SingleParam_int, "@TestClass.My(intValue >= 0, longValue >= -1) ^;"));
-        assertTrue(doTest(SingleParam_int, "@TestClass.My(intValue > 0, longValue > 1) ^;"));
-        assertTrue(doTest(SingleParam_int, "@TestClass.My(intValue <= 2, longValue <= 1) ^;"));
-        assertTrue(doTest(SingleParam_int, "@TestClass.My(intValue < 2, longValue < 1) ^;"));
+        assertPassed(test(environment, SingleParam_int, "@TestClass.My(intValue = 1, longValue = 0) ^;"));
+        assertPassed(test(environment, SingleParam_int, "@TestClass.My(intValue != 0, longValue != 1) ^;"));
+        assertPassed(test(environment, SingleParam_int, "@TestClass.My(intValue >= 0, longValue >= -1) ^;"));
+        assertPassed(test(environment, SingleParam_int, "@TestClass.My(intValue > 0, longValue > 1) ^;"));
+        assertPassed(test(environment, SingleParam_int, "@TestClass.My(intValue <= 2, longValue <= 1) ^;"));
+        assertPassed(test(environment, SingleParam_int, "@TestClass.My(intValue < 2, longValue < 1) ^;"));
 
-        assertTrue(doTest(SingleParam_long, "@TestClass.My(longValue = 1, floatValue = 0) ^;"));
-        assertTrue(doTest(SingleParam_long, "@TestClass.My(longValue != 0, floatValue != 1) ^;"));
-        assertTrue(doTest(SingleParam_long, "@TestClass.My(longValue >= 0, floatValue >= -1) ^;"));
-        assertTrue(doTest(SingleParam_long, "@TestClass.My(longValue > 0, floatValue > -1) ^;"));
-        assertTrue(doTest(SingleParam_long, "@TestClass.My(longValue <= 2, floatValue <= 0) ^;"));
-        assertTrue(doTest(SingleParam_long, "@TestClass.My(longValue < 2, floatValue < 1) ^;"));
+        assertPassed(test(environment, SingleParam_long, "@TestClass.My(longValue = 1, floatValue = 0) ^;"));
+        assertPassed(test(environment, SingleParam_long, "@TestClass.My(longValue != 0, floatValue != 1) ^;"));
+        assertPassed(test(environment, SingleParam_long, "@TestClass.My(longValue >= 0, floatValue >= -1) ^;"));
+        assertPassed(test(environment, SingleParam_long, "@TestClass.My(longValue > 0, floatValue > -1) ^;"));
+        assertPassed(test(environment, SingleParam_long, "@TestClass.My(longValue <= 2, floatValue <= 0) ^;"));
+        assertPassed(test(environment, SingleParam_long, "@TestClass.My(longValue < 2, floatValue < 1) ^;"));
 
-        assertTrue(doTest(SingleParam_float, "@TestClass.My(floatValue = 1, doubleValue = 0) ^;"));
-        assertTrue(doTest(SingleParam_float, "@TestClass.My(floatValue != 0, doubleValue != 1) ^;"));
-        assertTrue(doTest(SingleParam_float, "@TestClass.My(floatValue >= 0, doubleValue >= 0) ^;"));
-        assertTrue(doTest(SingleParam_float, "@TestClass.My(floatValue > 0, doubleValue > -1) ^;"));
-        assertTrue(doTest(SingleParam_float, "@TestClass.My(floatValue <= 2, doubleValue <= 1) ^;"));
-        assertTrue(doTest(SingleParam_float, "@TestClass.My(floatValue < 2, doubleValue < 1) ^;"));
+        assertPassed(test(environment, SingleParam_float, "@TestClass.My(floatValue = 1, doubleValue = 0) ^;"));
+        assertPassed(test(environment, SingleParam_float, "@TestClass.My(floatValue != 0, doubleValue != 1) ^;"));
+        assertPassed(test(environment, SingleParam_float, "@TestClass.My(floatValue >= 0, doubleValue >= 0) ^;"));
+        assertPassed(test(environment, SingleParam_float, "@TestClass.My(floatValue > 0, doubleValue > -1) ^;"));
+        assertPassed(test(environment, SingleParam_float, "@TestClass.My(floatValue <= 2, doubleValue <= 1) ^;"));
+        assertPassed(test(environment, SingleParam_float, "@TestClass.My(floatValue < 2, doubleValue < 1) ^;"));
 
-        assertTrue(doTest(SingleParam_double, "@TestClass.My(doubleValue = 1, charValue = ' ') ^;"));
-        assertTrue(doTest(SingleParam_double, "@TestClass.My(doubleValue != 0, charValue != 'a' ) ^;"));
-        assertTrue(doTest(SingleParam_double, "@TestClass.My(doubleValue >= 0, charValue = / /) ^;"));
-        assertTrue(doTest(SingleParam_double, "@TestClass.My(doubleValue > 0, charValue != /a/) ^;"));
+        assertPassed(test(environment, SingleParam_double, "@TestClass.My(doubleValue = 1, charValue = ' ') ^;"));
+        assertPassed(test(environment, SingleParam_double, "@TestClass.My(doubleValue != 0, charValue != 'a' ) ^;"));
+        assertPassed(test(environment, SingleParam_double, "@TestClass.My(doubleValue >= 0, charValue = / /) ^;"));
+        assertPassed(test(environment, SingleParam_double, "@TestClass.My(doubleValue > 0, charValue != /a/) ^;"));
 
-        assertTrue(doTest(SingleParam_char, "@TestClass.My(charValue = 'a', stringValue = '') ^;"));
-        assertTrue(doTest(SingleParam_char, "@TestClass.My(charValue != 'b', stringValue != ' ') ^;"));
+        assertPassed(test(environment, SingleParam_char, "@TestClass.My(charValue = 'a', stringValue = '') ^;"));
+        assertPassed(test(environment, SingleParam_char, "@TestClass.My(charValue != 'b', stringValue != ' ') ^;"));
 
-        assertTrue(doTest(SingleParam_string, "@TestClass.My(stringValue = 'ab', annotationValue = @java.lang.annotation.Target(*)) ^;"));
-        assertTrue(doTest(SingleParam_string, "@TestClass.My(stringValue != 'abc', annotationValue != @whatever) ^;"));
+        assertPassed(test(environment, SingleParam_string, "@TestClass.My(stringValue = 'ab', annotationValue = @java.lang.annotation.Target(*)) ^;"));
+        assertPassed(test(environment, SingleParam_string, "@TestClass.My(stringValue != 'abc', annotationValue != @whatever) ^;"));
 
-        assertTrue(doTest(SingleParam_annotation, "@TestClass.My(annotationValue = @java.lang.annotation.Target(**), classValue = java.lang.Object.class) ^;"));
-        assertTrue(doTest(SingleParam_annotation, "@TestClass.My(annotationValue != @java.lang.annotation.Target, classValue != java.lang.String.class) ^;"));
+        assertPassed(test(environment, SingleParam_annotation, "@TestClass.My(annotationValue = @java.lang.annotation.Target(**), classValue = java.lang.Object.class) ^;"));
+        assertPassed(test(environment, SingleParam_annotation, "@TestClass.My(annotationValue != @java.lang.annotation.Target, classValue != java.lang.String.class) ^;"));
 
-        assertTrue(doTest(SingleParam_class, "@TestClass.My(classValue = java.lang.String.class, booleanValue = false) ^;"));
-        assertTrue(doTest(SingleParam_class, "@TestClass.My(classValue != whatever.class, booleanValue != true) ^;"));
+        assertPassed(test(environment, SingleParam_class, "@TestClass.My(classValue = java.lang.String.class, booleanValue = false) ^;"));
+        assertPassed(test(environment, SingleParam_class, "@TestClass.My(classValue != whatever.class, booleanValue != true) ^;"));
     }
 
     @Test
     void testAnnotations_2concreteValues() {
-        assertTrue(doTest(TwoParams_boolean, "@TestClass.My(booleanValue = true, byteValue = 2) ^;"));
-        assertTrue(doTest(TwoParams_boolean, "@TestClass.My(booleanValue != false, byteValue != 1) ^;"));
+        assertPassed(test(environment, TwoParams_boolean, "@TestClass.My(booleanValue = true, byteValue = 2) ^;"));
+        assertPassed(test(environment, TwoParams_boolean, "@TestClass.My(booleanValue != false, byteValue != 1) ^;"));
 
-        assertTrue(doTest(TwoParams_byte, "@TestClass.My(byteValue = 1, shortValue = 2) ^;"));
-        assertTrue(doTest(TwoParams_byte, "@TestClass.My(byteValue != 0, shortValue != 1) ^;"));
-        assertTrue(doTest(TwoParams_byte, "@TestClass.My(byteValue >= 0, shortValue >= 1) ^;"));
-        assertTrue(doTest(TwoParams_byte, "@TestClass.My(byteValue > 0, shortValue > 1) ^;"));
-        assertTrue(doTest(TwoParams_byte, "@TestClass.My(byteValue <= 2, shortValue <= 3) ^;"));
-        assertTrue(doTest(TwoParams_byte, "@TestClass.My(byteValue < 2, shortValue < 3) ^;"));
+        assertPassed(test(environment, TwoParams_byte, "@TestClass.My(byteValue = 1, shortValue = 2) ^;"));
+        assertPassed(test(environment, TwoParams_byte, "@TestClass.My(byteValue != 0, shortValue != 1) ^;"));
+        assertPassed(test(environment, TwoParams_byte, "@TestClass.My(byteValue >= 0, shortValue >= 1) ^;"));
+        assertPassed(test(environment, TwoParams_byte, "@TestClass.My(byteValue > 0, shortValue > 1) ^;"));
+        assertPassed(test(environment, TwoParams_byte, "@TestClass.My(byteValue <= 2, shortValue <= 3) ^;"));
+        assertPassed(test(environment, TwoParams_byte, "@TestClass.My(byteValue < 2, shortValue < 3) ^;"));
 
-        assertTrue(doTest(TwoParams_short, "@TestClass.My(shortValue = 1, intValue = 2) ^;"));
-        assertTrue(doTest(TwoParams_short, "@TestClass.My(shortValue != 0, intValue != 1) ^;"));
-        assertTrue(doTest(TwoParams_short, "@TestClass.My(shortValue >= 0, intValue >= 2) ^;"));
-        assertTrue(doTest(TwoParams_short, "@TestClass.My(shortValue > 0, intValue > 1) ^;"));
-        assertTrue(doTest(TwoParams_short, "@TestClass.My(shortValue <= 2, intValue <= 3) ^;"));
-        assertTrue(doTest(TwoParams_short, "@TestClass.My(shortValue < 2, intValue < 3) ^;"));
+        assertPassed(test(environment, TwoParams_short, "@TestClass.My(shortValue = 1, intValue = 2) ^;"));
+        assertPassed(test(environment, TwoParams_short, "@TestClass.My(shortValue != 0, intValue != 1) ^;"));
+        assertPassed(test(environment, TwoParams_short, "@TestClass.My(shortValue >= 0, intValue >= 2) ^;"));
+        assertPassed(test(environment, TwoParams_short, "@TestClass.My(shortValue > 0, intValue > 1) ^;"));
+        assertPassed(test(environment, TwoParams_short, "@TestClass.My(shortValue <= 2, intValue <= 3) ^;"));
+        assertPassed(test(environment, TwoParams_short, "@TestClass.My(shortValue < 2, intValue < 3) ^;"));
 
-        assertTrue(doTest(TwoParams_int, "@TestClass.My(intValue = 1, longValue = 2) ^;"));
-        assertTrue(doTest(TwoParams_int, "@TestClass.My(intValue != 0, longValue != 1) ^;"));
-        assertTrue(doTest(TwoParams_int, "@TestClass.My(intValue >= 0, longValue >= 2) ^;"));
-        assertTrue(doTest(TwoParams_int, "@TestClass.My(intValue > 0, longValue > 1) ^;"));
-        assertTrue(doTest(TwoParams_int, "@TestClass.My(intValue <= 2, longValue <= 3) ^;"));
-        assertTrue(doTest(TwoParams_int, "@TestClass.My(intValue < 2, longValue < 3) ^;"));
+        assertPassed(test(environment, TwoParams_int, "@TestClass.My(intValue = 1, longValue = 2) ^;"));
+        assertPassed(test(environment, TwoParams_int, "@TestClass.My(intValue != 0, longValue != 1) ^;"));
+        assertPassed(test(environment, TwoParams_int, "@TestClass.My(intValue >= 0, longValue >= 2) ^;"));
+        assertPassed(test(environment, TwoParams_int, "@TestClass.My(intValue > 0, longValue > 1) ^;"));
+        assertPassed(test(environment, TwoParams_int, "@TestClass.My(intValue <= 2, longValue <= 3) ^;"));
+        assertPassed(test(environment, TwoParams_int, "@TestClass.My(intValue < 2, longValue < 3) ^;"));
 
-        assertTrue(doTest(TwoParams_long, "@TestClass.My(longValue = 1, floatValue = 2) ^;"));
-        assertTrue(doTest(TwoParams_long, "@TestClass.My(longValue != 0, floatValue != 2.1) ^;"));
-        assertTrue(doTest(TwoParams_long, "@TestClass.My(longValue >= 0, floatValue >= 1.9) ^;"));
-        assertTrue(doTest(TwoParams_long, "@TestClass.My(longValue > 0, floatValue > 1.9) ^;"));
-        assertTrue(doTest(TwoParams_long, "@TestClass.My(longValue <= 2, floatValue <= 2.1) ^;"));
-        assertTrue(doTest(TwoParams_long, "@TestClass.My(longValue < 2, floatValue < 2.1) ^;"));
+        assertPassed(test(environment, TwoParams_long, "@TestClass.My(longValue = 1, floatValue = 2) ^;"));
+        assertPassed(test(environment, TwoParams_long, "@TestClass.My(longValue != 0, floatValue != 2.1) ^;"));
+        assertPassed(test(environment, TwoParams_long, "@TestClass.My(longValue >= 0, floatValue >= 1.9) ^;"));
+        assertPassed(test(environment, TwoParams_long, "@TestClass.My(longValue > 0, floatValue > 1.9) ^;"));
+        assertPassed(test(environment, TwoParams_long, "@TestClass.My(longValue <= 2, floatValue <= 2.1) ^;"));
+        assertPassed(test(environment, TwoParams_long, "@TestClass.My(longValue < 2, floatValue < 2.1) ^;"));
 
-        assertTrue(doTest(TwoParams_float, "@TestClass.My(floatValue = 1, doubleValue = 2) ^;"));
-        assertTrue(doTest(TwoParams_float, "@TestClass.My(floatValue != 0, doubleValue != 2.1) ^;"));
-        assertTrue(doTest(TwoParams_float, "@TestClass.My(floatValue >= 0, doubleValue >= 1.9) ^;"));
-        assertTrue(doTest(TwoParams_float, "@TestClass.My(floatValue > 0, doubleValue > 1.9) ^;"));
-        assertTrue(doTest(TwoParams_float, "@TestClass.My(floatValue <= 2, doubleValue <= 2.1) ^;"));
-        assertTrue(doTest(TwoParams_float, "@TestClass.My(floatValue < 2, doubleValue < 2.1) ^;"));
+        assertPassed(test(environment, TwoParams_float, "@TestClass.My(floatValue = 1, doubleValue = 2) ^;"));
+        assertPassed(test(environment, TwoParams_float, "@TestClass.My(floatValue != 0, doubleValue != 2.1) ^;"));
+        assertPassed(test(environment, TwoParams_float, "@TestClass.My(floatValue >= 0, doubleValue >= 1.9) ^;"));
+        assertPassed(test(environment, TwoParams_float, "@TestClass.My(floatValue > 0, doubleValue > 1.9) ^;"));
+        assertPassed(test(environment, TwoParams_float, "@TestClass.My(floatValue <= 2, doubleValue <= 2.1) ^;"));
+        assertPassed(test(environment, TwoParams_float, "@TestClass.My(floatValue < 2, doubleValue < 2.1) ^;"));
 
-        assertTrue(doTest(TwoParams_double, "@TestClass.My(doubleValue = 1, charValue = 'b') ^;"));
-        assertTrue(doTest(TwoParams_double, "@TestClass.My(doubleValue != 0, charValue != 'a') ^;"));
-        assertTrue(doTest(TwoParams_double, "@TestClass.My(doubleValue >= 0, charValue = 'b') ^;"));
-        assertTrue(doTest(TwoParams_double, "@TestClass.My(doubleValue > 0, charValue = 'b') ^;"));
-        assertTrue(doTest(TwoParams_double, "@TestClass.My(doubleValue <= 2, charValue = *) ^;"));
-        assertTrue(doTest(TwoParams_double, "@TestClass.My(doubleValue < 2, charValue = *) ^;"));
+        assertPassed(test(environment, TwoParams_double, "@TestClass.My(doubleValue = 1, charValue = 'b') ^;"));
+        assertPassed(test(environment, TwoParams_double, "@TestClass.My(doubleValue != 0, charValue != 'a') ^;"));
+        assertPassed(test(environment, TwoParams_double, "@TestClass.My(doubleValue >= 0, charValue = 'b') ^;"));
+        assertPassed(test(environment, TwoParams_double, "@TestClass.My(doubleValue > 0, charValue = 'b') ^;"));
+        assertPassed(test(environment, TwoParams_double, "@TestClass.My(doubleValue <= 2, charValue = *) ^;"));
+        assertPassed(test(environment, TwoParams_double, "@TestClass.My(doubleValue < 2, charValue = *) ^;"));
 
-        assertTrue(doTest(TwoParams_char, "@TestClass.My(charValue = 'a', stringValue = 'abc') ^;"));
-        assertTrue(doTest(TwoParams_char, "@TestClass.My(charValue != 'b', stringValue != 'ab') ^;"));
+        assertPassed(test(environment, TwoParams_char, "@TestClass.My(charValue = 'a', stringValue = 'abc') ^;"));
+        assertPassed(test(environment, TwoParams_char, "@TestClass.My(charValue != 'b', stringValue != 'ab') ^;"));
 
-        assertTrue(doTest(TwoParams_string, "@TestClass.My(stringValue = 'ab', annotationValue = @java.lang.annotation.Target(**)) ^;"));
-        assertTrue(doTest(TwoParams_string, "@TestClass.My(stringValue != 'abc', annotationValue != java.lang.annotation.Retention) ^;"));
+        assertPassed(test(environment, TwoParams_string, "@TestClass.My(stringValue = 'ab', annotationValue = @java.lang.annotation.Target(**)) ^;"));
+        assertPassed(test(environment, TwoParams_string, "@TestClass.My(stringValue != 'abc', annotationValue != java.lang.annotation.Retention) ^;"));
 
-        assertTrue(doTest(TwoParams_annotation, "@TestClass.My(annotationValue = @java.lang.annotation.Target(**), classValue = java.lang.Object.class) ^;"));
-        assertTrue(doTest(TwoParams_annotation, "@TestClass.My(annotationValue != @java.lang.annotation.Target, classValue != java.lang.String.class) ^;"));
+        assertPassed(test(environment, TwoParams_annotation, "@TestClass.My(annotationValue = @java.lang.annotation.Target(**), classValue = java.lang.Object.class) ^;"));
+        assertPassed(test(environment, TwoParams_annotation, "@TestClass.My(annotationValue != @java.lang.annotation.Target, classValue != java.lang.String.class) ^;"));
 
-        assertTrue(doTest(TwoParams_class, "@TestClass.My(classValue = java.lang.String.class, booleanValue = false) ^;"));
-        assertTrue(doTest(TwoParams_class, "@TestClass.My(classValue != whatever.class, booleanValue != true) ^;"));
+        assertPassed(test(environment, TwoParams_class, "@TestClass.My(classValue = java.lang.String.class, booleanValue = false) ^;"));
+        assertPassed(test(environment, TwoParams_class, "@TestClass.My(classValue != whatever.class, booleanValue != true) ^;"));
 
-        assertTrue(doTest(TwoParams_class, "@TestClass.My(* = java.lang.String.class, * = *) ^;"));
+        assertPassed(test(environment, TwoParams_class, "@TestClass.My(* = java.lang.String.class, * = *) ^;"));
     }
 
     @Test
     void testAnnotations_regex() {
-        assertTrue(doTest(SingleParam_boolean, "@TestClass.My(booleanValue = /t[rR]ue/) ^;"));
-        assertTrue(doTest(SingleParam_boolean, "@TestClass.My(booleanValue != /false/) ^;"));
+        assertPassed(test(environment, SingleParam_boolean, "@TestClass.My(booleanValue = /t[rR]ue/) ^;"));
+        assertPassed(test(environment, SingleParam_boolean, "@TestClass.My(booleanValue != /false/) ^;"));
 
-        assertTrue(doTest(SingleParam_byte, "@TestClass.My(byteValue = /1/) ^;"));
-        assertTrue(doTest(SingleParam_byte, "@TestClass.My(byteValue != /2/) ^;"));
+        assertPassed(test(environment, SingleParam_byte, "@TestClass.My(byteValue = /1/) ^;"));
+        assertPassed(test(environment, SingleParam_byte, "@TestClass.My(byteValue != /2/) ^;"));
 
-        assertTrue(doTest(SingleParam_short, "@TestClass.My(shortValue = /1/) ^;"));
-        assertTrue(doTest(SingleParam_short, "@TestClass.My(shortValue != /0/) ^;"));
+        assertPassed(test(environment, SingleParam_short, "@TestClass.My(shortValue = /1/) ^;"));
+        assertPassed(test(environment, SingleParam_short, "@TestClass.My(shortValue != /0/) ^;"));
 
-        assertTrue(doTest(SingleParam_int, "@TestClass.My(intValue = /1/) ^;"));
-        assertTrue(doTest(SingleParam_int, "@TestClass.My(intValue != /0/) ^;"));
+        assertPassed(test(environment, SingleParam_int, "@TestClass.My(intValue = /1/) ^;"));
+        assertPassed(test(environment, SingleParam_int, "@TestClass.My(intValue != /0/) ^;"));
 
-        assertTrue(doTest(SingleParam_long, "@TestClass.My(longValue = /1.*/) ^;"));
-        assertTrue(doTest(SingleParam_long, "@TestClass.My(longValue != /^$/) ^;"));
+        assertPassed(test(environment, SingleParam_long, "@TestClass.My(longValue = /1.*/) ^;"));
+        assertPassed(test(environment, SingleParam_long, "@TestClass.My(longValue != /^$/) ^;"));
 
-        assertTrue(doTest(SingleParam_float, "@TestClass.My(floatValue = /1\\.0/) ^;"));
-        assertTrue(doTest(SingleParam_float, "@TestClass.My(floatValue != /0/) ^;"));
+        assertPassed(test(environment, SingleParam_float, "@TestClass.My(floatValue = /1\\.0/) ^;"));
+        assertPassed(test(environment, SingleParam_float, "@TestClass.My(floatValue != /0/) ^;"));
 
-        assertTrue(doTest(SingleParam_double, "@TestClass.My(doubleValue = /1\\.0/) ^;"));
-        assertTrue(doTest(SingleParam_double, "@TestClass.My(doubleValue != /0/) ^;"));
+        assertPassed(test(environment, SingleParam_double, "@TestClass.My(doubleValue = /1\\.0/) ^;"));
+        assertPassed(test(environment, SingleParam_double, "@TestClass.My(doubleValue != /0/) ^;"));
 
-        assertTrue(doTest(SingleParam_char, "@TestClass.My(charValue = /a/) ^;"));
-        assertTrue(doTest(SingleParam_char, "@TestClass.My(charValue != /[A-Z]/) ^;"));
+        assertPassed(test(environment, SingleParam_char, "@TestClass.My(charValue = /a/) ^;"));
+        assertPassed(test(environment, SingleParam_char, "@TestClass.My(charValue != /[A-Z]/) ^;"));
 
-        assertTrue(doTest(SingleParam_string, "@TestClass.My(stringValue = /a[bc]/) ^;"));
-        assertTrue(doTest(SingleParam_string, "@TestClass.My(stringValue != /abc/) ^;"));
+        assertPassed(test(environment, SingleParam_string, "@TestClass.My(stringValue = /a[bc]/) ^;"));
+        assertPassed(test(environment, SingleParam_string, "@TestClass.My(stringValue != /abc/) ^;"));
 
-        assertTrue(doTest(SingleParam_annotation, "@TestClass.My(annotationValue = @**.Target(**)) ^;"));
-        assertTrue(doTest(SingleParam_annotation, "@TestClass.My(annotationValue != @**.Retention) ^;"));
+        assertPassed(test(environment, SingleParam_annotation, "@TestClass.My(annotationValue = @**.Target(**)) ^;"));
+        assertPassed(test(environment, SingleParam_annotation, "@TestClass.My(annotationValue != @**.Retention) ^;"));
 
-        assertTrue(doTest(SingleParam_class, "@TestClass.My(classValue = **.String.class) ^;"));
-        assertTrue(doTest(SingleParam_class, "@TestClass.My(classValue != whatever.class) ^;"));
+        assertPassed(test(environment, SingleParam_class, "@TestClass.My(classValue = **.String.class) ^;"));
+        assertPassed(test(environment, SingleParam_class, "@TestClass.My(classValue != whatever.class) ^;"));
 
-        assertTrue(doTest(SingleParam_class, "@TestClass.My(* = /.*/) ^;"));
+        assertPassed(test(environment, SingleParam_class, "@TestClass.My(* = /.*/) ^;"));
     }
 
     @Test
     void testAnnotations_arrays() {
-        assertTrue(doTest(SingleParam_booleanArray1, "@TestClass.My(booleanArray = {true}) ^;"));
-        assertTrue(doTest(SingleParam_booleanArray1, "@TestClass.My(booleanArray != {}) ^;"));
-        assertTrue(doTest(SingleParam_booleanArray1, "@TestClass.My(booleanArray != {false}) ^;"));
-        assertTrue(doTest(SingleParam_booleanArray1, "@TestClass.My(booleanArray != {true, true}) ^;"));
+        assertPassed(test(environment, SingleParam_booleanArray1, "@TestClass.My(booleanArray = {true}) ^;"));
+        assertPassed(test(environment, SingleParam_booleanArray1, "@TestClass.My(booleanArray != {}) ^;"));
+        assertPassed(test(environment, SingleParam_booleanArray1, "@TestClass.My(booleanArray != {false}) ^;"));
+        assertPassed(test(environment, SingleParam_booleanArray1, "@TestClass.My(booleanArray != {true, true}) ^;"));
 
-        assertTrue(doTest(SingleParam_byteArray1, "@TestClass.My(byteArray = {1}) ^;"));
-        assertTrue(doTest(SingleParam_byteArray1, "@TestClass.My(byteArray != {}) ^;"));
-        assertTrue(doTest(SingleParam_byteArray1, "@TestClass.My(byteArray != {0}) ^;"));
-        assertTrue(doTest(SingleParam_byteArray1, "@TestClass.My(byteArray != {1, 1}) ^;"));
+        assertPassed(test(environment, SingleParam_byteArray1, "@TestClass.My(byteArray = {1}) ^;"));
+        assertPassed(test(environment, SingleParam_byteArray1, "@TestClass.My(byteArray != {}) ^;"));
+        assertPassed(test(environment, SingleParam_byteArray1, "@TestClass.My(byteArray != {0}) ^;"));
+        assertPassed(test(environment, SingleParam_byteArray1, "@TestClass.My(byteArray != {1, 1}) ^;"));
 
-        assertTrue(doTest(SingleParam_shortArray1, "@TestClass.My(shortArray = {1}) ^;"));
-        assertTrue(doTest(SingleParam_shortArray1, "@TestClass.My(shortArray != {}) ^;"));
-        assertTrue(doTest(SingleParam_shortArray1, "@TestClass.My(shortArray != {0}) ^;"));
-        assertTrue(doTest(SingleParam_shortArray1, "@TestClass.My(shortArray != {1, 1}) ^;"));
+        assertPassed(test(environment, SingleParam_shortArray1, "@TestClass.My(shortArray = {1}) ^;"));
+        assertPassed(test(environment, SingleParam_shortArray1, "@TestClass.My(shortArray != {}) ^;"));
+        assertPassed(test(environment, SingleParam_shortArray1, "@TestClass.My(shortArray != {0}) ^;"));
+        assertPassed(test(environment, SingleParam_shortArray1, "@TestClass.My(shortArray != {1, 1}) ^;"));
 
-        assertTrue(doTest(SingleParam_intArray1, "@TestClass.My(intArray = {1}) ^;"));
-        assertTrue(doTest(SingleParam_intArray1, "@TestClass.My(intArray != {}) ^;"));
-        assertTrue(doTest(SingleParam_intArray1, "@TestClass.My(intArray != {0}) ^;"));
-        assertTrue(doTest(SingleParam_intArray1, "@TestClass.My(intArray != {1, 1}) ^;"));
+        assertPassed(test(environment, SingleParam_intArray1, "@TestClass.My(intArray = {1}) ^;"));
+        assertPassed(test(environment, SingleParam_intArray1, "@TestClass.My(intArray != {}) ^;"));
+        assertPassed(test(environment, SingleParam_intArray1, "@TestClass.My(intArray != {0}) ^;"));
+        assertPassed(test(environment, SingleParam_intArray1, "@TestClass.My(intArray != {1, 1}) ^;"));
 
-        assertTrue(doTest(SingleParam_longArray1, "@TestClass.My(longArray = {1}) ^;"));
-        assertTrue(doTest(SingleParam_longArray1, "@TestClass.My(longArray != {}) ^;"));
-        assertTrue(doTest(SingleParam_longArray1, "@TestClass.My(longArray != {0}) ^;"));
-        assertTrue(doTest(SingleParam_longArray1, "@TestClass.My(longArray != {1, 1}) ^;"));
+        assertPassed(test(environment, SingleParam_longArray1, "@TestClass.My(longArray = {1}) ^;"));
+        assertPassed(test(environment, SingleParam_longArray1, "@TestClass.My(longArray != {}) ^;"));
+        assertPassed(test(environment, SingleParam_longArray1, "@TestClass.My(longArray != {0}) ^;"));
+        assertPassed(test(environment, SingleParam_longArray1, "@TestClass.My(longArray != {1, 1}) ^;"));
 
-        assertTrue(doTest(SingleParam_floatArray1, "@TestClass.My(floatArray = {1}) ^;"));
-        assertTrue(doTest(SingleParam_floatArray1, "@TestClass.My(floatArray != {}) ^;"));
-        assertTrue(doTest(SingleParam_floatArray1, "@TestClass.My(floatArray != {0}) ^;"));
-        assertTrue(doTest(SingleParam_floatArray1, "@TestClass.My(floatArray != {1, 1}) ^;"));
+        assertPassed(test(environment, SingleParam_floatArray1, "@TestClass.My(floatArray = {1}) ^;"));
+        assertPassed(test(environment, SingleParam_floatArray1, "@TestClass.My(floatArray != {}) ^;"));
+        assertPassed(test(environment, SingleParam_floatArray1, "@TestClass.My(floatArray != {0}) ^;"));
+        assertPassed(test(environment, SingleParam_floatArray1, "@TestClass.My(floatArray != {1, 1}) ^;"));
 
-        assertTrue(doTest(SingleParam_doubleArray1, "@TestClass.My(doubleArray = {1}) ^;"));
-        assertTrue(doTest(SingleParam_doubleArray1, "@TestClass.My(doubleArray != {}) ^;"));
-        assertTrue(doTest(SingleParam_doubleArray1, "@TestClass.My(doubleArray != {0}) ^;"));
-        assertTrue(doTest(SingleParam_doubleArray1, "@TestClass.My(doubleArray != {1, 1}) ^;"));
+        assertPassed(test(environment, SingleParam_doubleArray1, "@TestClass.My(doubleArray = {1}) ^;"));
+        assertPassed(test(environment, SingleParam_doubleArray1, "@TestClass.My(doubleArray != {}) ^;"));
+        assertPassed(test(environment, SingleParam_doubleArray1, "@TestClass.My(doubleArray != {0}) ^;"));
+        assertPassed(test(environment, SingleParam_doubleArray1, "@TestClass.My(doubleArray != {1, 1}) ^;"));
 
-        assertTrue(doTest(SingleParam_charArray1, "@TestClass.My(charArray = {'a'}) ^;"));
-        assertTrue(doTest(SingleParam_charArray1, "@TestClass.My(charArray != {}) ^;"));
-        assertTrue(doTest(SingleParam_charArray1, "@TestClass.My(charArray != {'b'}) ^;"));
-        assertTrue(doTest(SingleParam_charArray1, "@TestClass.My(charArray != {'a', 'a'}) ^;"));
+        assertPassed(test(environment, SingleParam_charArray1, "@TestClass.My(charArray = {'a'}) ^;"));
+        assertPassed(test(environment, SingleParam_charArray1, "@TestClass.My(charArray != {}) ^;"));
+        assertPassed(test(environment, SingleParam_charArray1, "@TestClass.My(charArray != {'b'}) ^;"));
+        assertPassed(test(environment, SingleParam_charArray1, "@TestClass.My(charArray != {'a', 'a'}) ^;"));
 
-        assertTrue(doTest(SingleParam_stringArray1, "@TestClass.My(stringArray = {'ab'}) ^;"));
-        assertTrue(doTest(SingleParam_stringArray1, "@TestClass.My(stringArray != {}) ^;"));
-        assertTrue(doTest(SingleParam_stringArray1, "@TestClass.My(stringArray != {'b'}) ^;"));
-        assertTrue(doTest(SingleParam_stringArray1, "@TestClass.My(stringArray != {'ab', 'ab'}) ^;"));
+        assertPassed(test(environment, SingleParam_stringArray1, "@TestClass.My(stringArray = {'ab'}) ^;"));
+        assertPassed(test(environment, SingleParam_stringArray1, "@TestClass.My(stringArray != {}) ^;"));
+        assertPassed(test(environment, SingleParam_stringArray1, "@TestClass.My(stringArray != {'b'}) ^;"));
+        assertPassed(test(environment, SingleParam_stringArray1, "@TestClass.My(stringArray != {'ab', 'ab'}) ^;"));
 
-        assertTrue(doTest(SingleParam_annotationArray1, "@TestClass.My(annotationArray = {@java.lang.annotation.Target(*)}) ^;"));
-        assertTrue(doTest(SingleParam_annotationArray1, "@TestClass.My(annotationArray != {}) ^;"));
-        assertTrue(doTest(SingleParam_annotationArray1, "@TestClass.My(annotationArray != {@whatever}) ^;"));
-        assertTrue(doTest(SingleParam_annotationArray1, "@TestClass.My(annotationArray != {@java.lang.annotation.Target(*), @java.lang.annotation.Target(*)}) ^;"));
+        assertPassed(test(environment, SingleParam_annotationArray1, "@TestClass.My(annotationArray = {@java.lang.annotation.Target(*)}) ^;"));
+        assertPassed(test(environment, SingleParam_annotationArray1, "@TestClass.My(annotationArray != {}) ^;"));
+        assertPassed(test(environment, SingleParam_annotationArray1, "@TestClass.My(annotationArray != {@whatever}) ^;"));
+        assertPassed(test(environment, SingleParam_annotationArray1, "@TestClass.My(annotationArray != {@java.lang.annotation.Target(*), @java.lang.annotation.Target(*)}) ^;"));
 
-        assertTrue(doTest(SingleParam_classArray1, "@TestClass.My(classArray = {java.lang.String.class}) ^;"));
-        assertTrue(doTest(SingleParam_classArray1, "@TestClass.My(classArray != {}) ^;"));
-        assertTrue(doTest(SingleParam_classArray1, "@TestClass.My(classArray != {java.lang.Object.class}) ^;"));
-        assertTrue(doTest(SingleParam_classArray1, "@TestClass.My(classArray != {java.lang.String.class, java.lang.String.class}) ^;"));
+        assertPassed(test(environment, SingleParam_classArray1, "@TestClass.My(classArray = {java.lang.String.class}) ^;"));
+        assertPassed(test(environment, SingleParam_classArray1, "@TestClass.My(classArray != {}) ^;"));
+        assertPassed(test(environment, SingleParam_classArray1, "@TestClass.My(classArray != {java.lang.Object.class}) ^;"));
+        assertPassed(test(environment, SingleParam_classArray1, "@TestClass.My(classArray != {java.lang.String.class, java.lang.String.class}) ^;"));
     }
 
     @Test
     void testAnnotations_arraysWithMultipleElements() {
-        assertTrue(doTest(SingleParam_booleanArray2, "@TestClass.My(booleanArray = {true, false}) ^;"));
-        assertTrue(doTest(SingleParam_booleanArray2, "@TestClass.My(booleanArray != {}) ^;"));
-        assertTrue(doTest(SingleParam_booleanArray2, "@TestClass.My(booleanArray != {false}) ^;"));
-        assertTrue(doTest(SingleParam_booleanArray2, "@TestClass.My(booleanArray != {true, true}) ^;"));
+        assertPassed(test(environment, SingleParam_booleanArray2, "@TestClass.My(booleanArray = {true, false}) ^;"));
+        assertPassed(test(environment, SingleParam_booleanArray2, "@TestClass.My(booleanArray != {}) ^;"));
+        assertPassed(test(environment, SingleParam_booleanArray2, "@TestClass.My(booleanArray != {false}) ^;"));
+        assertPassed(test(environment, SingleParam_booleanArray2, "@TestClass.My(booleanArray != {true, true}) ^;"));
 
-        assertTrue(doTest(SingleParam_byteArray2, "@TestClass.My(byteArray = {1, 2}) ^;"));
-        assertTrue(doTest(SingleParam_byteArray2, "@TestClass.My(byteArray != {}) ^;"));
-        assertTrue(doTest(SingleParam_byteArray2, "@TestClass.My(byteArray != {0}) ^;"));
-        assertTrue(doTest(SingleParam_byteArray2, "@TestClass.My(byteArray != {1, 1}) ^;"));
+        assertPassed(test(environment, SingleParam_byteArray2, "@TestClass.My(byteArray = {1, 2}) ^;"));
+        assertPassed(test(environment, SingleParam_byteArray2, "@TestClass.My(byteArray != {}) ^;"));
+        assertPassed(test(environment, SingleParam_byteArray2, "@TestClass.My(byteArray != {0}) ^;"));
+        assertPassed(test(environment, SingleParam_byteArray2, "@TestClass.My(byteArray != {1, 1}) ^;"));
 
-        assertTrue(doTest(SingleParam_shortArray2, "@TestClass.My(shortArray = {1, 2}) ^;"));
-        assertTrue(doTest(SingleParam_shortArray2, "@TestClass.My(shortArray != {}) ^;"));
-        assertTrue(doTest(SingleParam_shortArray2, "@TestClass.My(shortArray != {0}) ^;"));
-        assertTrue(doTest(SingleParam_shortArray2, "@TestClass.My(shortArray != {1, 1}) ^;"));
+        assertPassed(test(environment, SingleParam_shortArray2, "@TestClass.My(shortArray = {1, 2}) ^;"));
+        assertPassed(test(environment, SingleParam_shortArray2, "@TestClass.My(shortArray != {}) ^;"));
+        assertPassed(test(environment, SingleParam_shortArray2, "@TestClass.My(shortArray != {0}) ^;"));
+        assertPassed(test(environment, SingleParam_shortArray2, "@TestClass.My(shortArray != {1, 1}) ^;"));
 
-        assertTrue(doTest(SingleParam_intArray2, "@TestClass.My(intArray = {1, 2}) ^;"));
-        assertTrue(doTest(SingleParam_intArray2, "@TestClass.My(intArray != {}) ^;"));
-        assertTrue(doTest(SingleParam_intArray2, "@TestClass.My(intArray != {0}) ^;"));
-        assertTrue(doTest(SingleParam_intArray2, "@TestClass.My(intArray != {1, 1}) ^;"));
+        assertPassed(test(environment, SingleParam_intArray2, "@TestClass.My(intArray = {1, 2}) ^;"));
+        assertPassed(test(environment, SingleParam_intArray2, "@TestClass.My(intArray != {}) ^;"));
+        assertPassed(test(environment, SingleParam_intArray2, "@TestClass.My(intArray != {0}) ^;"));
+        assertPassed(test(environment, SingleParam_intArray2, "@TestClass.My(intArray != {1, 1}) ^;"));
 
-        assertTrue(doTest(SingleParam_longArray2, "@TestClass.My(longArray = {1, 2}) ^;"));
-        assertTrue(doTest(SingleParam_longArray2, "@TestClass.My(longArray != {}) ^;"));
-        assertTrue(doTest(SingleParam_longArray2, "@TestClass.My(longArray != {0}) ^;"));
-        assertTrue(doTest(SingleParam_longArray2, "@TestClass.My(longArray != {1, 1}) ^;"));
+        assertPassed(test(environment, SingleParam_longArray2, "@TestClass.My(longArray = {1, 2}) ^;"));
+        assertPassed(test(environment, SingleParam_longArray2, "@TestClass.My(longArray != {}) ^;"));
+        assertPassed(test(environment, SingleParam_longArray2, "@TestClass.My(longArray != {0}) ^;"));
+        assertPassed(test(environment, SingleParam_longArray2, "@TestClass.My(longArray != {1, 1}) ^;"));
 
-        assertTrue(doTest(SingleParam_floatArray2, "@TestClass.My(floatArray = {1, 2}) ^;"));
-        assertTrue(doTest(SingleParam_floatArray2, "@TestClass.My(floatArray != {}) ^;"));
-        assertTrue(doTest(SingleParam_floatArray2, "@TestClass.My(floatArray != {0}) ^;"));
-        assertTrue(doTest(SingleParam_floatArray2, "@TestClass.My(floatArray != {1, 1}) ^;"));
+        assertPassed(test(environment, SingleParam_floatArray2, "@TestClass.My(floatArray = {1, 2}) ^;"));
+        assertPassed(test(environment, SingleParam_floatArray2, "@TestClass.My(floatArray != {}) ^;"));
+        assertPassed(test(environment, SingleParam_floatArray2, "@TestClass.My(floatArray != {0}) ^;"));
+        assertPassed(test(environment, SingleParam_floatArray2, "@TestClass.My(floatArray != {1, 1}) ^;"));
 
-        assertTrue(doTest(SingleParam_doubleArray2, "@TestClass.My(doubleArray = {1, 2}) ^;"));
-        assertTrue(doTest(SingleParam_doubleArray2, "@TestClass.My(doubleArray != {}) ^;"));
-        assertTrue(doTest(SingleParam_doubleArray2, "@TestClass.My(doubleArray != {0}) ^;"));
-        assertTrue(doTest(SingleParam_doubleArray2, "@TestClass.My(doubleArray != {1, 1}) ^;"));
+        assertPassed(test(environment, SingleParam_doubleArray2, "@TestClass.My(doubleArray = {1, 2}) ^;"));
+        assertPassed(test(environment, SingleParam_doubleArray2, "@TestClass.My(doubleArray != {}) ^;"));
+        assertPassed(test(environment, SingleParam_doubleArray2, "@TestClass.My(doubleArray != {0}) ^;"));
+        assertPassed(test(environment, SingleParam_doubleArray2, "@TestClass.My(doubleArray != {1, 1}) ^;"));
 
-        assertTrue(doTest(SingleParam_charArray2, "@TestClass.My(charArray = {'a', 'b'}) ^;"));
-        assertTrue(doTest(SingleParam_charArray2, "@TestClass.My(charArray != {}) ^;"));
-        assertTrue(doTest(SingleParam_charArray2, "@TestClass.My(charArray != {'b'}) ^;"));
-        assertTrue(doTest(SingleParam_charArray2, "@TestClass.My(charArray != {'a', 'a'}) ^;"));
+        assertPassed(test(environment, SingleParam_charArray2, "@TestClass.My(charArray = {'a', 'b'}) ^;"));
+        assertPassed(test(environment, SingleParam_charArray2, "@TestClass.My(charArray != {}) ^;"));
+        assertPassed(test(environment, SingleParam_charArray2, "@TestClass.My(charArray != {'b'}) ^;"));
+        assertPassed(test(environment, SingleParam_charArray2, "@TestClass.My(charArray != {'a', 'a'}) ^;"));
 
-        assertTrue(doTest(SingleParam_stringArray2, "@TestClass.My(stringArray = {'ab', 'abc'}) ^;"));
-        assertTrue(doTest(SingleParam_stringArray2, "@TestClass.My(stringArray = {'ab', 'abc', **}) ^;"));
-        assertTrue(doTest(SingleParam_stringArray2, "@TestClass.My(stringArray != {}) ^;"));
-        assertTrue(doTest(SingleParam_stringArray2, "@TestClass.My(stringArray != {'b'}) ^;"));
-        assertTrue(doTest(SingleParam_stringArray2, "@TestClass.My(stringArray != {'ab', 'ab'}) ^;"));
+        assertPassed(test(environment, SingleParam_stringArray2, "@TestClass.My(stringArray = {'ab', 'abc'}) ^;"));
+        assertPassed(test(environment, SingleParam_stringArray2, "@TestClass.My(stringArray = {'ab', 'abc', **}) ^;"));
+        assertPassed(test(environment, SingleParam_stringArray2, "@TestClass.My(stringArray != {}) ^;"));
+        assertPassed(test(environment, SingleParam_stringArray2, "@TestClass.My(stringArray != {'b'}) ^;"));
+        assertPassed(test(environment, SingleParam_stringArray2, "@TestClass.My(stringArray != {'ab', 'ab'}) ^;"));
 
-        assertTrue(doTest(SingleParam_annotationArray2, "@TestClass.My(annotationArray = {@java.lang.annotation.Target(*),*}) ^;"));
-        assertTrue(doTest(SingleParam_annotationArray2, "@TestClass.My(annotationArray != {}) ^;"));
-        assertTrue(doTest(SingleParam_annotationArray2, "@TestClass.My(annotationArray != {@whatever}) ^;"));
-        assertTrue(doTest(SingleParam_annotationArray2, "@TestClass.My(annotationArray != {*, *, *}) ^;"));
+        assertPassed(test(environment, SingleParam_annotationArray2, "@TestClass.My(annotationArray = {@java.lang.annotation.Target(*),*}) ^;"));
+        assertPassed(test(environment, SingleParam_annotationArray2, "@TestClass.My(annotationArray != {}) ^;"));
+        assertPassed(test(environment, SingleParam_annotationArray2, "@TestClass.My(annotationArray != {@whatever}) ^;"));
+        assertPassed(test(environment, SingleParam_annotationArray2, "@TestClass.My(annotationArray != {*, *, *}) ^;"));
 
-        assertTrue(doTest(SingleParam_classArray2, "@TestClass.My(classArray = {java.lang.String.class, java.lang.Object.class}) ^;"));
-        assertTrue(doTest(SingleParam_classArray2, "@TestClass.My(classArray != {}) ^;"));
-        assertTrue(doTest(SingleParam_classArray2, "@TestClass.My(classArray != {java.lang.Object.class}) ^;"));
-        assertTrue(doTest(SingleParam_classArray2, "@TestClass.My(classArray != {java.lang.String.class, java.lang.String.class}) ^;"));
-    }
-
-    private boolean doTest(Element expected, String recipe) {
-        ModelInspector<Element> insp = new MirroringModelInspector(environment.elements(), environment.types());
-
-        StructuralMatcher matcher = Classif.compile(recipe);
-
-        return matcher.with(insp).start(expected).toBoolean(false);
+        assertPassed(test(environment, SingleParam_classArray2, "@TestClass.My(classArray = {java.lang.String.class, java.lang.Object.class}) ^;"));
+        assertPassed(test(environment, SingleParam_classArray2, "@TestClass.My(classArray != {}) ^;"));
+        assertPassed(test(environment, SingleParam_classArray2, "@TestClass.My(classArray != {java.lang.Object.class}) ^;"));
+        assertPassed(test(environment, SingleParam_classArray2, "@TestClass.My(classArray != {java.lang.String.class, java.lang.String.class}) ^;"));
     }
 }
