@@ -16,10 +16,13 @@
  */
 package org.revapi.classif.match.instance;
 
+import static org.revapi.classif.TestResult.TestableStream.testable;
+
 import java.util.List;
 
 import javax.lang.model.type.TypeMirror;
 
+import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.util.Globbed;
 
@@ -41,7 +44,7 @@ public final class TypeReferenceMatch extends TypeInstanceMatch implements Globb
     }
 
     @Override
-    public <M> boolean testInstance(TypeMirror instantiation, MatchContext<M> ctx) {
-        return matches.stream().anyMatch(m -> m.testInstance(instantiation, ctx));
+    public <M> TestResult testInstance(TypeMirror instantiation, MatchContext<M> ctx) {
+        return testable(matches).testAny(m -> m.testInstance(instantiation, ctx));
     }
 }

@@ -22,6 +22,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.type.TypeMirror;
 
+import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
 
 public final class ModifierMatch extends DeclarationMatch {
@@ -68,7 +69,7 @@ public final class ModifierMatch extends DeclarationMatch {
     }
 
     @Override
-    protected <M> boolean defaultTest(Element el, TypeMirror instantiation, MatchContext<M> ctx) {
+    protected <M> TestResult defaultTest(Element el, TypeMirror instantiation, MatchContext<M> ctx) {
         Set<Modifier> modifiers = el.getModifiers();
 
         boolean ret;
@@ -79,6 +80,6 @@ public final class ModifierMatch extends DeclarationMatch {
             ret = modifiers.contains(modifier);
         }
 
-        return negation != ret;
+        return TestResult.fromBoolean(negation != ret);
     }
 }

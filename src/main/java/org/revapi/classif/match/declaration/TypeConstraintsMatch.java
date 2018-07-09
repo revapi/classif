@@ -16,33 +16,36 @@
  */
 package org.revapi.classif.match.declaration;
 
+import static org.revapi.classif.TestResult.PASSED;
+import static org.revapi.classif.TestResult.TestableStream.testable;
+
 import java.util.List;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
 
+import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
 
 public final class TypeConstraintsMatch extends DeclarationMatch {
     private final List<ImplementsMatch> implemented;
     private final ExtendsMatch extended;
     private final List<UsesMatch> uses;
+    private final List<UsedByMatch> usedBys;
 
-    public TypeConstraintsMatch(List<ImplementsMatch> implemented, ExtendsMatch extended, List<UsesMatch> uses) {
+    public TypeConstraintsMatch(List<ImplementsMatch> implemented, ExtendsMatch extended, List<UsesMatch> uses,
+            List<UsedByMatch> usedBys) {
         this.implemented = implemented;
         this.extended = extended;
         this.uses = uses;
-    }
-
-    public boolean isDecidableInPlace() {
-        return uses == null;
+        this.usedBys = usedBys;
     }
 
     @Override
-    public <M> boolean testDeclaration(Element declaration, TypeMirror instantiation, MatchContext<M> ctx) {
-        // TODO add the rest of the type constraints
-        return implemented.stream().allMatch(m -> m.testDeclaration(declaration, instantiation, ctx))
-                && uses.stream().allMatch(m -> m.testDeclaration(declaration, instantiation, ctx))
-                && (extended == null || extended.testDeclaration(declaration, instantiation, ctx));
+    public <M> TestResult testDeclaration(Element declaration, TypeMirror instantiation, MatchContext<M> ctx) {
+        return testable(implemented).testAll(m -> m.testDeclaration(declaration, instantiation, ctx))
+                .and(() -> testable(uses).testAll(m -> m.testDeclaration(declaration, instantiation, ctx)))
+                .and(() -> testable(usedBys).testAll(m -> m.testDeclaration(declaration, instantiation, ctx)))
+                .and(() -> extended == null ? PASSED : extended.testDeclaration(declaration, instantiation, ctx));
     }
 }

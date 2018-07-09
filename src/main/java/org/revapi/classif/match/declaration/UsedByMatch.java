@@ -16,11 +16,10 @@
  */
 package org.revapi.classif.match.declaration;
 
-import static org.revapi.classif.TestResult.TestableStream.testable;
-
 import java.util.stream.Stream;
 
 import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVisitor;
@@ -29,37 +28,39 @@ import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.instance.TypeReferenceMatch;
 
-public final class UsesMatch extends DeclarationMatch {
+public class UsedByMatch extends DeclarationMatch {
 
     private final boolean onlyDirect;
     private final TypeReferenceMatch type;
 
-    public UsesMatch(boolean onlyDirect, TypeReferenceMatch type) {
+    public UsedByMatch(boolean onlyDirect, TypeReferenceMatch type) {
         this.onlyDirect = onlyDirect;
         this.type = type;
     }
 
     @Override
-    public <M> TestResult testDeclaration(Element declaration, TypeMirror instantiation, MatchContext<M> ctx) {
+    protected <M> TestResult testType(TypeElement declaration, TypeMirror instantiation, MatchContext<M> ctx) {
+        // TODO this is wrong - the usedby is more different from uses than just by the different inspector call
         TypeVisitor<Stream<DeclaredType>, ?> visitor = UseVisitor.findUses(ctx.modelInspector);
 
-        Stream<DeclaredType> directUses = visitor.visit(instantiation);
+        Stream<DeclaredType> directUseSites = visitor.visit(instantiation);
 
-        if (directUses == null) {
-            return TestResult.DEFERRED;
-        }
-
-        if (onlyDirect) {
-            return testable(directUses).testAny(u -> type.testInstance(u, ctx));
-        } else {
-            return testRecursively(directUses, ctx);
-        }
+//        if (onlyDirect) {
+//            return directUseSites.anyMatch(u -> type.testInstance(u, ctx));
+//        } else {
+//            return testRecursively(directUseSites, visitor, ctx);
+//        }
+        return TestResult.NOT_PASSED;
     }
 
-    private TestResult testRecursively(Stream<DeclaredType> types,
-            MatchContext<?> ctx) {
-
-        return types == null ? TestResult.DEFERRED : testable(types).testAny(t -> type.testInstance(t, ctx).or(() ->
-                testRecursively(UseVisitor.findUses(ctx.modelInspector).visit(t), ctx)));
-    }
+//    private boolean testRecursively(Stream<DeclaredType> types, TypeVisitor<Stream<DeclaredType>, ?> visitor,
+//            MatchContext<?> ctx) {
+//
+//        return types.reduce(
+//                false,
+//                (prior, next) -> prior
+//                        || type.testInstance(next, ctx)
+//                        || testRecursively(visitor.visit(next), visitor, ctx),
+//                Boolean::logicalOr);
+//    }
 }

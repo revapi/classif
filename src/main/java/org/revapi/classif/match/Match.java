@@ -19,6 +19,7 @@ package org.revapi.classif.match;
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
 
+import org.revapi.classif.TestResult;
 import org.revapi.classif.match.declaration.DeclarationMatch;
 import org.revapi.classif.match.instance.TypeInstanceMatch;
 
@@ -28,11 +29,11 @@ public abstract class Match {
 
     }
 
-    public final <M> boolean test(M model, MatchContext<M> ctx) {
+    public final <M> TestResult test(M model, MatchContext<M> ctx) {
         return test(ctx.modelInspector.toElement(model), ctx.modelInspector.toMirror(model), ctx);
     }
 
-    public final <M> boolean test(Element declaration, TypeMirror instance, MatchContext<M> ctx) {
+    public final <M> TestResult test(Element declaration, TypeMirror instance, MatchContext<M> ctx) {
         if (this instanceof DeclarationMatch) {
             return testDeclaration(declaration, instance, ctx);
         } else if (this instanceof TypeInstanceMatch) {
@@ -42,7 +43,7 @@ public abstract class Match {
         }
     }
 
-    public abstract <M> boolean testDeclaration(Element declaration, TypeMirror instance, MatchContext<M> ctx);
+    public abstract <M> TestResult testDeclaration(Element declaration, TypeMirror instance, MatchContext<M> ctx);
 
-    public abstract <M> boolean testInstance(TypeMirror instance, MatchContext<M> ctx);
+    public abstract <M> TestResult testInstance(TypeMirror instance, MatchContext<M> ctx);
 }

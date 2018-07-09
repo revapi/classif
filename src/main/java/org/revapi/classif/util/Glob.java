@@ -19,14 +19,17 @@ package org.revapi.classif.util;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
+import static org.revapi.classif.TestResult.TestableStream.testable;
+
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import org.revapi.classif.TestResult;
 
 public final class Glob<T extends Globbed> {
 
@@ -73,34 +76,52 @@ public final class Glob<T extends Globbed> {
         startState = start;
     }
 
-    public <X> boolean test(BiPredicate<T, X> test, Iterable<X> elements) {
+    public <X> TestResult test(TestResult.BiPredicate<T, X> test, Iterable<X> elements) {
         List<MatchState<T>> branches = new ArrayList<>(2);
         branches.add(startState);
+        boolean[] isDeferred = {false};
 
-        elements.forEach(t -> {
+        for (X t : elements) {
             List<MatchState<T>> next = branches.stream()
                     .flatMap(ms -> ms.nexts.entrySet().stream()
-                            .map(e -> test.test(e.getKey(), t) ? e.getValue() : null)
+                            .map(e -> {
+                                switch (test.test(e.getKey(), t)) {
+                                    case DEFERRED:
+                                        isDeferred[0] = true;
+                                        // intentional fallthrough
+                                    case PASSED:
+                                        return e.getValue();
+                                    default:
+                                        return null;
+                                }
+                            })
                             .filter(Objects::nonNull))
                     .collect(toList());
 
+            if (isDeferred[0]) {
+                break;
+            }
+
             branches.clear();
             branches.addAll(next);
-        });
+        }
 
-        return branches.stream().anyMatch(ms -> ms.terminal);
+        return isDeferred[0]
+                ? TestResult.DEFERRED
+                : TestResult.fromBoolean(branches.stream().anyMatch(ms -> ms.terminal));
     }
 
-    public <X> boolean testUnordered(BiPredicate<T, X> test, Iterable<X> elements) {
+    public <X> TestResult testUnordered(TestResult.BiPredicate<T, X> test, Iterable<X> elements) {
         return testUnorderedWithOptionals(test, elements, emptyList());
     }
 
-    public <X> boolean testUnorderedWithOptionals(BiPredicate<T, X> test, Iterable<X> mandatory, Iterable<X> optional) {
-        return stream(mandatory)
-                .reduce(true,
-                        (res, next) -> res && matches.stream().anyMatch(m ->
-                                test.test(m, next) || stream(optional).anyMatch(x -> test.test(m, x))),
-                        Boolean::logicalAnd);
+    public <X> TestResult testUnorderedWithOptionals(TestResult.BiPredicate<T, X> test, Iterable<X> mandatory,
+            Iterable<X> optional) {
+        return testable(stream(mandatory))
+                .testAll(next ->
+                        testable(matches).testAny(match ->
+                                test.test(match, next).or(() -> testable(stream(optional)).testAny(x ->
+                                        test.test(match, x)))));
     }
 
     private static final class MatchState<T extends Globbed> {

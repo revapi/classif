@@ -50,6 +50,7 @@ import org.revapi.classif.match.declaration.AnnotationMatch;
 import org.revapi.classif.match.declaration.ExtendsMatch;
 import org.revapi.classif.match.declaration.ImplementsMatch;
 import org.revapi.classif.match.declaration.TypeConstraintsMatch;
+import org.revapi.classif.match.declaration.UsedByMatch;
 import org.revapi.classif.match.declaration.UsesMatch;
 import org.revapi.classif.match.instance.TypeParameterMatch;
 import org.revapi.classif.match.instance.TypeParameterWildcardMatch;
@@ -732,6 +733,7 @@ public final class Classif {
             ReferencedVariablesAnd<TypeConstraintsMatch> ret = new ReferencedVariablesAnd<>();
             List<ImplementsMatch> implemented = new ArrayList<>(2);
             List<UsesMatch> uses = new ArrayList<>(2);
+            List<UsedByMatch> usedBys = new ArrayList<>(2);
             ExtendsMatch[] extended = new ExtendsMatch[1];
 
             ctx.typeConstraint().forEach(constraintCtx -> {
@@ -760,12 +762,16 @@ public final class Classif {
                     ret.referencedVariables.addAll(type.referencedVariables);
                     extended[0] = new ExtendsMatch(onlyDirect, type.match);
                 } else if (constraintCtx.USED_BY() != null) {
-                    // TODO implement
-                    throw new UnsupportedOperationException("'usedby' not yet implemented!.");
+                    boolean onlyDirect = constraintCtx.DIRECTLY() != null;
+                    ReferencedVariablesAnd<TypeReferenceMatch> type =
+                            constraintCtx.typeReference().get(0).accept(TypeReferenceVisitor.INSTANCE);
+
+                    ret.referencedVariables.addAll(type.referencedVariables);
+                    usedBys.add(new UsedByMatch(onlyDirect, type.match));
                 }
             });
 
-            ret.match = new TypeConstraintsMatch(implemented, extended[0], uses);
+            ret.match = new TypeConstraintsMatch(implemented, extended[0], uses, usedBys);
             return ret;
         }
     }

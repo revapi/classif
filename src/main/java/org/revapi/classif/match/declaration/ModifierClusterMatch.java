@@ -16,11 +16,14 @@
  */
 package org.revapi.classif.match.declaration;
 
+import static org.revapi.classif.TestResult.TestableStream.testable;
+
 import java.util.Collection;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
 
+import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
 
 public final class ModifierClusterMatch extends DeclarationMatch {
@@ -31,7 +34,7 @@ public final class ModifierClusterMatch extends DeclarationMatch {
     }
 
     @Override
-    public <M> boolean testDeclaration(Element declaration, TypeMirror instance, MatchContext<M> ctx) {
-        return modifiers.stream().anyMatch(m -> m.testDeclaration(declaration, instance, ctx));
+    public <M> TestResult testDeclaration(Element declaration, TypeMirror instance, MatchContext<M> ctx) {
+        return testable(modifiers).testAny(m -> m.testDeclaration(declaration, instance, ctx));
     }
 }

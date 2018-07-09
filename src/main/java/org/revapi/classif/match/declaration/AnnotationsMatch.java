@@ -16,11 +16,14 @@
  */
 package org.revapi.classif.match.declaration;
 
+import static org.revapi.classif.TestResult.TestableStream.testable;
+
 import java.util.List;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
 
+import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
 
 public final class AnnotationsMatch extends DeclarationMatch {
@@ -31,10 +34,11 @@ public final class AnnotationsMatch extends DeclarationMatch {
     }
 
     @Override
-    protected <M> boolean defaultTest(Element e, TypeMirror inst, MatchContext<M> matchContext) {
+    protected <M> TestResult defaultTest(Element e, TypeMirror inst, MatchContext<M> matchContext) {
         return annotations.stream().reduce(
-                true,
-                (res, next) -> res && e.getAnnotationMirrors().stream().anyMatch(a -> next.test(a, matchContext)),
-                Boolean::logicalAnd);
+                TestResult.PASSED,
+                (res, next) -> res.and(() ->
+                        testable(e.getAnnotationMirrors()).testAny(a -> next.test(a, matchContext))),
+                TestResult::and);
     }
 }

@@ -16,11 +16,14 @@
  */
 package org.revapi.classif.match.instance;
 
+import static org.revapi.classif.TestResult.TestableStream.testable;
+
 import java.util.List;
 
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.WildcardType;
 
+import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
 
 public final class TypeParameterWildcardMatch extends TypeInstanceMatch {
@@ -33,13 +36,13 @@ public final class TypeParameterWildcardMatch extends TypeInstanceMatch {
     }
 
     @Override
-    protected <M> boolean testWildcard(WildcardType t, MatchContext<M> matchContext) {
+    protected <M> TestResult testWildcard(WildcardType t, MatchContext<M> matchContext) {
         TypeMirror bound = isExtends ? t.getExtendsBound() : t.getSuperBound();
         if (bound == null) {
             bound = matchContext.modelInspector.getJavaLangObjectElement().asType();
         }
 
         final TypeMirror b = bound;
-        return bounds.stream().allMatch(m -> m.testInstance(b, matchContext));
+        return testable(bounds).testAll(m -> m.testInstance(b, matchContext));
     }
 }

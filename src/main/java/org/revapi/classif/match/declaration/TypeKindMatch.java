@@ -22,6 +22,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 
+import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
 
 public final class TypeKindMatch extends DeclarationMatch {
@@ -53,9 +54,9 @@ public final class TypeKindMatch extends DeclarationMatch {
     }
 
     @Override
-    protected <M> boolean testType(TypeElement type, TypeMirror instantiation, MatchContext<M> ctx) {
+    protected <M> TestResult testType(TypeElement type, TypeMirror instantiation, MatchContext<M> ctx) {
         boolean matches = kind == ElementKind.OTHER || type.getKind() == kind;
 
-        return negation != matches;
+        return TestResult.fromBoolean(negation != matches);
     }
 }

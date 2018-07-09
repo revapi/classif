@@ -18,6 +18,8 @@ package org.revapi.classif.match.declaration;
 
 import static java.util.stream.Collectors.toList;
 
+import static org.revapi.classif.TestResult.TestableStream.testable;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -27,6 +29,7 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 
 import org.revapi.classif.ModelInspector;
+import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.instance.TypeReferenceMatch;
 import org.revapi.classif.util.Glob;
@@ -44,11 +47,11 @@ public final class ImplementsMatch extends DeclarationMatch {
     }
 
     @Override
-    protected <M> boolean testType(TypeElement declaration, TypeMirror instantiation, MatchContext<M> ctx) {
+    protected <M> TestResult testType(TypeElement declaration, TypeMirror instantiation, MatchContext<M> ctx) {
         if (glob == null) {
             assert types != null;
             List<DeclaredType> impld = getImplemented(instantiation, ctx.modelInspector);
-            return types.stream().allMatch(m -> impld.stream().anyMatch(i -> m.testInstance(i, ctx)));
+            return testable(types).testAll(m -> testable(impld).testAny(i -> m.testInstance(i, ctx)));
         } else {
             return glob.testUnordered((m, t) -> m.testInstance(t, ctx), getImplemented(instantiation, ctx.modelInspector));
         }

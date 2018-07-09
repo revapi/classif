@@ -21,6 +21,7 @@ import java.util.Map;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
 
+import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.NameMatch;
 import org.revapi.classif.util.Globbed;
@@ -50,9 +51,12 @@ public final class AnnotationAttributeMatch implements Globbed {
         return isAll;
     }
 
-    public <M> boolean test(Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> attribute, MatchContext<M> matchContext) {
-        return isMatchAny() || isMatchAll()
-                || (name == null || name.matches(attribute.getKey().getSimpleName().toString())
-                && (valueMatch == null || valueMatch.test(attribute.getValue(), matchContext)));
+    public <M> TestResult test(Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> attribute,
+            MatchContext<M> matchContext) {
+        return TestResult.fromBoolean(isMatchAny() || isMatchAll()
+                || (name == null || name.matches(attribute.getKey().getSimpleName().toString())))
+                .and(() -> valueMatch == null
+                        ? TestResult.PASSED
+                        : valueMatch.test(attribute.getValue(), matchContext));
     }
 }

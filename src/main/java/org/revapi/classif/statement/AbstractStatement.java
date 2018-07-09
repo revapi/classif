@@ -16,11 +16,14 @@
  */
 package org.revapi.classif.statement;
 
+import static org.revapi.classif.TestResult.TestableStream.testable;
+
 import java.util.List;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
 
+import org.revapi.classif.TestResult;
 import org.revapi.classif.util.Nullable;
 import org.revapi.classif.util.TreeNode;
 import org.revapi.classif.match.Match;
@@ -41,10 +44,6 @@ public abstract class AbstractStatement extends TreeNode<AbstractStatement> {
         this.isMatch = isMatch;
     }
 
-    public boolean isDecidableInPlace() {
-        return  getParent() == null && getReferencedVariables().isEmpty() && getChildren().isEmpty();
-    }
-
     public String getDefinedVariable() {
         return definedVariable;
     }
@@ -62,13 +61,11 @@ public abstract class AbstractStatement extends TreeNode<AbstractStatement> {
             ModelMatch exact = createExactMatcher();
 
             @Override
-            protected <M> boolean defaultElementTest(M model, MatchContext<M> ctx) {
+            protected <M> TestResult defaultElementTest(M model, MatchContext<M> ctx) {
                 Element el = ctx.modelInspector.toElement(model);
                 TypeMirror t = ctx.modelInspector.toMirror(model);
 
-                return innerMatchers.stream().allMatch(m -> m.test(el, t, ctx))
-                        && exact.test(model, ctx);
-
+                return testable(innerMatchers).testAll(m -> m.test(el, t, ctx)).and(() -> exact.test(model, ctx));
             }
         };
     }

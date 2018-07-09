@@ -16,6 +16,8 @@
  */
 package org.revapi.classif.match.instance;
 
+import static org.revapi.classif.TestResult.TestableStream.testable;
+
 import java.util.List;
 
 import javax.lang.model.type.DeclaredType;
@@ -23,6 +25,7 @@ import javax.lang.model.type.ErrorType;
 import javax.lang.model.type.IntersectionType;
 import javax.lang.model.type.TypeVariable;
 
+import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.util.Glob;
 
@@ -34,22 +37,22 @@ public final class TypeParametersMatch extends TypeInstanceMatch {
     }
 
     @Override
-    protected <M> boolean testIntersection(IntersectionType t, MatchContext<M> matchContext) {
-        return t.getBounds().stream().anyMatch(b -> testInstance(b, matchContext));
+    protected <M> TestResult testIntersection(IntersectionType t, MatchContext<M> matchContext) {
+        return testable(t.getBounds()).testAny(b -> testInstance(b, matchContext));
     }
 
     @Override
-    protected <M> boolean testDeclared(DeclaredType type, MatchContext<M> matchContext) {
+    protected <M> TestResult testDeclared(DeclaredType type, MatchContext<M> matchContext) {
         return glob.test((m, t) -> m.testInstance(t, matchContext), type.getTypeArguments());
     }
 
     @Override
-    protected <M> boolean testError(ErrorType t, MatchContext<M> matchContext) {
+    protected <M> TestResult testError(ErrorType t, MatchContext<M> matchContext) {
         return testDeclared(t, matchContext);
     }
 
     @Override
-    protected <M> boolean testTypeVariable(TypeVariable t, MatchContext<M> matchContext) {
+    protected <M> TestResult testTypeVariable(TypeVariable t, MatchContext<M> matchContext) {
         return testInstance(t.getUpperBound(), matchContext);
     }
 }

@@ -18,6 +18,7 @@ package org.revapi.classif.statement;
 
 import java.util.List;
 
+import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.ModelMatch;
 import org.revapi.classif.match.declaration.AnnotationsMatch;
@@ -53,19 +54,15 @@ public class TypeDefinitionStatement extends StatementStatement {
     }
 
     @Override
-    public boolean isDecidableInPlace() {
-        return super.isDecidableInPlace() && (constraints == null || constraints.isDecidableInPlace());
-    }
-
-    @Override
     protected ModelMatch createExactMatcher() {
         return new ModelMatch() {
             @Override
-            public <M> boolean testType(M type, MatchContext<M> ctx) {
-                boolean ret = annotations.test(type, ctx)
-                        && modifiers.test(type, ctx)
-                        && typeKind.test(type, ctx)
-                        && fqn.test(type, ctx);
+            public <M> TestResult testTypeUndecidedly(M type, MatchContext<M> ctx) {
+
+                TestResult ret = annotations.test(type, ctx)
+                        .and(() -> modifiers.test(type, ctx))
+                        .and(() -> typeKind.test(type, ctx))
+                        .and(() -> fqn.test(type, ctx));
 
                 if (typeParameters != null) {
                     ret = typeParameters.test(type, ctx);
@@ -75,7 +72,7 @@ public class TypeDefinitionStatement extends StatementStatement {
                     ret = constraints.test(type, ctx);
                 }
 
-                return negation != ret;
+                return negation ? ret.negate() : ret;
             }
         };
     }

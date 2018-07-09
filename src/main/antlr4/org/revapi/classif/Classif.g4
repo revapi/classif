@@ -289,7 +289,7 @@ typeReference
     ;
 
 singleTypeReference
-    : not? variable arrayType*
+    : variable arrayType*
     | not? fqn typeParameters? arrayType*
     ;
 

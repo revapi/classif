@@ -16,66 +16,67 @@
  */
 package org.revapi.classif.util;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.revapi.classif.TestResult.PASSED;
+import static org.revapi.classif.Tester.assertNotPassed;
+import static org.revapi.classif.Tester.assertPassed;
 import static org.revapi.classif.util.GlobTest.Matcher.ALL;
 import static org.revapi.classif.util.GlobTest.Matcher.ANY;
 import static org.revapi.classif.util.GlobTest.Matcher.TEST;
 
 import java.util.List;
-import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
+import org.revapi.classif.TestResult;
 
 class GlobTest {
 
     @Test
     void testConcreteStepsRequirePresence() {
-        assertTrue(test(array(true, true, true), TEST, TEST, TEST));
-        assertFalse(test(array(true, true, true), TEST, TEST));
-        assertFalse(test(array(true, true, true), TEST, TEST, TEST, TEST));
+        assertPassed(test(array(PASSED, PASSED, PASSED), TEST, TEST, TEST));
+        assertNotPassed(test(array(PASSED, PASSED, PASSED), TEST, TEST));
+        assertNotPassed(test(array(PASSED, PASSED, PASSED), TEST, TEST, TEST, TEST));
     }
 
     @Test
     void testAnyRequiresPresence() {
-        assertTrue(test(array(true, true, true), TEST, ANY, TEST));
-        assertTrue(test(array(true, true, true), TEST, TEST, ANY));
-        assertFalse(test(array(true, true, true), TEST, ANY, TEST, ANY));
-        assertFalse(test(array(true, true, true), TEST, TEST, ANY, TEST));
+        assertPassed(test(array(PASSED, PASSED, PASSED), TEST, ANY, TEST));
+        assertPassed(test(array(PASSED, PASSED, PASSED), TEST, TEST, ANY));
+        assertNotPassed(test(array(PASSED, PASSED, PASSED), TEST, ANY, TEST, ANY));
+        assertNotPassed(test(array(PASSED, PASSED, PASSED), TEST, TEST, ANY, TEST));
     }
 
     @Test
     void testAllDoesntRequirePresence() {
-        assertTrue(test(array(true, true), TEST, ALL));
-        assertTrue(test(array(true, true, true, true), TEST, ALL));
-        assertTrue(test(array(true, true), TEST, TEST, ALL));
-        assertTrue(test(array(true, true), TEST, ALL, TEST));
-        assertTrue(test(array(true, true), TEST, ALL, TEST, ALL));
-        assertTrue(test(array(true, true), TEST, ALL, TEST, ALL, ALL));
-        assertTrue(test(array(), ALL));
-        assertTrue(test(array(true, true, true, true), ALL));
+        assertPassed(test(array(PASSED, PASSED), TEST, ALL));
+        assertPassed(test(array(PASSED, PASSED, PASSED, PASSED), TEST, ALL));
+        assertPassed(test(array(PASSED, PASSED), TEST, TEST, ALL));
+        assertPassed(test(array(PASSED, PASSED), TEST, ALL, TEST));
+        assertPassed(test(array(PASSED, PASSED), TEST, ALL, TEST, ALL));
+        assertPassed(test(array(PASSED, PASSED), TEST, ALL, TEST, ALL, ALL));
+        assertPassed(test(array(), ALL));
+        assertPassed(test(array(PASSED, PASSED, PASSED, PASSED), ALL));
     }
 
-    private boolean[] array(boolean... vals) {
+    private TestResult[] array(TestResult... vals) {
         return vals;
     }
 
-    private static boolean test(boolean[] testResults, Matcher... matchers) {
+    private static TestResult test(TestResult[] testResults, Matcher... matchers) {
         return getGlob(matchers).test(test(testResults), nIndices(testResults.length));
     }
 
-    private static boolean testUnordered(boolean[] testResults, Matcher... matchers) {
+    private static TestResult testUnordered(TestResult[] testResults, Matcher... matchers) {
         return getGlob(matchers).testUnordered(test(testResults), nIndices(testResults.length));
     }
 
-    private static boolean testUnorderedWithOptionals(boolean[] testResults, boolean[] optionals, Matcher... matchers) {
+    private static TestResult testUnorderedWithOptionals(TestResult[] testResults, TestResult[] optionals, Matcher... matchers) {
         return getGlob(matchers).testUnorderedWithOptionals(test(testResults), nIndices(testResults.length),
                 nIndices(optionals.length));
     }
 
-    private static <T> BiPredicate<T, Integer> test(boolean[] testResults) {
+    private static <T> TestResult.BiPredicate<T, Integer> test(TestResult[] testResults) {
         return (__, i) -> testResults[i];
     }
 

@@ -16,6 +16,9 @@
  */
 package org.revapi.classif.match.instance;
 
+import static org.revapi.classif.TestResult.NOT_PASSED;
+import static org.revapi.classif.TestResult.TestableStream.testable;
+
 import java.util.List;
 
 import javax.lang.model.type.DeclaredType;
@@ -25,6 +28,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.WildcardType;
 
+import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.util.Globbed;
 import org.revapi.classif.util.Nullable;
@@ -59,38 +63,29 @@ public class TypeParameterMatch extends TypeInstanceMatch implements Globbed {
     }
 
     @Override
-    protected <M> boolean testIntersection(IntersectionType t, MatchContext<M> matchContext) {
+    protected <M> TestResult testIntersection(IntersectionType t, MatchContext<M> matchContext) {
         // each required bound has to be present in the actual bounds
         // there can be more actual bounds than required, but we still match
-        nextBound: for (TypeReferenceMatch m : bounds) {
-            for (TypeMirror b : t.getBounds()) {
-                if (m.testInstance(b, matchContext)) {
-                    continue nextBound;
-                }
-            }
-            return false;
-        }
-
-        return true;
+        return testable(bounds).testAll(m -> testable(t.getBounds()).testAny(b -> m.testInstance(b, matchContext)));
     }
 
     @Override
-    protected <M> boolean testDeclared(DeclaredType t, MatchContext<M> matchContext) {
-        return bounds.stream().allMatch(b -> b.testInstance(t, matchContext));
+    protected <M> TestResult testDeclared(DeclaredType t, MatchContext<M> matchContext) {
+        return testable(bounds).testAll(b -> b.testInstance(t, matchContext));
     }
 
     @Override
-    protected <M> boolean testError(ErrorType t, MatchContext<M> matchContext) {
+    protected <M> TestResult testError(ErrorType t, MatchContext<M> matchContext) {
         return testDeclared(t, matchContext);
     }
 
     @Override
-    protected <M> boolean testTypeVariable(TypeVariable t, MatchContext<M> matchContext) {
+    protected <M> TestResult testTypeVariable(TypeVariable t, MatchContext<M> matchContext) {
         return testInstance(t.getUpperBound(), matchContext);
     }
 
     @Override
-    protected <M> boolean testWildcard(WildcardType t, MatchContext<M> matchContext) {
-        return wildcard != null && wildcard.testInstance(t, matchContext);
+    protected <M> TestResult testWildcard(WildcardType t, MatchContext<M> matchContext) {
+        return wildcard != null ? wildcard.testInstance(t, matchContext) : NOT_PASSED;
     }
 }

@@ -16,8 +16,8 @@
  */
 package org.revapi.classif.match.declaration;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.revapi.classif.Tester.assertNotPassed;
+import static org.revapi.classif.Tester.assertPassed;
 
 import java.util.Collections;
 import java.util.Map;
@@ -64,34 +64,34 @@ class TypeKindMatchTest {
 
         MatchContext<Element> ctx = new MatchContext<>(inspector, vars);
         
-        assertTrue(classes.test(TestClass, null, ctx));
-        assertFalse(interfaces.test(TestClass, null, ctx));
-        assertFalse(enums.test(TestClass, null, ctx));
-        assertFalse(annos.test(TestClass, null, ctx));
-        assertTrue(types.test(TestClass, null, ctx));
+        assertPassed(classes.test(TestClass, null, ctx));
+        assertNotPassed(interfaces.test(TestClass, null, ctx));
+        assertNotPassed(enums.test(TestClass, null, ctx));
+        assertNotPassed(annos.test(TestClass, null, ctx));
+        assertPassed(types.test(TestClass, null, ctx));
 
-        assertFalse(classes.test(Iface, null, ctx));
-        assertTrue(interfaces.test(Iface, null, ctx));
-        assertFalse(enums.test(Iface, null, ctx));
-        assertFalse(annos.test(Iface, null, ctx));
-        assertTrue(types.test(Iface, null, ctx));
+        assertNotPassed(classes.test(Iface, null, ctx));
+        assertPassed(interfaces.test(Iface, null, ctx));
+        assertNotPassed(enums.test(Iface, null, ctx));
+        assertNotPassed(annos.test(Iface, null, ctx));
+        assertPassed(types.test(Iface, null, ctx));
 
-        assertFalse(classes.test(Enum, null, ctx));
-        assertFalse(interfaces.test(Enum, null, ctx));
-        assertTrue(enums.test(Enum, null, ctx));
-        assertFalse(annos.test(Enum, null, ctx));
-        assertTrue(types.test(Enum, null, ctx));
+        assertNotPassed(classes.test(Enum, null, ctx));
+        assertNotPassed(interfaces.test(Enum, null, ctx));
+        assertPassed(enums.test(Enum, null, ctx));
+        assertNotPassed(annos.test(Enum, null, ctx));
+        assertPassed(types.test(Enum, null, ctx));
 
-        assertFalse(classes.test(Anno, null, ctx));
-        assertFalse(interfaces.test(Anno, null, ctx));
-        assertFalse(enums.test(Anno, null, ctx));
-        assertTrue(annos.test(Anno, null, ctx));
-        assertTrue(types.test(Anno, null, ctx));
+        assertNotPassed(classes.test(Anno, null, ctx));
+        assertNotPassed(interfaces.test(Anno, null, ctx));
+        assertNotPassed(enums.test(Anno, null, ctx));
+        assertPassed(annos.test(Anno, null, ctx));
+        assertPassed(types.test(Anno, null, ctx));
 
-        assertFalse(classes.test(method, null, ctx));
-        assertFalse(interfaces.test(method, null, ctx));
-        assertFalse(enums.test(method, null, ctx));
-        assertFalse(annos.test(method, null, ctx));
-        assertFalse(types.test(method, null, ctx));
+        assertNotPassed(classes.test(method, null, ctx));
+        assertNotPassed(interfaces.test(method, null, ctx));
+        assertNotPassed(enums.test(method, null, ctx));
+        assertNotPassed(annos.test(method, null, ctx));
+        assertNotPassed(types.test(method, null, ctx));
     }
 }

@@ -19,6 +19,9 @@ package org.revapi.classif.match.instance;
 import static java.util.Arrays.asList;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.revapi.classif.TestResult.NOT_PASSED;
+import static org.revapi.classif.TestResult.PASSED;
+import static org.revapi.classif.Tester.assertPassed;
 import static org.revapi.classif.match.NameMatch.all;
 import static org.revapi.classif.match.NameMatch.any;
 import static org.revapi.classif.match.NameMatch.exact;
@@ -35,6 +38,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.revapi.classif.MirroringModelInspector;
+import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
 import org.revapi.testjars.CompiledJar;
 import org.revapi.testjars.junit5.CompiledJarExtension;
@@ -49,25 +53,25 @@ class FqnMatchTest {
 
     static Stream<Object[]> statements() {
         return Stream.of(
-                new Object[] {new FqnMatch(asList(exact("fqn"), exact("pkg"), exact("TestClass"))), true},
-                new Object[] {new FqnMatch(asList(exact("fqn"), any(), exact("TestClass"))), true},
-                new Object[] {new FqnMatch(asList(exact("fqn"), all(), exact("NotThere"))), false},
-                new Object[] {new FqnMatch(asList(all(), exact("TestClass"))), true},
-                new Object[] {new FqnMatch(asList(exact("fqn"), all())), true},
-                new Object[] {new FqnMatch(asList(exact("fqn"), exact("TestClass"))), false},
-                new Object[] {new FqnMatch(asList(pattern(Pattern.compile("[fF]qn")), any(), exact("TestClass"))), true},
-                new Object[] {new FqnMatch(asList(all())), true},
+                new Object[] {new FqnMatch(asList(exact("fqn"), exact("pkg"), exact("TestClass"))), PASSED},
+                new Object[] {new FqnMatch(asList(exact("fqn"), any(), exact("TestClass"))), PASSED},
+                new Object[] {new FqnMatch(asList(exact("fqn"), all(), exact("NotThere"))), NOT_PASSED},
+                new Object[] {new FqnMatch(asList(all(), exact("TestClass"))), PASSED},
+                new Object[] {new FqnMatch(asList(exact("fqn"), all())), PASSED},
+                new Object[] {new FqnMatch(asList(exact("fqn"), exact("TestClass"))), NOT_PASSED},
+                new Object[] {new FqnMatch(asList(pattern(Pattern.compile("[fF]qn")), any(), exact("TestClass"))), PASSED},
+                new Object[] {new FqnMatch(asList(all())), PASSED},
                 // special case - a lone single star means "everything"
-                new Object[] {new FqnMatch(asList(any())), true}
+                new Object[] {new FqnMatch(asList(any())), PASSED}
         );
     }
 
     @ParameterizedTest(name = "fqn[{index}]")
     @MethodSource("statements")
-    void test(FqnMatch matcher, boolean expectedMatch) {
+    void test(FqnMatch matcher, TestResult expectedMatch) {
         TypeElement testClass = fqnClasses.elements().getTypeElement("fqn.pkg.TestClass");
 
-        boolean matches = matcher.test(testClass, testClass.asType(),
+        TestResult matches = matcher.test(testClass, testClass.asType(),
                 new MatchContext<>(new MirroringModelInspector(fqnClasses.elements(), fqnClasses.types()),
                         Collections.emptyMap()));
 

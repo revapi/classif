@@ -16,6 +16,7 @@
  */
 package org.revapi.classif.match.declaration;
 
+import static org.revapi.classif.TestResult.NOT_PASSED;
 import static org.revapi.classif.util.Operator.EQ;
 import static org.revapi.classif.util.Operator.NE;
 
@@ -29,6 +30,7 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.SimpleAnnotationValueVisitor8;
 
+import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.NameMatch;
 import org.revapi.classif.match.instance.FqnMatch;
@@ -92,19 +94,19 @@ public abstract class AnnotationValueMatch implements Globbed {
         return this instanceof AllValue;
     }
 
-    public abstract <M> boolean test(AnnotationValue value, MatchContext<M> ctx);
+    public abstract <M> TestResult test(AnnotationValue value, MatchContext<M> ctx);
 
     private static final class StringValue extends AnnotationValueMatch {
-        private final AnnotationValueVisitor<Boolean, Void> visitor =
-                new SimpleAnnotationValueVisitor8<Boolean, Void>(false) {
+        private final AnnotationValueVisitor<TestResult, Void> visitor =
+                new SimpleAnnotationValueVisitor8<TestResult, Void>(NOT_PASSED) {
                     @Override
-                    public Boolean visitChar(char c, Void __) {
-                        return stringMatch.length() == 1 && operator.satisfied(c, stringMatch.charAt(0));
+                    public TestResult visitChar(char c, Void __) {
+                        return TestResult.fromBoolean(stringMatch.length() == 1 && operator.satisfied(c, stringMatch.charAt(0)));
                     }
 
                     @Override
-                    public Boolean visitString(String s, Void __) {
-                        return operator.satisfied(s, stringMatch);
+                    public TestResult visitString(String s, Void __) {
+                        return TestResult.fromBoolean(operator.satisfied(s, stringMatch));
                     }
                 };
 
@@ -116,71 +118,71 @@ public abstract class AnnotationValueMatch implements Globbed {
         }
 
         @Override
-        public <M> boolean test(AnnotationValue value, MatchContext<M> ctx) {
+        public <M> TestResult test(AnnotationValue value, MatchContext<M> ctx) {
             return visitor.visit(value);
         }
     }
 
     private static final class PatternValue extends AnnotationValueMatch {
-        private static final AnnotationValueVisitor<Boolean, Pattern> VISITOR = new SimpleAnnotationValueVisitor8<Boolean, Pattern>(false) {
+        private static final AnnotationValueVisitor<TestResult, Pattern> VISITOR = new SimpleAnnotationValueVisitor8<TestResult, Pattern>(NOT_PASSED) {
             @Override
-            public Boolean visitBoolean(boolean b, Pattern pattern) {
-                return pattern.matcher(b ? "true" : "false").matches();
+            public TestResult visitBoolean(boolean b, Pattern pattern) {
+                return TestResult.fromBoolean(pattern.matcher(b ? "true" : "false").matches());
             }
 
             @Override
-            public Boolean visitByte(byte b, Pattern pattern) {
-                return pattern.matcher(Byte.toString(b)).matches();
+            public TestResult visitByte(byte b, Pattern pattern) {
+                return TestResult.fromBoolean(pattern.matcher(Byte.toString(b)).matches());
             }
 
             @Override
-            public Boolean visitChar(char c, Pattern pattern) {
-                return pattern.matcher(Character.toString(c)).matches();
+            public TestResult visitChar(char c, Pattern pattern) {
+                return TestResult.fromBoolean(pattern.matcher(Character.toString(c)).matches());
             }
 
             @Override
-            public Boolean visitDouble(double d, Pattern pattern) {
-                return pattern.matcher(Double.toString(d)).matches();
+            public TestResult visitDouble(double d, Pattern pattern) {
+                return TestResult.fromBoolean(pattern.matcher(Double.toString(d)).matches());
             }
 
             @Override
-            public Boolean visitFloat(float f, Pattern pattern) {
-                return pattern.matcher(Float.toString(f)).matches();
+            public TestResult visitFloat(float f, Pattern pattern) {
+                return TestResult.fromBoolean(pattern.matcher(Float.toString(f)).matches());
             }
 
             @Override
-            public Boolean visitInt(int i, Pattern pattern) {
-                return pattern.matcher(Integer.toString(i)).matches();
+            public TestResult visitInt(int i, Pattern pattern) {
+                return TestResult.fromBoolean(pattern.matcher(Integer.toString(i)).matches());
             }
 
             @Override
-            public Boolean visitLong(long i, Pattern pattern) {
-                return pattern.matcher(Long.toString(i)).matches();
+            public TestResult visitLong(long i, Pattern pattern) {
+                return TestResult.fromBoolean(pattern.matcher(Long.toString(i)).matches());
             }
 
             @Override
-            public Boolean visitShort(short s, Pattern pattern) {
-                return pattern.matcher(Short.toString(s)).matches();
+            public TestResult visitShort(short s, Pattern pattern) {
+                return TestResult.fromBoolean(pattern.matcher(Short.toString(s)).matches());
             }
 
             @Override
-            public Boolean visitString(String s, Pattern pattern) {
-                return pattern.matcher(s).matches();
+            public TestResult visitString(String s, Pattern pattern) {
+                return TestResult.fromBoolean(pattern.matcher(s).matches());
             }
 
             @Override
-            public Boolean visitType(TypeMirror t, Pattern pattern) {
-                return pattern.matcher(t.toString() + ".class").matches();
+            public TestResult visitType(TypeMirror t, Pattern pattern) {
+                return TestResult.fromBoolean(pattern.matcher(t.toString() + ".class").matches());
             }
 
             @Override
-            public Boolean visitEnumConstant(VariableElement c, Pattern pattern) {
-                return pattern.matcher(c.asType().toString() + "." + c.getSimpleName().toString()).matches();
+            public TestResult visitEnumConstant(VariableElement c, Pattern pattern) {
+                return TestResult.fromBoolean(pattern.matcher(c.asType().toString() + "." + c.getSimpleName().toString()).matches());
             }
 
             @Override
-            public Boolean visitAnnotation(AnnotationMirror a, Pattern pattern) {
-                return pattern.matcher("@" + a.toString()).matches();
+            public TestResult visitAnnotation(AnnotationMirror a, Pattern pattern) {
+                return TestResult.fromBoolean(pattern.matcher("@" + a.toString()).matches());
             }
         };
 
@@ -192,48 +194,48 @@ public abstract class AnnotationValueMatch implements Globbed {
         }
 
         @Override
-        public <M> boolean test(AnnotationValue value, MatchContext<M> ctx) {
+        public <M> TestResult test(AnnotationValue value, MatchContext<M> ctx) {
             if (operator != EQ && operator != NE) {
-                return false;
+                return NOT_PASSED;
             }
 
-            boolean match = VISITOR.visit(value, pattern);
+            TestResult match = VISITOR.visit(value, pattern);
 
-            return (operator == EQ) == match;
+            return operator == EQ ? match : match.negate();
         }
     }
 
     private static final class NumberValue extends AnnotationValueMatch {
-        private final AnnotationValueVisitor<Boolean, Void> visitor =
-                new SimpleAnnotationValueVisitor8<Boolean, Void>(false) {
+        private final AnnotationValueVisitor<TestResult, Void> visitor =
+                new SimpleAnnotationValueVisitor8<TestResult, Void>(NOT_PASSED) {
                     @Override
-                    public Boolean visitByte(byte b, Void __) {
-                        return operator.satisfied(b, number.byteValue());
+                    public TestResult visitByte(byte b, Void __) {
+                        return TestResult.fromBoolean(operator.satisfied(b, number.byteValue()));
                     }
 
                     @Override
-                    public Boolean visitDouble(double d, Void __) {
-                        return operator.satisfied(d, number.doubleValue());
+                    public TestResult visitDouble(double d, Void __) {
+                        return TestResult.fromBoolean(operator.satisfied(d, number.doubleValue()));
                     }
 
                     @Override
-                    public Boolean visitFloat(float f, Void __) {
-                        return operator.satisfied(f, number.floatValue());
+                    public TestResult visitFloat(float f, Void __) {
+                        return TestResult.fromBoolean(operator.satisfied(f, number.floatValue()));
                     }
 
                     @Override
-                    public Boolean visitInt(int i, Void __) {
-                        return operator.satisfied(i, number.intValue());
+                    public TestResult visitInt(int i, Void __) {
+                        return TestResult.fromBoolean(operator.satisfied(i, number.intValue()));
                     }
 
                     @Override
-                    public Boolean visitLong(long i, Void __) {
-                        return operator.satisfied(i, number.longValue());
+                    public TestResult visitLong(long i, Void __) {
+                        return TestResult.fromBoolean(operator.satisfied(i, number.longValue()));
                     }
 
                     @Override
-                    public Boolean visitShort(short s, Void __) {
-                        return operator.satisfied(s, number.shortValue());
+                    public TestResult visitShort(short s, Void __) {
+                        return TestResult.fromBoolean(operator.satisfied(s, number.shortValue()));
                     }
                 };
 
@@ -245,7 +247,7 @@ public abstract class AnnotationValueMatch implements Globbed {
         }
 
         @Override
-        public <M> boolean test(AnnotationValue value, MatchContext<M> ctx) {
+        public <M> TestResult test(AnnotationValue value, MatchContext<M> ctx) {
             return visitor.visit(value);
         }
     }
@@ -259,9 +261,9 @@ public abstract class AnnotationValueMatch implements Globbed {
         }
 
         @Override
-        public <M> boolean test(AnnotationValue value, MatchContext<M> ctx) {
+        public <M> TestResult test(AnnotationValue value, MatchContext<M> ctx) {
             Object val = value.getValue();
-            return val instanceof Boolean && operator.satisfied((Boolean) val, matchValue);
+            return TestResult.fromBoolean(val instanceof Boolean && operator.satisfied((Boolean) val, matchValue));
         }
     }
 
@@ -271,8 +273,8 @@ public abstract class AnnotationValueMatch implements Globbed {
         }
 
         @Override
-        public <M> boolean test(AnnotationValue value, MatchContext<M> ctx) {
-            return operator == EQ;
+        public <M> TestResult test(AnnotationValue value, MatchContext<M> ctx) {
+            return TestResult.fromBoolean(operator == EQ);
         }
     }
 
@@ -282,17 +284,18 @@ public abstract class AnnotationValueMatch implements Globbed {
         }
 
         @Override
-        public <M> boolean test(AnnotationValue value, MatchContext<M> ctx) {
-            return true;
+        public <M> TestResult test(AnnotationValue value, MatchContext<M> ctx) {
+            return TestResult.PASSED;
         }
     }
 
     private static final class EnumValue extends AnnotationValueMatch {
-        private final AnnotationValueVisitor<Boolean, MatchContext<?>> visitor =
-                new SimpleAnnotationValueVisitor8<Boolean, MatchContext<?>>(false) {
+        private final AnnotationValueVisitor<TestResult, MatchContext<?>> visitor =
+                new SimpleAnnotationValueVisitor8<TestResult, MatchContext<?>>(NOT_PASSED) {
                     @Override
-                    public Boolean visitEnumConstant(VariableElement c, MatchContext<?> ctx) {
-                        return fqn.testInstance(c.asType(), ctx) && name.matches(c.getSimpleName().toString());
+                    public TestResult visitEnumConstant(VariableElement c, MatchContext<?> ctx) {
+                        return fqn.testInstance(c.asType(), ctx)
+                                .and(() -> TestResult.fromBoolean(name.matches(c.getSimpleName().toString())));
                     }
                 };
 
@@ -306,21 +309,21 @@ public abstract class AnnotationValueMatch implements Globbed {
         }
 
         @Override
-        public <M> boolean test(AnnotationValue value, MatchContext<M> ctx) {
+        public <M> TestResult test(AnnotationValue value, MatchContext<M> ctx) {
             if (operator != EQ && operator != NE) {
-                return false;
+                return NOT_PASSED;
             }
 
-            boolean res = visitor.visit(value, ctx);
-            return (operator == EQ) == res;
+            TestResult res = visitor.visit(value, ctx);
+            return (operator == EQ) ? res : res.negate();
         }
     }
 
     private static final class TypeValue extends AnnotationValueMatch {
-        private final AnnotationValueVisitor<Boolean, MatchContext<?>> visitor =
-                new SimpleAnnotationValueVisitor8<Boolean, MatchContext<?>>(false) {
+        private final AnnotationValueVisitor<TestResult, MatchContext<?>> visitor =
+                new SimpleAnnotationValueVisitor8<TestResult, MatchContext<?>>(NOT_PASSED) {
                     @Override
-                    public Boolean visitType(TypeMirror t, MatchContext<?> ctx) {
+                    public TestResult visitType(TypeMirror t, MatchContext<?> ctx) {
                         return type.testInstance(t, ctx);
                     }
                 };
@@ -333,21 +336,21 @@ public abstract class AnnotationValueMatch implements Globbed {
         }
 
         @Override
-        public <M> boolean test(AnnotationValue value, MatchContext<M> ctx) {
+        public <M> TestResult test(AnnotationValue value, MatchContext<M> ctx) {
             if (operator != EQ && operator != NE) {
-                return false;
+                return NOT_PASSED;
             }
 
-            boolean res = visitor.visit(value, ctx);
-            return (operator == EQ) == res;
+            TestResult res = visitor.visit(value, ctx);
+            return (operator == EQ) ? res : res.negate();
         }
     }
 
     private static final class AnnoValue extends AnnotationValueMatch {
-        private final AnnotationValueVisitor<Boolean, MatchContext<?>> visitor =
-                new SimpleAnnotationValueVisitor8<Boolean, MatchContext<?>>(false) {
+        private final AnnotationValueVisitor<TestResult, MatchContext<?>> visitor =
+                new SimpleAnnotationValueVisitor8<TestResult, MatchContext<?>>(NOT_PASSED) {
                     @Override
-                    public Boolean visitAnnotation(AnnotationMirror a, MatchContext<?> matchContext) {
+                    public TestResult visitAnnotation(AnnotationMirror a, MatchContext<?> matchContext) {
                         return match.test(a, matchContext);
                     }
                 };
@@ -359,21 +362,21 @@ public abstract class AnnotationValueMatch implements Globbed {
         }
 
         @Override
-        public <M> boolean test(AnnotationValue value, MatchContext<M> ctx) {
+        public <M> TestResult test(AnnotationValue value, MatchContext<M> ctx) {
             if (operator != EQ && operator != NE) {
-                return false;
+                return NOT_PASSED;
             }
 
-            boolean res = visitor.visit(value, ctx);
-            return (operator == EQ) == res;
+            TestResult res = visitor.visit(value, ctx);
+            return (operator == EQ) ? res : res.negate();
         }
     }
 
     private static final class ArrayValue extends AnnotationValueMatch {
-        private final AnnotationValueVisitor<Boolean, MatchContext<?>> visitor =
-                new SimpleAnnotationValueVisitor8<Boolean, MatchContext<?>>(false) {
+        private final AnnotationValueVisitor<TestResult, MatchContext<?>> visitor =
+                new SimpleAnnotationValueVisitor8<TestResult, MatchContext<?>>(NOT_PASSED) {
                     @Override
-                    public Boolean visitArray(List<? extends AnnotationValue> vals, MatchContext<?> ctx) {
+                    public TestResult visitArray(List<? extends AnnotationValue> vals, MatchContext<?> ctx) {
                         return match.test((m, v) -> m.test(v, ctx), vals);
                     }
                 };
@@ -386,13 +389,13 @@ public abstract class AnnotationValueMatch implements Globbed {
         }
 
         @Override
-        public <M> boolean test(AnnotationValue value, MatchContext<M> ctx) {
+        public <M> TestResult test(AnnotationValue value, MatchContext<M> ctx) {
             if (operator != EQ && operator != NE) {
-                return false;
+                return NOT_PASSED;
             }
 
-            boolean res = visitor.visit(value, ctx);
-            return (operator == EQ) == res;
+            TestResult res = visitor.visit(value, ctx);
+            return (operator == EQ) ? res : res.negate();
         }
     }
 }

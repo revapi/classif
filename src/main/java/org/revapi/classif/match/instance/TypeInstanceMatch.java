@@ -32,128 +32,129 @@ import javax.lang.model.type.UnionType;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.SimpleTypeVisitor8;
 
+import org.revapi.classif.TestResult;
 import org.revapi.classif.match.Match;
 import org.revapi.classif.match.MatchContext;
 
 public abstract class TypeInstanceMatch extends Match {
 
-    private final TypeVisitor<Boolean, MatchContext<?>> dispatcher = new SimpleTypeVisitor8<Boolean, MatchContext<?>>() {
+    private final TypeVisitor<TestResult, MatchContext<?>> dispatcher = new SimpleTypeVisitor8<TestResult, MatchContext<?>>() {
         @Override
-        public Boolean visitIntersection(IntersectionType t, MatchContext<?> matchContext) {
+        public TestResult visitIntersection(IntersectionType t, MatchContext<?> matchContext) {
             return testIntersection(t, matchContext);
         }
 
         @Override
-        public Boolean visitUnion(UnionType t, MatchContext<?> matchContext) {
+        public TestResult visitUnion(UnionType t, MatchContext<?> matchContext) {
             return testUnion(t, matchContext);
         }
 
         @Override
-        protected Boolean defaultAction(TypeMirror e, MatchContext<?> matchContext) {
-            return false;
+        protected TestResult defaultAction(TypeMirror e, MatchContext<?> matchContext) {
+            return TestResult.NOT_PASSED;
         }
 
         @Override
-        public Boolean visitPrimitive(PrimitiveType t, MatchContext<?> matchContext) {
+        public TestResult visitPrimitive(PrimitiveType t, MatchContext<?> matchContext) {
             return testPrimitive(t, matchContext);
         }
 
         @Override
-        public Boolean visitNull(NullType t, MatchContext<?> matchContext) {
+        public TestResult visitNull(NullType t, MatchContext<?> matchContext) {
             return testNull(t, matchContext);
         }
 
         @Override
-        public Boolean visitArray(ArrayType t, MatchContext<?> matchContext) {
+        public TestResult visitArray(ArrayType t, MatchContext<?> matchContext) {
             return testArray(t, matchContext);
         }
 
         @Override
-        public Boolean visitDeclared(DeclaredType t, MatchContext<?> matchContext) {
+        public TestResult visitDeclared(DeclaredType t, MatchContext<?> matchContext) {
             return testDeclared(t, matchContext);
         }
 
         @Override
-        public Boolean visitError(ErrorType t, MatchContext<?> matchContext) {
+        public TestResult visitError(ErrorType t, MatchContext<?> matchContext) {
             return testError(t, matchContext);
         }
 
         @Override
-        public Boolean visitTypeVariable(TypeVariable t, MatchContext<?> matchContext) {
+        public TestResult visitTypeVariable(TypeVariable t, MatchContext<?> matchContext) {
             return testTypeVariable(t, matchContext);
         }
 
         @Override
-        public Boolean visitWildcard(WildcardType t, MatchContext<?> matchContext) {
+        public TestResult visitWildcard(WildcardType t, MatchContext<?> matchContext) {
             return testWildcard(t, matchContext);
         }
 
         @Override
-        public Boolean visitExecutable(ExecutableType t, MatchContext<?> matchContext) {
+        public TestResult visitExecutable(ExecutableType t, MatchContext<?> matchContext) {
             return testExecutable(t, matchContext);
         }
 
         @Override
-        public Boolean visitNoType(NoType t, MatchContext<?> matchContext) {
+        public TestResult visitNoType(NoType t, MatchContext<?> matchContext) {
             return testNoType(t, matchContext);
         }
     };
 
     @Override
-    public final <M> boolean testDeclaration(Element declaration, TypeMirror instance, MatchContext<M> ctx) {
-        return false;
+    public final <M> TestResult testDeclaration(Element declaration, TypeMirror instance, MatchContext<M> ctx) {
+        return TestResult.NOT_PASSED;
     }
 
     @Override
-    public <M> boolean testInstance(TypeMirror instance, MatchContext<M> ctx) {
+    public <M> TestResult testInstance(TypeMirror instance, MatchContext<M> ctx) {
         return dispatcher.visit(instance, ctx);
     }
 
-    protected <M> boolean testIntersection(IntersectionType t, MatchContext<M> matchContext) {
+    protected <M> TestResult testIntersection(IntersectionType t, MatchContext<M> matchContext) {
         return defaultTest(t, matchContext);
     }
 
-    protected <M> boolean testUnion(UnionType t, MatchContext<M> matchContext) {
+    protected <M> TestResult testUnion(UnionType t, MatchContext<M> matchContext) {
         return defaultTest(t, matchContext);
     }
 
-    protected <M> boolean defaultTest(TypeMirror e, MatchContext<M> matchContext) {
-        return false;
+    protected <M> TestResult defaultTest(TypeMirror e, MatchContext<M> matchContext) {
+        return TestResult.NOT_PASSED;
     }
 
-    protected <M> boolean testPrimitive(PrimitiveType t, MatchContext<M> matchContext) {
+    protected <M> TestResult testPrimitive(PrimitiveType t, MatchContext<M> matchContext) {
         return defaultTest(t, matchContext);
     }
 
-    protected <M> boolean testNull(NullType t, MatchContext<M> matchContext) {
+    protected <M> TestResult testNull(NullType t, MatchContext<M> matchContext) {
         return defaultTest(t, matchContext);
     }
 
-    protected <M> boolean testArray(ArrayType t, MatchContext<M> matchContext) {
+    protected <M> TestResult testArray(ArrayType t, MatchContext<M> matchContext) {
         return defaultTest(t, matchContext);
     }
 
-    protected <M> boolean testDeclared(DeclaredType t, MatchContext<M> matchContext) {
+    protected <M> TestResult testDeclared(DeclaredType t, MatchContext<M> matchContext) {
         return defaultTest(t, matchContext);
     }
 
-    protected <M> boolean testError(ErrorType t, MatchContext<M> matchContext) {
+    protected <M> TestResult testError(ErrorType t, MatchContext<M> matchContext) {
         return defaultTest(t, matchContext);
     }
 
-    protected <M> boolean testTypeVariable(TypeVariable t, MatchContext<M> matchContext) {
+    protected <M> TestResult testTypeVariable(TypeVariable t, MatchContext<M> matchContext) {
         return defaultTest(t, matchContext);
     }
 
-    protected <M> boolean testWildcard(WildcardType t, MatchContext<M> matchContext) {
+    protected <M> TestResult testWildcard(WildcardType t, MatchContext<M> matchContext) {
         return defaultTest(t, matchContext);
     }
 
-    protected <M> boolean testExecutable(ExecutableType t, MatchContext<M> matchContext) {
+    protected <M> TestResult testExecutable(ExecutableType t, MatchContext<M> matchContext) {
         return defaultTest(t, matchContext);
     }
 
-    protected <M> boolean testNoType(NoType t, MatchContext<M> matchContext) {
+    protected <M> TestResult testNoType(NoType t, MatchContext<M> matchContext) {
         return defaultTest(t, matchContext);
     }
 }

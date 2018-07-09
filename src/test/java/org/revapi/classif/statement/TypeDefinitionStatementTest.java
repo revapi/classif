@@ -16,16 +16,26 @@
  */
 package org.revapi.classif.statement;
 
+import static java.util.Collections.emptySet;
+
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 import static org.revapi.classif.Tester.assertNotPassed;
 import static org.revapi.classif.Tester.assertPassed;
 import static org.revapi.classif.Tester.test;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.revapi.classif.MirroringModelInspector;
+import org.revapi.classif.ModelInspector;
 import org.revapi.testjars.CompiledJar;
 import org.revapi.testjars.junit5.CompiledJarExtension;
 import org.revapi.testjars.junit5.JarSources;
@@ -104,9 +114,7 @@ class TypeDefinitionStatementTest {
 
     @Test
     void testExtends() {
-        TypeElement A = constraints.elements().getTypeElement("Extends.A");
         TypeElement B = constraints.elements().getTypeElement("Extends.B");
-        TypeElement GA = constraints.elements().getTypeElement("Extends.GA");
         TypeElement GB = constraints.elements().getTypeElement("Extends.GB");
         TypeElement GC = constraints.elements().getTypeElement("Extends.GC");
         TypeElement GD = constraints.elements().getTypeElement("Extends.GD");
@@ -122,5 +130,80 @@ class TypeDefinitionStatementTest {
         assertPassed(test(constraints, GD, "type ^ extends Extends.GA<java.lang.Integer>;"));
         assertPassed(test(constraints, GD, "type ^ directly extends Extends.GC<java.lang.Integer>;"));
         assertPassed(test(constraints, GD, "type ^ directly extends Extends.GC<? extends java.lang.Integer>;"));
+    }
+
+    @Test
+    void testUses() {
+        TypeElement B = constraints.elements().getTypeElement("Extends.B");
+        TypeElement GB = constraints.elements().getTypeElement("Extends.GB");
+        TypeElement GC = constraints.elements().getTypeElement("Extends.GC");
+        TypeElement GD = constraints.elements().getTypeElement("Extends.GD");
+
+        ModelInspector<Element> insp = new MirroringModelInspector(constraints.elements(), constraints.types()) {
+            @Override
+            public Set<Element> getUses(Element model) {
+                // return some uses for the elements... sneakily introduce a cycle there to check that we're guarding
+                // against that...
+                if (model == B) {
+                    return new HashSet<Element>(2) {{
+                        add(GB);
+                        add(GC);
+                    }};
+                } else if (model == GC) {
+                    return new HashSet<Element>(1) {{
+                        add(B);
+                    }};
+                } else if (model == GB) {
+                    return new HashSet<Element>(1) {{
+                        add(GD);
+                    }};
+                } else {
+                    return emptySet();
+                }
+            }
+        };
+
+//        assertPassed(test(insp, GB, "type ^ uses Extends.GD;"));
+        assertPassed(test(insp, B, "type ^ uses Extends.GD;"));
+//        assertNotPassed(test(insp, B, "type ^ directly uses Extends.GD;"));
+//        assertPassed(test(insp, GB, "type ^ directly uses Extends.GD;"));
+    }
+
+    @Test
+    @Disabled
+    void testUsedBy() {
+        TypeElement B = constraints.elements().getTypeElement("Extends.B");
+        TypeElement GB = constraints.elements().getTypeElement("Extends.GB");
+        TypeElement GC = constraints.elements().getTypeElement("Extends.GC");
+        TypeElement GD = constraints.elements().getTypeElement("Extends.GD");
+
+        ModelInspector<Element> insp = new MirroringModelInspector(constraints.elements(), constraints.types()) {
+            @Override
+            public Set<Element> getUseSites(Element model) {
+                // return some uses for the elements... sneakily introduce a cycle there to check that we're guarding
+                // against that...
+                if (model == B) {
+                    return new HashSet<Element>(2) {{
+                        add(GB);
+                        add(GC);
+                    }};
+                } else if (model == GC) {
+                    return new HashSet<Element>(1) {{
+                        add(B);
+                    }};
+                } else if (model == GB) {
+                    return new HashSet<Element>(1) {{
+                        add(GD);
+                    }};
+                } else {
+                    return emptySet();
+                }
+            }
+        };
+
+        assertPassed(test(insp, GB, "type ^ usedby Extends.GD;"));
+        assertPassed(test(insp, B, "type ^ usedby Extends.GD;"));
+        assertNotPassed(test(insp, B, "type ^ directly usedby Extends.GD;"));
+        assertPassed(test(insp, GB, "type ^ directly usedby Extends.GD;"));
     }
 }

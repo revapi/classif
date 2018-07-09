@@ -57,8 +57,8 @@ import org.revapi.classif.util.execution.Node;
 public final class MatchingProgress<M> {
     private static final ModelMatch MATCH_ANY = new ModelMatch() {
         @Override
-        protected <MM> boolean defaultElementTest(MM model, MatchContext<MM> ctx) {
-            return true;
+        protected <MM> TestResult defaultElementTest(MM model, MatchContext<MM> ctx) {
+            return PASSED;
         }
     };
 
@@ -147,12 +147,12 @@ public final class MatchingProgress<M> {
         // fast track if we have just a single test to make
         if (allSteps.size() == 1) {
             Step<M> s = allSteps.iterator().next().getObject();
-            boolean result = s.executionContext.match.test(model, s.blueprintMatchContext);
-            if (result) {
+            TestResult result = s.executionContext.match.test(model, s.blueprintMatchContext);
+            if (result.toBoolean(false)) {
                 // use this as a kind of cache in the simple case
                 s.independentlyMatchingModels.put(model, null);
             }
-            return TestResult.fromBoolean(result);
+            return result;
         }
 
         // ==== Processing the step dependencies ====
@@ -254,7 +254,7 @@ public final class MatchingProgress<M> {
                 .filter(n -> n.getObject().executionContext.isReturn)
                 .flatMap(n -> n.getObject().resolutionCache.entrySet().stream())
                 .filter(e -> deferredModels.contains(e.getKey()))
-                .collect(toMap(Map.Entry::getKey, e -> e.getValue().define(false)));
+                .collect(toMap(Map.Entry::getKey, e -> e.getValue().decide(false)));
 
         deferredModels.forEach(m -> {
             if (!ret.containsKey(m)) {
@@ -301,11 +301,11 @@ public final class MatchingProgress<M> {
         return forEachPotential(n -> {
             Step<M> step = n.getObject();
 
-            boolean result = step.executionContext.match.test(model, step.independentMatchContext);
-            if (result) {
+            TestResult result = step.executionContext.match.test(model, step.independentMatchContext);
+            if (result.toBoolean(false)) {
                 step.independentlyMatchingModels.put(model, null);
             } else {
-                return TestResult.fromBoolean(false);
+                return result;
             }
 
             Map<Node<Step<M>>, M> successRoute = new HashMap<>();
@@ -368,7 +368,7 @@ public final class MatchingProgress<M> {
                 ctx = ctx.replace(nm.step.getObject().executionContext.definedVariable, new IsEqual(nm.model));
             }
 
-            TestResult res = TestResult.fromBoolean(nodeStep.executionContext.match.test(model, ctx));
+            TestResult res = nodeStep.executionContext.match.test(model, ctx);
 
             //check that the dependency providers pass, too
             res = res.and(() ->
@@ -523,9 +523,9 @@ public final class MatchingProgress<M> {
         }
 
         @Override
-        protected <M> boolean defaultElementTest(M model, MatchContext<M> ctx) {
-            //TODO this probably isn't that simple with "real" elements from javac and such...
-            return model.equals(this.model);
+        protected <M> TestResult defaultElementTest(M model, MatchContext<M> ctx) {
+            //XXX this probably isn't that simple with "real" elements from javac and such...
+            return TestResult.fromBoolean(model.equals(this.model));
         }
     }
 }

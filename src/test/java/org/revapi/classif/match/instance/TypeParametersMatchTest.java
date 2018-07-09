@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.revapi.classif.MirroringModelInspector;
+import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
 import org.revapi.testjars.CompiledJar;
 import org.revapi.testjars.junit5.CompiledJarExtension;
@@ -70,7 +71,7 @@ class TypeParametersMatchTest {
                 .orElse(null);
     }
 
-    private boolean doTest(TypeMirror t, TypeParametersMatch match) {
+    private TestResult doTest(TypeMirror t, TypeParametersMatch match) {
         MatchContext<Element> ctx = new MatchContext<>(new MirroringModelInspector(environment.elements(),
                 environment.types()), emptyMap());
         return match.testInstance(t, ctx);

@@ -20,6 +20,9 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
+import static org.revapi.classif.TestResult.NOT_PASSED;
+import static org.revapi.classif.TestResult.TestableStream.testable;
+
 import java.util.List;
 
 import javax.lang.model.element.ElementVisitor;
@@ -38,6 +41,7 @@ import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.SimpleElementVisitor8;
 import javax.lang.model.util.SimpleTypeVisitor8;
 
+import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.ModelMatch;
 import org.revapi.classif.util.Globbed;
@@ -103,15 +107,17 @@ public final class SingleTypeReferenceMatch extends TypeInstanceMatch implements
     }
 
     @Override
-    public <M> boolean testInstance(TypeMirror instance, MatchContext<M> ctx) {
-        return instance.accept(new SimpleTypeVisitor8<Boolean, Void>(false) {
+    public <M> TestResult testInstance(TypeMirror instance, MatchContext<M> ctx) {
+        return instance.accept(new SimpleTypeVisitor8<TestResult, Void>(NOT_PASSED) {
             @Override
-            public Boolean visitPrimitive(PrimitiveType t, Void __) {
-                return fullyQualifiedName != null && fullyQualifiedName.testInstance(instance, ctx);
+            public TestResult visitPrimitive(PrimitiveType t, Void __) {
+                return fullyQualifiedName == null
+                        ? NOT_PASSED
+                        : fullyQualifiedName.testInstance(instance, ctx);
             }
 
             @Override
-            public Boolean visitArray(ArrayType t, Void __) {
+            public TestResult visitArray(ArrayType t, Void __) {
                 int dim = arrayDimension;
 
                 TypeMirror m = t;
@@ -120,26 +126,28 @@ public final class SingleTypeReferenceMatch extends TypeInstanceMatch implements
                     m = ((ArrayType) m).getComponentType();
                 }
 
-                return dim == 0 && m.accept(this, null);
+                return dim == 0
+                        ? visit(m)
+                        : NOT_PASSED;
             }
 
             @Override
-            public Boolean visitDeclared(DeclaredType t, Void __) {
+            public TestResult visitDeclared(DeclaredType t, Void __) {
                 return doTest(t, ctx);
             }
 
             @Override
-            public Boolean visitError(ErrorType t, Void __) {
+            public TestResult visitError(ErrorType t, Void __) {
                 return visitDeclared(t, null);
             }
 
             @Override
-            public Boolean visitTypeVariable(TypeVariable t, Void __) {
+            public TestResult visitTypeVariable(TypeVariable t, Void __) {
                 return visit(t.getUpperBound());
             }
 
             @Override
-            public Boolean visitWildcard(WildcardType t, Void __) {
+            public TestResult visitWildcard(WildcardType t, Void __) {
                 if (t.getExtendsBound() != null) {
                     return visit(t.getExtendsBound());
                 } else if (t.getSuperBound() != null) {
@@ -151,19 +159,21 @@ public final class SingleTypeReferenceMatch extends TypeInstanceMatch implements
             }
 
             @Override
-            public Boolean visitIntersection(IntersectionType t, Void aVoid) {
-                return t.getBounds().stream().anyMatch(this::visit);
+            public TestResult visitIntersection(IntersectionType t, Void aVoid) {
+                return testable(t.getBounds()).testAny(this::visit);
             }
 
             @Override
-            public Boolean visitNoType(NoType t, Void __) {
-                return fullyQualifiedName != null && fullyQualifiedName.testInstance(t, ctx);
+            public TestResult visitNoType(NoType t, Void __) {
+                return fullyQualifiedName != null
+                        ? fullyQualifiedName.testInstance(t, ctx)
+                        : NOT_PASSED;
             }
         }, null);
     }
 
-    private <M> boolean doTest(TypeMirror instance, MatchContext<M> ctx) {
-        boolean ret;
+    private <M> TestResult doTest(TypeMirror instance, MatchContext<M> ctx) {
+        TestResult ret;
         if (fullyQualifiedName != null) {
             ret = fullyQualifiedName.testInstance(instance, ctx);
             if (typeParameters != null) {
@@ -172,10 +182,10 @@ public final class SingleTypeReferenceMatch extends TypeInstanceMatch implements
         } else {
             ModelMatch match = ctx.variables.getOrDefault(variable, null);
             ret = match != null
-                    && TO_TYPE.visit(instance).stream()
-                    .anyMatch(e -> match.test(ctx.modelInspector.fromType(e), ctx));
+                    ? testable(TO_TYPE.visit(instance)).testAny(e -> match.test(ctx.modelInspector.fromType(e), ctx))
+                    : NOT_PASSED;
         }
 
-        return negation != ret;
+        return negation ? ret.negate() : ret;
     }
 }

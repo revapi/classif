@@ -23,6 +23,8 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 
+import org.revapi.classif.util.Nullable;
+
 /**
  * Provides {@link Classif} with the means to navigate the element hierarchy. In addition to providing
  * the conversion from and to the {@link Element} instances (to enable analysis of the elements) the implementors also
@@ -73,26 +75,38 @@ public interface ModelInspector<M> {
      * Provides the model representations of the types that are directly used by the element. The provided model
      * is guaranteed to represent a Java type.
      *
-     * <p>The exact semantics of what types are assumed to be used by another type is left to the implementation of this
-     * interface.
+     * <p>The returned set should only contain types that cannot be directly deduced from the element. I.e. when
+     * looking for what a method uses, the return type, the type of type parameters, arguments and the type of the
+     * thrown exception are automatically considered and should not be part of the returned set.
      *
-     * <p>This is the inverse of {@link #getUseSites(Object)}.
+     * <p>So in another words this method is useful only for some non-standard uses somehow known to the inspector
+     * that cannot otherwise be deduced from the declaration of the element itself.
+     *
+     * <p>Note that this method is allowed to return null in the case when the inspector doesn't have enough information
+     * to provide the information at the time it is called. In this case the result of the matching that requires this
+     * check will be deferred to the {@link MatchingProgress#finish()} method.
      *
      * @param model the model of the element
      * @return the set of model representations of the types directly used by the provided element
      */
-    Set<M> getUses(M model);
+    @Nullable Set<M> getUses(M model);
 
     /**
      * Provides the model representations of elements that directly use the provided element. The provided model
      * is guaranteed to represent a Java type.
      *
-     * <p>This is the reverse of {@link #getUses(Object)}
+     * <p>Unlike with {@link #getUses(Object)}, Classif cannot find any use sites of the element on its own. That would
+     * require a full-scan of all the model elements during the matching.
+     *
+     * <p>Note that this method is allowed to return null in the case when the inspector doesn't have enough information
+     * to provide the information at the time it is called. In this case the result of the matching that requires this
+     * check will be deferred to the {@link MatchingProgress#finish()} method.
      *
      * @param model the model of the element
-     * @return the set of model representations of the elements that directly uses the provided type element.
+     * @return the set of model representations of the elements that directly use the provided type element. Null if
+     * such set cannot be provided at the time the method is called.
      */
-    Set<M> getUseSites(M model);
+    @Nullable Set<M> getUseSites(M model);
 
     /**
      * Tells whether the provided element is inherited from some super type. The method is only ever called on

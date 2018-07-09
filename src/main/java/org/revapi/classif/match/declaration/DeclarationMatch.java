@@ -23,49 +23,50 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.SimpleElementVisitor8;
 
+import org.revapi.classif.TestResult;
 import org.revapi.classif.match.Match;
 import org.revapi.classif.match.MatchContext;
 
 public abstract class DeclarationMatch extends Match {
 
-    public <M> boolean testDeclaration(Element declaration, TypeMirror instantiation, MatchContext<M> ctx) {
-        return new SimpleElementVisitor8<Boolean, Void>(false) {
+    public <M> TestResult testDeclaration(Element declaration, TypeMirror instantiation, MatchContext<M> ctx) {
+        return new SimpleElementVisitor8<TestResult, Void>(TestResult.NOT_PASSED) {
             @Override
-            public Boolean visitVariable(VariableElement e, Void __) {
+            public TestResult visitVariable(VariableElement e, Void __) {
                 return testFieldOrArgument(e, instantiation, ctx);
             }
 
             @Override
-            public Boolean visitType(TypeElement e, Void __) {
+            public TestResult visitType(TypeElement e, Void __) {
                 return testType(e, instantiation, ctx);
             }
 
             @Override
-            public Boolean visitExecutable(ExecutableElement e, Void __) {
+            public TestResult visitExecutable(ExecutableElement e, Void __) {
                 return testMethod(e, instantiation, ctx);
             }
         }.visit(declaration);
     }
 
     @Override
-    public final <M> boolean testInstance(TypeMirror instance, MatchContext<M> ctx) {
-        return false;
+    public final <M> TestResult testInstance(TypeMirror instance, MatchContext<M> ctx) {
+        return TestResult.NOT_PASSED;
     }
 
-    protected <M> boolean testType(TypeElement declaration, TypeMirror instantiation, MatchContext<M> ctx) {
+    protected <M> TestResult testType(TypeElement declaration, TypeMirror instantiation, MatchContext<M> ctx) {
         return defaultTest(declaration, instantiation, ctx);
     }
 
-    protected <M> boolean testFieldOrArgument(VariableElement declaration, TypeMirror instantiation, MatchContext<M> ctx) {
+    protected <M> TestResult testFieldOrArgument(VariableElement declaration, TypeMirror instantiation, MatchContext<M> ctx) {
         return defaultTest(declaration, instantiation, ctx);
     }
 
-    protected <M> boolean testMethod(ExecutableElement declaration, TypeMirror instantiation, MatchContext<M> ctx) {
+    protected <M> TestResult testMethod(ExecutableElement declaration, TypeMirror instantiation, MatchContext<M> ctx) {
         return defaultTest(declaration, instantiation, ctx);
     }
 
-    protected <M> boolean defaultTest(Element declaration, TypeMirror instantiation, MatchContext<M> ctx) {
-        return false;
+    protected <M> TestResult defaultTest(Element declaration, TypeMirror instantiation, MatchContext<M> ctx) {
+        return TestResult.NOT_PASSED;
     }
 
 }

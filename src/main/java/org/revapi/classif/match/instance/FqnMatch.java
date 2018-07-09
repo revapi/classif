@@ -16,6 +16,9 @@
  */
 package org.revapi.classif.match.instance;
 
+import static org.revapi.classif.TestResult.NOT_PASSED;
+import static org.revapi.classif.TestResult.PASSED;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +29,7 @@ import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
+import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.NameMatch;
 import org.revapi.classif.util.Glob;
@@ -58,10 +62,10 @@ public final class FqnMatch extends TypeInstanceMatch implements Globbed {
     }
 
     @Override
-    public <M> boolean testInstance(TypeMirror instantiation, MatchContext<M> ctx) {
+    public <M> TestResult testInstance(TypeMirror instantiation, MatchContext<M> ctx) {
         // special case - * or ** are considered equal for the fqns...
         if (glob == null) {
-            return true;
+            return PASSED;
         }
 
         String fqn;
@@ -73,13 +77,13 @@ public final class FqnMatch extends TypeInstanceMatch implements Globbed {
             if (instantiation.getKind() == TypeKind.VOID) {
                 fqn = "void";
             } else {
-                return false;
+                return NOT_PASSED;
             }
         } else {
-            return false;
+            return NOT_PASSED;
         }
 
-        return glob.test(NameMatch::matches, split(fqn));
+        return glob.test((m, n) -> TestResult.fromBoolean(m.matches(n)), split(fqn));
     }
 
     private static List<String> split(String fqn) {

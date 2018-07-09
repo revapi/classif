@@ -19,6 +19,8 @@ package org.revapi.classif.match.declaration;
 import static java.util.stream.Collectors.toList;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.revapi.classif.TestResult.NOT_PASSED;
+import static org.revapi.classif.TestResult.PASSED;
 
 import java.util.Collections;
 import java.util.stream.Stream;
@@ -30,6 +32,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.revapi.classif.MirroringModelInspector;
+import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
 import org.revapi.testjars.CompiledJar;
 import org.revapi.testjars.junit5.CompiledJarExtension;
@@ -44,21 +47,21 @@ class ModifiersMatchTest {
 
     static Stream<Object[]> modifiers() {
         return Stream.of(
-                new Object[] {parse("public"), true},
-                new Object[] {parse("public|private"), true},
-                new Object[] {parse("public !static"), true},
-                new Object[] {parse("!private !static"), true},
-                new Object[] {parse("public|private !static|volatile"), true},
-                new Object[] {parse("!public !static"), false}
+                new Object[] {parse("public"), PASSED},
+                new Object[] {parse("public|private"), PASSED},
+                new Object[] {parse("public !static"), PASSED},
+                new Object[] {parse("!private !static"), PASSED},
+                new Object[] {parse("public|private !static|volatile"), PASSED},
+                new Object[] {parse("!public !static"), NOT_PASSED}
         );
     }
 
     @ParameterizedTest
     @MethodSource("modifiers")
-    void test(ModifiersMatch statement, boolean expectedMatch) {
+    void test(ModifiersMatch statement, TestResult expectedMatch) {
         TypeElement testClass = classes.elements().getTypeElement("modifiers.TestClass");
 
-        boolean matches = statement.test(testClass, testClass.asType(),
+        TestResult matches = statement.test(testClass, testClass.asType(),
                 new MatchContext<>(new MirroringModelInspector(classes.elements(), classes.types()), Collections.emptyMap()));
 
         assertEquals(expectedMatch, matches);

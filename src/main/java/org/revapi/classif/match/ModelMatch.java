@@ -26,12 +26,13 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.SimpleElementVisitor8;
 
+import org.revapi.classif.TestResult;
 import org.revapi.classif.util.TreeNode;
 
 public abstract class ModelMatch extends TreeNode<ModelMatch> {
 //    private final IdentityHashMap<Object, Boolean> decisionCache = new IdentityHashMap<>();
 
-    public final <M> boolean test(M model, MatchContext<M> ctx) {
+    public final <M> TestResult test(M model, MatchContext<M> ctx) {
         model = requireNonNull(model);
         ctx = requireNonNull(ctx);
 
@@ -53,43 +54,43 @@ public abstract class ModelMatch extends TreeNode<ModelMatch> {
         return dispatchTest(model, ctx);
     }
 
-    public final <M> boolean dispatchTest(M model, MatchContext<M> ctx) {
-        return new SimpleElementVisitor8<Boolean, Void>() {
+    private <M> TestResult dispatchTest(M model, MatchContext<M> ctx) {
+        return new SimpleElementVisitor8<TestResult, Void>() {
             @Override
-            protected Boolean defaultAction(Element e, Void aVoid) {
-                return false;
+            protected TestResult defaultAction(Element e, Void aVoid) {
+                return TestResult.NOT_PASSED;
             }
 
             @Override
-            public Boolean visitVariable(VariableElement e, Void __) {
-                return testVariable(model, ctx);
+            public TestResult visitVariable(VariableElement e, Void __) {
+                return testVariableUndecidedly(model, ctx);
             }
 
             @Override
-            public Boolean visitType(TypeElement e, Void __) {
-                return testType(model, ctx);
+            public TestResult visitType(TypeElement e, Void __) {
+                return testTypeUndecidedly(model, ctx);
             }
 
             @Override
-            public Boolean visitExecutable(ExecutableElement e, Void __) {
-                return testMethod(model, ctx);
+            public TestResult visitExecutable(ExecutableElement e, Void __) {
+                return testMethodUndecidedly(model, ctx);
             }
         }.visit(ctx.modelInspector.toElement(model));
     }
 
-    public <M> boolean testType(M type, MatchContext<M> ctx) {
+    public <M> TestResult testTypeUndecidedly(M type, MatchContext<M> ctx) {
         return defaultElementTest(type, ctx);
     }
 
-    public <M> boolean testMethod(M method, MatchContext<M> ctx) {
+    public <M> TestResult testMethodUndecidedly(M method, MatchContext<M> ctx) {
         return defaultElementTest(method, ctx);
     }
 
-    public <M> boolean testVariable(M var, MatchContext<M> ctx) {
+    public <M> TestResult testVariableUndecidedly(M var, MatchContext<M> ctx) {
         return defaultElementTest(var, ctx);
     }
 
-    protected <M> boolean defaultElementTest(M model, MatchContext<M> ctx) {
-        return false;
+    protected <M> TestResult defaultElementTest(M model, MatchContext<M> ctx) {
+        return TestResult.NOT_PASSED;
     }
 }

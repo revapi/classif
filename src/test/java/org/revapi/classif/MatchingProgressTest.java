@@ -30,7 +30,6 @@ import java.util.Map;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -29,7 +29,11 @@ import org.revapi.testjars.CompiledJar;
 
 public class Tester {
     public static TestResult test(CompiledJar.Environment env, Element el, String recipe, Element... nextElements) {
-        MatchingProgress<Element> progress = startProgress(env, recipe);
+        return test(inspector(env), el, recipe, nextElements);
+    }
+
+    public static TestResult test(ModelInspector<Element> insp, Element el, String recipe, Element... nextElements) {
+        MatchingProgress<Element> progress = startProgress(insp, recipe);
 
         TestResult res = progress.start(el);
         if (res == PASSED) {
@@ -50,7 +54,11 @@ public class Tester {
     }
 
     public static Map<Element, TestResult> testRest(CompiledJar.Environment env, Element el, String recipe, Element... nextElements) {
-        MatchingProgress<Element> progress = startProgress(env, recipe);
+        return testRest(inspector(env), el, recipe, nextElements);
+    }
+
+    public static Map<Element, TestResult> testRest(ModelInspector<Element> insp, Element el, String recipe, Element... nextElements) {
+        MatchingProgress<Element> progress = startProgress(insp, recipe);
 
         progress.start(el);
         progress.finish(el);
@@ -64,7 +72,11 @@ public class Tester {
     }
 
     public static TestResult testProgressStart(CompiledJar.Environment env, Element el, String recipe) {
-        MatchingProgress<Element> progress = startProgress(env, recipe);
+        return testProgressStart(inspector(env), el, recipe);
+    }
+
+    public static TestResult testProgressStart(ModelInspector<Element> insp, Element el, String recipe) {
+        MatchingProgress<Element> progress = startProgress(insp, recipe);
 
         return progress.start(el);
     }
@@ -81,11 +93,13 @@ public class Tester {
         assertSame(DEFERRED, res);
     }
 
-    private static MatchingProgress<Element> startProgress(CompiledJar.Environment env, String recipe) {
-        ModelInspector<Element> insp = new MirroringModelInspector(env.elements(), env.types());
-
+    private static MatchingProgress<Element> startProgress(ModelInspector<Element> insp, String recipe) {
         StructuralMatcher matcher = Classif.compile(recipe);
 
         return matcher.with(insp);
+    }
+
+    private static ModelInspector<Element> inspector(CompiledJar.Environment env) {
+        return new MirroringModelInspector(env.elements(), env.types());
     }
 }
