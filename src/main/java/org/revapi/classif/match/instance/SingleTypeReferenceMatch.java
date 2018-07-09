@@ -182,7 +182,7 @@ public final class SingleTypeReferenceMatch extends TypeInstanceMatch implements
         } else {
             ModelMatch match = ctx.variables.getOrDefault(variable, null);
             ret = match != null
-                    ? testable(TO_TYPE.visit(instance)).testAny(e -> match.test(ctx.modelInspector.fromType(e), ctx))
+                    ? testable(TO_TYPE.visit(instance)).testAny(e -> match.test(ctx.modelInspector.fromElement(e), ctx))
                     : NOT_PASSED;
         }
 

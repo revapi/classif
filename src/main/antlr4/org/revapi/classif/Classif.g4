@@ -326,7 +326,7 @@ typeConstraints
 
 typeConstraint
     : (DIRECTLY WS)? USES WS typeReference
-    | (DIRECTLY WS)? USED_BY WS typeReference
+    | (DIRECTLY WS)? USED_BY WS variables
     | (DIRECTLY WS)? (EXACTLY WS)? IMPLEMENTS WS typeReference (WS? COMMA WS? typeReference)*
     | (DIRECTLY WS)? EXTENDS WS typeReference
     ;

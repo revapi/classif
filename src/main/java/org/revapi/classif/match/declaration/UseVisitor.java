@@ -21,10 +21,10 @@ import static java.util.stream.Stream.empty;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
@@ -149,7 +149,7 @@ final class UseVisitor {
             }
 
             private Stream<DeclaredType> modelledUses(TypeElement t) {
-                return insp.getUses(insp.fromType(t)).stream().map(type -> (DeclaredType) insp.toMirror(type));
+                return insp.getUses(insp.fromElement(t)).stream().map(type -> (DeclaredType) insp.toMirror(type));
             }
 
             private <T> T nest(Supplier<T> fn) {
@@ -163,8 +163,16 @@ final class UseVisitor {
         };
     }
 
-    static <M> TypeVisitor<Stream<TypeMirror>, ?> findUseSites(ModelInspector<M> insp) {
-        return new SimpleTypeVisitor8<Stream<TypeMirror>, Object>(Stream.empty()) {
+    static <M> TypeVisitor<@Nullable Stream<Element>, ?> findUseSites(ModelInspector<M> insp) {
+        return new SimpleTypeVisitor8<@Nullable Stream<Element>, Object>(Stream.empty()) {
+            @Override
+            public @Nullable Stream<Element> visitDeclared(DeclaredType t, Object o) {
+                Element el = t.asElement();
+                M model = insp.fromElement(el);
+
+                Set<M> useSites = insp.getUseSites(model);
+                return useSites == null ? null : useSites.stream().map(insp::toElement);
+            }
         };
     }
 }

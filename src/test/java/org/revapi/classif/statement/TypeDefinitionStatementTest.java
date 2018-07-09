@@ -139,6 +139,7 @@ class TypeDefinitionStatementTest {
         TypeElement GC = constraints.elements().getTypeElement("Extends.GC");
         TypeElement GD = constraints.elements().getTypeElement("Extends.GD");
 
+        @SuppressWarnings("Duplicates")
         ModelInspector<Element> insp = new MirroringModelInspector(constraints.elements(), constraints.types()) {
             @Override
             public Set<Element> getUses(Element model) {
@@ -163,20 +164,20 @@ class TypeDefinitionStatementTest {
             }
         };
 
-//        assertPassed(test(insp, GB, "type ^ uses Extends.GD;"));
+        assertPassed(test(insp, GB, "type ^ uses Extends.GD;"));
         assertPassed(test(insp, B, "type ^ uses Extends.GD;"));
-//        assertNotPassed(test(insp, B, "type ^ directly uses Extends.GD;"));
-//        assertPassed(test(insp, GB, "type ^ directly uses Extends.GD;"));
+        assertNotPassed(test(insp, B, "type ^ directly uses Extends.GD;"));
+        assertPassed(test(insp, GB, "type ^ directly uses Extends.GD;"));
     }
 
     @Test
-    @Disabled
     void testUsedBy() {
         TypeElement B = constraints.elements().getTypeElement("Extends.B");
         TypeElement GB = constraints.elements().getTypeElement("Extends.GB");
         TypeElement GC = constraints.elements().getTypeElement("Extends.GC");
         TypeElement GD = constraints.elements().getTypeElement("Extends.GD");
 
+        @SuppressWarnings("Duplicates")
         ModelInspector<Element> insp = new MirroringModelInspector(constraints.elements(), constraints.types()) {
             @Override
             public Set<Element> getUseSites(Element model) {
@@ -201,9 +202,9 @@ class TypeDefinitionStatementTest {
             }
         };
 
-        assertPassed(test(insp, GB, "type ^ usedby Extends.GD;"));
-        assertPassed(test(insp, B, "type ^ usedby Extends.GD;"));
-        assertNotPassed(test(insp, B, "type ^ directly usedby Extends.GD;"));
-        assertPassed(test(insp, GB, "type ^ directly usedby Extends.GD;"));
+        assertPassed(test(insp, GB, "type ^ usedby %u; type %u=Extends.GD;", GD));
+        assertPassed(test(insp, B, "type ^ usedby %u; type %u=Extends.GD;", GD));
+        assertNotPassed(test(insp, B, "type ^ directly usedby %u; type %u=Extends.GD;", GD));
+        assertPassed(test(insp, GB, "type ^ directly usedby %u; type %u=Extends.GD;", GD));
     }
 }

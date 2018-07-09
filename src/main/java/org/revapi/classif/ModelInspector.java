@@ -125,7 +125,7 @@ public interface ModelInspector<M> {
      * @param element the element to convert back to the model representation
      * @return the model representation of the element
      */
-    M fromType(TypeElement element);
+    M fromElement(Element element);
 
     /**
      * This is assumed to be equivalent to {@link javax.lang.model.util.Types#directSupertypes(TypeMirror)}.

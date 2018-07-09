@@ -77,7 +77,7 @@ public class MirroringModelInspector implements ModelInspector<Element> {
     }
 
     @Override
-    public Element fromType(TypeElement element) {
+    public Element fromElement(Element element) {
         return element;
     }
 

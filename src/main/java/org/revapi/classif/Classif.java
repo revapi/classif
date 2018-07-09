@@ -651,7 +651,8 @@ public final class Classif {
                 }
 
                 if (ctx.possibleTypeAssignment() == null) {
-                    return new TypeDefinitionStatement(null, referenced, annotations, modifiers, typeKind,
+                    reffed.addAll(referenced);
+                    return new TypeDefinitionStatement(null, reffed, annotations, modifiers, typeKind,
                             new FqnMatch(singletonList(NameMatch.any())), null, constraints, false, isMatch);
                 } else {
                     FqnMatch fqn = FqnVisitor.INSTANCE.visit(ctx.possibleTypeAssignment().fqn());
@@ -763,11 +764,11 @@ public final class Classif {
                     extended[0] = new ExtendsMatch(onlyDirect, type.match);
                 } else if (constraintCtx.USED_BY() != null) {
                     boolean onlyDirect = constraintCtx.DIRECTLY() != null;
-                    ReferencedVariablesAnd<TypeReferenceMatch> type =
-                            constraintCtx.typeReference().get(0).accept(TypeReferenceVisitor.INSTANCE);
+                    List<String> variables = constraintCtx.variables().variable().stream()
+                            .map(v -> v.accept(VariableVisitor.INSTANCE)).collect(toList());
 
-                    ret.referencedVariables.addAll(type.referencedVariables);
-                    usedBys.add(new UsedByMatch(onlyDirect, type.match));
+                    ret.referencedVariables.addAll(variables);
+                    usedBys.add(new UsedByMatch(onlyDirect, variables));
                 }
             });
 
