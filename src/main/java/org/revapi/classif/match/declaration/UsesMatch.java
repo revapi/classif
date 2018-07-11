@@ -52,14 +52,14 @@ public final class UsesMatch extends DeclarationMatch {
         if (onlyDirect) {
             return testable(directUses).testAny(u -> type.testInstance(u, ctx));
         } else {
-            return testRecursively(directUses, ctx);
+            return testRecursively(directUses, ctx, UseVisitor.findUses(ctx.modelInspector));
         }
     }
 
     private TestResult testRecursively(Stream<DeclaredType> types,
-            MatchContext<?> ctx) {
+            MatchContext<?> ctx, TypeVisitor<Stream<DeclaredType>, ?> visitor) {
 
         return types == null ? TestResult.DEFERRED : testable(types).testAny(t -> type.testInstance(t, ctx).or(() ->
-                testRecursively(UseVisitor.findUses(ctx.modelInspector).visit(t), ctx)));
+                testRecursively(visitor.visit(t), ctx, visitor)));
     }
 }

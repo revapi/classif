@@ -54,12 +54,12 @@ public class UsedByMatch extends DeclarationMatch {
                 return m == null ? NOT_PASSED : m.test(ctx.modelInspector.fromElement(us), ctx);
             }));
         } else {
-            return testRecursively(directUseSites, ctx);
+            return testRecursively(directUseSites, ctx, UseVisitor.findUseSites(ctx.modelInspector));
         }
     }
 
     private <M> TestResult testRecursively(Stream<Element> sites,
-            MatchContext<M> ctx) {
+            MatchContext<M> ctx, TypeVisitor<Stream<Element>, ?> visitor) {
 
         if (sites == null) {
             return DEFERRED;
@@ -69,7 +69,7 @@ public class UsedByMatch extends DeclarationMatch {
                 return m == null
                         ? NOT_PASSED
                         : m.test(ctx.modelInspector.fromElement(us), ctx)
-                        .or(() -> testRecursively(UseVisitor.findUseSites(ctx.modelInspector).visit(us.asType()), ctx));
+                        .or(() -> testRecursively(visitor.visit(us.asType()), ctx, visitor));
             }));
         }
     }

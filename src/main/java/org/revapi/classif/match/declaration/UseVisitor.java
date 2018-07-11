@@ -47,8 +47,10 @@ final class UseVisitor {
     }
 
     /**
-     * Returns a visitor to find out the stream of directly used types of some element. Note that this is a single
-     * use object. You need to obtain a fresh instance of it after each use.
+     * Returns a visitor to find out the stream of directly used types of some element.
+     *
+     * <p>Note that the visitor keeps track of the types it visited and will return an empty stream for types it already
+     * has seen.
      *
      * @param insp        the inspector to find uses of types
      * @param <M>         the type of the model elements
@@ -163,10 +165,28 @@ final class UseVisitor {
         };
     }
 
+    /**
+     * Returns a visitor to find out the stream of elements directly using the provided types.
+     *
+     * <p>Note that the visitor keeps track of the types it visited and will return an empty stream for types it already
+     * has seen.
+     *
+     * @param insp        the inspector to find uses of types
+     * @param <M>         the type of the model elements
+     * @return a visitor returning a stream of direct use sites of some type
+     */
     static <M> TypeVisitor<@Nullable Stream<Element>, ?> findUseSites(ModelInspector<M> insp) {
         return new SimpleTypeVisitor8<@Nullable Stream<Element>, Object>(Stream.empty()) {
+            private HashSet<DeclaredType> visited = new HashSet<>();
+
             @Override
             public @Nullable Stream<Element> visitDeclared(DeclaredType t, Object o) {
+                if (visited.contains(t)) {
+                    return empty();
+                }
+
+                visited.add(t);
+
                 Element el = t.asElement();
                 M model = insp.fromElement(el);
 
