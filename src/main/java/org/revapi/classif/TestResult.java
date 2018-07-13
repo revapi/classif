@@ -16,6 +16,8 @@
  */
 package org.revapi.classif;
 
+import static java.util.Objects.requireNonNull;
+
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -27,6 +29,7 @@ import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToIntFunction;
@@ -64,11 +67,11 @@ public enum TestResult {
     public TestResult and(TestResult other) {
         switch (this) {
             case PASSED:
-                return other;
+                return requireNonNull(other);
             case NOT_PASSED:
                 return this;
             case DEFERRED:
-                return other == NOT_PASSED ? other : this;
+                return requireNonNull(other) == NOT_PASSED ? other : this;
         }
 
         throw new IllegalStateException("Unhandled TestResult: " + this);
@@ -77,11 +80,11 @@ public enum TestResult {
     public TestResult and(Supplier<TestResult> other) {
         switch (this) {
             case PASSED:
-                return other.get();
+                return requireNonNull(other.get());
             case NOT_PASSED:
                 return this;
             case DEFERRED:
-                TestResult res = other.get();
+                TestResult res = requireNonNull(other.get());
                 return res == NOT_PASSED ? res : this;
         }
 
@@ -93,9 +96,9 @@ public enum TestResult {
             case PASSED:
                 return this;
             case NOT_PASSED:
-                return other;
+                return requireNonNull(other);
             case DEFERRED:
-                return other == PASSED ? other : this;
+                return requireNonNull(other) == PASSED ? other : this;
         }
 
         throw new IllegalStateException("Unhandled TestResult: " + this);
@@ -106,9 +109,9 @@ public enum TestResult {
             case PASSED:
                 return this;
             case NOT_PASSED:
-                return other.get();
+                return requireNonNull(other.get());
             case DEFERRED:
-                TestResult res = other.get();
+                TestResult res = requireNonNull(other.get());
                 return res == PASSED ? res : this;
         }
 
@@ -154,10 +157,24 @@ public enum TestResult {
             return testable(collection.stream());
         }
 
+        /**
+         * Equivalent of {@link #anyMatch(java.util.function.Predicate)} only with ternary logic.
+         *
+         * @param predicate a {@link TestResult.Predicate} instance
+         * @return NOT_PASSED if the stream is empty otherwise the individual test results {@link #or(TestResult) or'd}
+         * together.
+         */
         public TestResult testAny(Predicate<? super T> predicate) {
             return wrapped.reduce(NOT_PASSED, (res, next) -> res.or(() -> predicate.test(next)), TestResult::or);
         }
 
+        /**
+         * Equivalent of {@link #allMatch(java.util.function.Predicate)} only with ternary logic.
+         *
+         * @param predicate a {@link TestResult.Predicate} instance
+         * @return PASSED if the stream is empty otherwise the individual test results {@link #and(TestResult) and'd}
+         * together.
+         */
         public TestResult testAll(Predicate<? super T> predicate) {
             return wrapped.reduce(PASSED, (res, next) -> res.and(() -> predicate.test(next)), TestResult::and);
         }

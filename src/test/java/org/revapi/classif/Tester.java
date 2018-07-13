@@ -21,10 +21,14 @@ import static org.revapi.classif.TestResult.DEFERRED;
 import static org.revapi.classif.TestResult.NOT_PASSED;
 import static org.revapi.classif.TestResult.PASSED;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.lang.model.element.Element;
 
+import org.revapi.classif.util.TreeNode;
 import org.revapi.testjars.CompiledJar;
 
 public class Tester {
@@ -35,15 +39,8 @@ public class Tester {
     public static TestResult test(ModelInspector<Element> insp, Element el, String recipe, Element... nextElements) {
         MatchingProgress<Element> progress = startProgress(insp, recipe);
 
-        TestResult res = progress.start(el);
-        if (res == PASSED) {
-            return PASSED;
-        }
-
-        res = progress.finish(el);
-        if (res == PASSED) {
-            return PASSED;
-        }
+        progress.start(el);
+        TestResult res = progress.finish(el);
 
         for (Element e : nextElements) {
             progress.start(e);
@@ -51,6 +48,33 @@ public class Tester {
         }
 
         return progress.finish().getOrDefault(el, res);
+    }
+
+    public static Map<Element, TestResult> test(CompiledJar.Environment env, String recipe, Hierarchy elementHierarchy) {
+        return test(inspector(env), recipe, elementHierarchy);
+    }
+
+    public static Map<Element, TestResult> test(ModelInspector<Element> insp, String recipe, Hierarchy elementHierarchy) {
+        MatchingProgress<Element> progress = startProgress(insp, recipe);
+        Map<Element, TestResult> ret = new HashMap<>();
+
+        for (Hierarchy el : elementHierarchy.getChildren()) {
+            test(progress, el, ret);
+        }
+
+        ret.putAll(progress.finish());
+
+        return ret;
+    }
+
+    private static void test(MatchingProgress<Element> progress, Hierarchy element, Map<Element, TestResult> results) {
+        if (progress.start(element.element).isDescend()) {
+
+            for (Hierarchy child : element.getChildren()) {
+                test(progress, child, results);
+            }
+        }
+        results.put(element.element, progress.finish(element.element));
     }
 
     public static Map<Element, TestResult> testRest(CompiledJar.Environment env, Element el, String recipe, Element... nextElements) {
@@ -78,7 +102,7 @@ public class Tester {
     public static TestResult testProgressStart(ModelInspector<Element> insp, Element el, String recipe) {
         MatchingProgress<Element> progress = startProgress(insp, recipe);
 
-        return progress.start(el);
+        return progress.start(el).getTestResult();
     }
 
     public static void assertPassed(TestResult res) {
@@ -101,5 +125,78 @@ public class Tester {
 
     private static ModelInspector<Element> inspector(CompiledJar.Environment env) {
         return new MirroringModelInspector(env.elements(), env.types());
+    }
+
+    public static final class Hierarchy extends TreeNode<Hierarchy> {
+        private final Element element;
+
+        private Hierarchy(Element element) {
+            this.element = element;
+        }
+
+        public static RootBuilder builder() {
+            return new RootBuilder();
+        }
+
+        public static final class RootBuilder {
+            private final Set<Builder> children = new HashSet<>();
+
+            private RootBuilder() {
+
+            }
+
+            public Builder<RootBuilder> start(Element element) {
+                Builder<RootBuilder> ret = new Builder<>(this, element);
+                children.add(ret);
+                return ret;
+            }
+
+            public RootBuilder add(Element element) {
+                return start(element).end();
+            }
+
+            public Hierarchy build() {
+                Hierarchy ret = new Hierarchy(null);
+                for (Builder child : children) {
+                    ret.getChildren().add(child.build());
+                }
+
+                return ret;
+            }
+        }
+
+        public static final class Builder<Parent> {
+            private final Set<Builder<Builder<Parent>>> children = new HashSet<>();
+            private final Element element;
+            private final Parent parent;
+
+            private Builder(Parent parent, Element element) {
+                this.parent = parent;
+                this.element = element;
+            }
+
+            public Builder<Builder<Parent>> start(Element element) {
+                Builder<Builder<Parent>> ret = new Builder<>(this, element);
+                children.add(ret);
+                return ret;
+            }
+
+            public Builder<Parent> add(Element element) {
+                return start(element).end();
+            }
+
+            public Parent end() {
+                return parent;
+            }
+
+            private Hierarchy build() {
+                Hierarchy ret = new Hierarchy(element);
+                for (Builder child : children) {
+                    ret.getChildren().add(child.build());
+                }
+
+                return ret;
+            }
+        }
     }
 }

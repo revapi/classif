@@ -242,7 +242,7 @@ fieldOrMethodWithoutTypeParameters
     ;
 
 fieldNameOrMethodWithoutReturnType
-    : (typeReference DOUBLE_COLON)? returned? assignment? not? name (fieldConstraints | methodRestStatement)?
+    : (typeReference DOUBLE_COLON)? returned? assignment? not? name (WS fieldConstraints | methodRestStatement)?
     ;
 
 methodAfterTypeParametersStatement

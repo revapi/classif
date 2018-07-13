@@ -44,31 +44,33 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.revapi.classif.match.NameMatch;
 import org.revapi.classif.match.declaration.AnnotationAttributeMatch;
-import org.revapi.classif.match.declaration.AnnotationValueMatch;
 import org.revapi.classif.match.declaration.AnnotationMatch;
+import org.revapi.classif.match.declaration.AnnotationValueMatch;
+import org.revapi.classif.match.declaration.AnnotationsMatch;
 import org.revapi.classif.match.declaration.ExtendsMatch;
 import org.revapi.classif.match.declaration.ImplementsMatch;
-import org.revapi.classif.match.declaration.TypeConstraintsMatch;
-import org.revapi.classif.match.declaration.UsedByMatch;
-import org.revapi.classif.match.declaration.UsesMatch;
-import org.revapi.classif.match.instance.TypeParameterMatch;
-import org.revapi.classif.match.instance.TypeParameterWildcardMatch;
-import org.revapi.classif.match.declaration.AnnotationsMatch;
-import org.revapi.classif.match.NameMatch;
 import org.revapi.classif.match.declaration.ModifierClusterMatch;
 import org.revapi.classif.match.declaration.ModifierMatch;
 import org.revapi.classif.match.declaration.ModifiersMatch;
+import org.revapi.classif.match.declaration.TypeConstraintsMatch;
 import org.revapi.classif.match.declaration.TypeKindMatch;
+import org.revapi.classif.match.declaration.UsedByMatch;
+import org.revapi.classif.match.declaration.UsesMatch;
 import org.revapi.classif.match.instance.FqnMatch;
 import org.revapi.classif.match.instance.SingleTypeReferenceMatch;
+import org.revapi.classif.match.instance.TypeParameterMatch;
+import org.revapi.classif.match.instance.TypeParameterWildcardMatch;
 import org.revapi.classif.match.instance.TypeParametersMatch;
 import org.revapi.classif.match.instance.TypeReferenceMatch;
-import org.revapi.classif.util.Operator;
 import org.revapi.classif.statement.AbstractStatement;
+import org.revapi.classif.statement.FieldStatement;
 import org.revapi.classif.statement.GenericStatement;
+import org.revapi.classif.statement.MethodStatement;
 import org.revapi.classif.statement.StatementStatement;
 import org.revapi.classif.statement.TypeDefinitionStatement;
+import org.revapi.classif.util.Operator;
 
 /**
  * Classif is a structural matcher for Java declarations. It supports variables and nested statements and is cool.
@@ -76,6 +78,7 @@ import org.revapi.classif.statement.TypeDefinitionStatement;
 public final class Classif {
 
     private static final DecimalFormat NUMBER_FORMAT = (DecimalFormat) DecimalFormat.getNumberInstance(Locale.ROOT);
+
     static {
         NUMBER_FORMAT.setGroupingUsed(true);
         DecimalFormatSymbols symbols = NUMBER_FORMAT.getDecimalFormatSymbols();
@@ -96,7 +99,8 @@ public final class Classif {
     public static StructuralMatcher compile(String program) {
         ANTLRErrorListener errorListener = new BaseErrorListener() {
             @Override
-            public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
+            public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line,
+                    int charPositionInLine, String msg, RecognitionException e) {
                 throw new ParseCancellationException(ErrorFormatter.formatError(program, line, charPositionInLine, msg));
             }
         };
@@ -177,6 +181,7 @@ public final class Classif {
 
     private static final class MatchStatementVisitor extends ClassifBaseVisitor<List<String>> {
         static final MatchStatementVisitor INSTANCE = new MatchStatementVisitor();
+
         @Override
         public List<String> visitMatchStatement(ClassifParser.MatchStatementContext ctx) {
             return ctx.variables().variable().stream().map(v -> v.accept(VariableVisitor.INSTANCE)).collect(toList());
@@ -197,7 +202,7 @@ public final class Classif {
 
         @Override
         public NameMatch visitName(ClassifParser.NameContext ctx) {
-            NameMatch ret = ifNotNull(ctx.resolvedName(), c ->  c.accept(ResolvedNameVisitor.INSTANCE));
+            NameMatch ret = ifNotNull(ctx.resolvedName(), c -> c.accept(ResolvedNameVisitor.INSTANCE));
 
             if (ret == null) {
                 ret = ifNotNull(ctx.REGEX(), r -> NameMatch.pattern(toRegex(r)));
@@ -593,7 +598,8 @@ public final class Classif {
         static final TypeParametersVisitor INSTANCE = new TypeParametersVisitor();
 
         @Override
-        public ReferencedVariablesAnd<TypeParametersMatch> visitTypeParameters(ClassifParser.TypeParametersContext ctx) {
+        public ReferencedVariablesAnd<TypeParametersMatch> visitTypeParameters(
+                ClassifParser.TypeParametersContext ctx) {
             ReferencedVariablesAnd<TypeParametersMatch> ret = new ReferencedVariablesAnd<>();
 
             List<TypeParameterMatch> params = ctx.typeParam().stream().map(tp -> {
@@ -652,8 +658,14 @@ public final class Classif {
 
                 if (ctx.possibleTypeAssignment() == null) {
                     reffed.addAll(referenced);
-                    return new TypeDefinitionStatement(null, reffed, annotations, modifiers, typeKind,
-                            new FqnMatch(singletonList(NameMatch.any())), null, constraints, false, isMatch);
+                    TypeDefinitionStatement type = new TypeDefinitionStatement(null, reffed, annotations, modifiers,
+                            typeKind, new FqnMatch(singletonList(NameMatch.any())), null, constraints, false, isMatch);
+
+                    for (ClassifParser.ElementStatementContext elementStatementContext : ctx.elementStatement()) {
+                        type.getChildren().add(ElementStatementVisitor.INSTANCE.visit(elementStatementContext));
+                    }
+
+                    return type;
                 } else {
                     FqnMatch fqn = FqnVisitor.INSTANCE.visit(ctx.possibleTypeAssignment().fqn());
                     ReferencedVariablesAnd<TypeParametersMatch> tps = null;
@@ -674,8 +686,15 @@ public final class Classif {
 
                     reffed.addAll(referenced);
 
-                    return new TypeDefinitionStatement(variable, reffed, annotations, modifiers, typeKind, fqn,
+                    TypeDefinitionStatement type =
+                            new TypeDefinitionStatement(variable, reffed, annotations, modifiers, typeKind, fqn,
                             tps == null ? null : tps.match, constraints, negation, isMatch);
+
+                    for (ClassifParser.ElementStatementContext elementStatementContext : ctx.elementStatement()) {
+                        type.getChildren().add(ElementStatementVisitor.INSTANCE.visit(elementStatementContext));
+                    }
+
+                    return type;
                 }
             } else {
                 // generic statement
@@ -774,6 +793,188 @@ public final class Classif {
 
             ret.match = new TypeConstraintsMatch(implemented, extended[0], uses, usedBys);
             return ret;
+        }
+    }
+
+    private static final class ElementStatementVisitor extends ClassifBaseVisitor<StatementStatement> {
+        static final ElementStatementVisitor INSTANCE = new ElementStatementVisitor();
+
+        @Override
+        public StatementStatement visitElementStatement(ClassifParser.ElementStatementContext ctx) {
+            List<ReferencedVariablesAnd<AnnotationMatch>> annos = ctx.annotations().annotation().stream()
+                    .map(a -> a.accept(AnnotationVisitor.INSTANCE)).collect(toList());
+
+            ModifiersMatch modifiers = new ModifiersMatch(ctx.modifiers().modifierCluster().stream()
+                    .map(cc -> new ModifierClusterMatch(cc.modifier().stream()
+                            .map(mc -> {
+                                boolean negation = mc.not() != null;
+                                String text = negation ? mc.getText().substring(1) : mc.getText();
+                                return new ModifierMatch(negation, text);
+                            }).collect(toList())))
+                    .collect(toList()));
+
+            return new FieldOrMethodStatementVisitor(annos, modifiers)
+                    .visitFieldOrMethodStatement(ctx.fieldOrMethodStatement());
+        }
+    }
+
+    private static final class FieldOrMethodStatementVisitor extends ClassifBaseVisitor<StatementStatement> {
+        private final List<ReferencedVariablesAnd<AnnotationMatch>> annotations;
+        private final ModifiersMatch modifiers;
+
+        private FieldOrMethodStatementVisitor(
+                List<ReferencedVariablesAnd<AnnotationMatch>> annotations, ModifiersMatch modifiers) {
+            this.annotations = annotations;
+            this.modifiers = modifiers;
+        }
+
+        @Override
+        public StatementStatement visitFieldOrMethodStatement(ClassifParser.FieldOrMethodStatementContext ctx) {
+            if (ctx.typeParameters() != null) {
+                ReferencedVariablesAnd<TypeParametersMatch> typeParams =
+                        ctx.typeParameters().accept(TypeParametersVisitor.INSTANCE);
+
+                return new MethodAfterTypeParametersStatementVisitor(annotations, modifiers, typeParams)
+                        .visitMethodAfterTypeParametersStatement(ctx.methodAfterTypeParametersStatement());
+            } else {
+                return new FieldOrMethodWithoutTypeParametersVisitor(annotations, modifiers)
+                        .visitFieldOrMethodWithoutTypeParameters(ctx.fieldOrMethodWithoutTypeParameters());
+            }
+        }
+    }
+
+    private static final class MethodAfterTypeParametersStatementVisitor extends ClassifBaseVisitor<MethodStatement> {
+        private final List<ReferencedVariablesAnd<AnnotationMatch>> annotations;
+        private final ModifiersMatch modifiers;
+        private final ReferencedVariablesAnd<TypeParametersMatch> typeParams;
+
+        MethodAfterTypeParametersStatementVisitor(
+                List<ReferencedVariablesAnd<AnnotationMatch>> annotations,
+                ModifiersMatch modifiers,
+                ReferencedVariablesAnd<TypeParametersMatch> typeParams) {
+            this.annotations = annotations;
+            this.modifiers = modifiers;
+            this.typeParams = typeParams;
+        }
+
+        @Override
+        public MethodStatement visitMethodAfterTypeParametersStatement(
+                ClassifParser.MethodAfterTypeParametersStatementContext ctx) {
+            ReferencedVariablesAnd<TypeReferenceMatch> declaringType = null;
+            if (ctx.typeReference() != null) {
+                declaringType = ctx.typeReference().accept(TypeReferenceVisitor.INSTANCE);
+            }
+
+            return new MethodNameAndRestStatementVisitor(annotations, modifiers, declaringType)
+                    .visit(ctx.methodNameAndRestStatement());
+        }
+    }
+
+    private static final class FieldOrMethodWithoutTypeParametersVisitor extends ClassifBaseVisitor<StatementStatement> {
+        private final List<ReferencedVariablesAnd<AnnotationMatch>> annotations;
+        private final ModifiersMatch modifiers;
+
+        FieldOrMethodWithoutTypeParametersVisitor(
+                List<ReferencedVariablesAnd<AnnotationMatch>> annotations,
+                ModifiersMatch modifiers) {
+            this.annotations = annotations;
+            this.modifiers = modifiers;
+        }
+
+        @Override
+        public StatementStatement visitFieldOrMethodWithoutTypeParameters(
+                ClassifParser.FieldOrMethodWithoutTypeParametersContext ctx) {
+            ReferencedVariablesAnd<TypeReferenceMatch> type = null;
+            if (ctx.typeReference() != null) {
+                type = ctx.typeReference().accept(TypeReferenceVisitor.INSTANCE);
+            }
+
+            return new FieldNameOrMethodWithoutReturnType(annotations, modifiers, type)
+                    .visitFieldNameOrMethodWithoutReturnType(ctx.fieldNameOrMethodWithoutReturnType());
+        }
+    }
+
+    private static final class FieldNameOrMethodWithoutReturnType extends ClassifBaseVisitor<StatementStatement> {
+        private final List<ReferencedVariablesAnd<AnnotationMatch>> annotations;
+        private final ModifiersMatch modifiers;
+        private final ReferencedVariablesAnd<TypeReferenceMatch> type;
+
+        private FieldNameOrMethodWithoutReturnType(
+                List<ReferencedVariablesAnd<AnnotationMatch>> annotations,
+                ModifiersMatch modifiers,
+                ReferencedVariablesAnd<TypeReferenceMatch> type) {
+            this.annotations = annotations;
+            this.modifiers = modifiers;
+            this.type = type;
+        }
+
+        @Override
+        public StatementStatement visitFieldNameOrMethodWithoutReturnType(
+                ClassifParser.FieldNameOrMethodWithoutReturnTypeContext ctx) {
+            ReferencedVariablesAnd<TypeReferenceMatch> declaringType = null;
+            if (ctx.typeReference() != null) {
+                declaringType = ctx.typeReference().accept(TypeReferenceVisitor.INSTANCE);
+            }
+
+            boolean isReturn = ctx.returned() != null;
+
+            String definedName = ctx.assignment() == null ? null : ctx.assignment().resolvedName().getText();
+
+            boolean negation = ctx.not() != null;
+
+            NameMatch name = ctx.name().accept(NameVisitor.INSTANCE);
+
+            if (ctx.methodRestStatement() != null) {
+                // TODO implement
+                throw new UnsupportedOperationException("Method statements not supported yet.");
+            } else {
+                List<String> referenced = new ArrayList<>(4);
+
+                UsesMatch fieldConstraints = null;
+                if (ctx.fieldConstraints() != null) {
+                    ClassifParser.FieldConstraintsContext constraints = ctx.fieldConstraints();
+                    ReferencedVariablesAnd<TypeReferenceMatch> useType = constraints.typeReference()
+                            .accept(TypeReferenceVisitor.INSTANCE);
+                    boolean direct = constraints.DIRECTLY() != null;
+                    fieldConstraints = new UsesMatch(direct, useType.match);
+                    referenced.addAll(useType.referencedVariables);
+                }
+
+                AnnotationsMatch annos = new AnnotationsMatch(annotations.stream()
+                        .peek(ref -> referenced.addAll(ref.referencedVariables))
+                        .map(ref -> ref.match)
+                        .collect(toList()));
+
+                referenced.addAll(type.referencedVariables);
+
+                if (declaringType != null) {
+                    referenced.addAll(declaringType.referencedVariables);
+                }
+
+                return new FieldStatement(definedName, referenced, annos, modifiers, isReturn, negation, name,
+                        type.match, declaringType == null ? null : declaringType.match, fieldConstraints);
+            }
+        }
+    }
+
+    private static final class MethodNameAndRestStatementVisitor extends ClassifBaseVisitor<MethodStatement> {
+        private final List<ReferencedVariablesAnd<AnnotationMatch>> annotations;
+        private final ModifiersMatch modifiers;
+        private final ReferencedVariablesAnd<TypeReferenceMatch> declaringType;
+
+        private MethodNameAndRestStatementVisitor(
+                List<ReferencedVariablesAnd<AnnotationMatch>> annotations,
+                ModifiersMatch modifiers,
+                ReferencedVariablesAnd<TypeReferenceMatch> declaringType) {
+            this.annotations = annotations;
+            this.modifiers = modifiers;
+            this.declaringType = declaringType;
+        }
+
+        @Override
+        public MethodStatement visitMethodNameAndRestStatement(ClassifParser.MethodNameAndRestStatementContext ctx) {
+            // TODO implement
+            return super.visitMethodNameAndRestStatement(ctx);
         }
     }
 

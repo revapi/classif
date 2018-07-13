@@ -17,6 +17,7 @@
 package org.revapi.classif;
 
 import static java.util.Collections.emptyMap;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
@@ -26,7 +27,6 @@ import static org.revapi.classif.TestResult.PASSED;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
@@ -63,9 +63,8 @@ public final class MatchingProgress<M> {
     };
 
     private final List<Node<Step<M>>> allSteps;
-    private final List<List<Node<Step<M>>>> potentialMatches;
-    private final Deque<TestResult> resolutionStack = new ArrayDeque<>();
-    private final Deque<M> modelStack = new ArrayDeque<>();
+    private final List<Node<Step<M>>> rootMatches;
+    private final Deque<ProgressContext<M>> progressStack = new ArrayDeque<>();
     private final Set<M> deferredModels = new HashSet<>();
 
     MatchingProgress(DependencyGraph matchGraph, ModelInspector<M> inspector) {
@@ -76,10 +75,32 @@ public final class MatchingProgress<M> {
                 .map(n -> convert(n, inspector, cache))
                 .collect(toList());
 
-        //bootstrap the potential matches with the roots of the node hierarchy
-        List<Node<Step<M>>> roots = allSteps.stream().filter(n -> n.getParent() == null).collect(toList());
-        this.potentialMatches = new ArrayList<>();
-        potentialMatches.add(roots);
+        // not too efficient way of figuring out whether some children return or use variables.
+        // This is needed in #start().
+        for (Node<Step<M>> n : allSteps) {
+            boolean isReturn = n.getObject().executionContext.isReturn;
+            boolean usesVariables = n.getObject().executionContext.definedVariable != null
+                    || !n.getObject().executionContext.referencedVariables.isEmpty();
+
+            n.getObject().thisOrChildrenReturn |= isReturn;
+            n.getObject().thisOrChildrenUseVariables |= usesVariables;
+
+            if (isReturn || usesVariables) {
+                Node<Step<M>> parent = n.getParent();
+                while (parent != null) {
+                    boolean parentReturns = isReturn || parent.getObject().executionContext.isReturn;
+                    boolean parentUsesVariables = usesVariables
+                            || parent.getObject().executionContext.definedVariable != null
+                            || !parent.getObject().executionContext.referencedVariables.isEmpty();
+
+                    parent.getObject().thisOrChildrenReturn |= parentReturns;
+                    parent.getObject().thisOrChildrenUseVariables |= parentUsesVariables;
+                    parent = parent.getParent();
+                }
+            }
+        }
+
+        rootMatches = allSteps.stream().filter(n -> n.getParent() == null).collect(toList());
     }
 
     private static <M> Node<Step<M>> convert(Node<MatchExecutionContext> n, ModelInspector<M> inspector,
@@ -131,19 +152,26 @@ public final class MatchingProgress<M> {
         return ret;
     }
 
+    // TODO get rid of the generic statements. They're superfluous and just complicate things
+
     /**
-     * Starts a tree-walk of the provided java element. If this method returns {@link TestResult#PASSED} or
-     * {@link TestResult#DEFERRED}, the caller is expected to continue the walk of the elements in the depth-first
-     * search manner. Once all children are visited, the caller is expected to call the {@link #finish(Object)} method
-     * with the same model object.
+     * Starts a tree-walk of the provided java element. The caller is expected to continue the walk of the model
+     * elements in the depth-first search manner. The returned instruction tells the caller the result of the test
+     * of the provided model (at this stage) and also whether it is necessary to continue the walk into the children.
      *
-     * <p>If the result is {@link TestResult#NOT_PASSED} the caller must not continue the walk on the children and
-     * is also not expected to call the {@link #finish(Object)} method.
+     * <p>The caller does not have to obey that and can descend into the children even if the instruction tells
+     * otherwise provided it still conforms to the contract of using the depth-first-search for the visits and calling
+     * {@link #start(Object)} and {@link #finish(Object)} at appropriate times.
+     *
+     * <p>On the other hand, if the caller doesn't descend into the children even if the instruction said to do that,
+     * the overall results of the tests might be wrong, because the children might have contained information needed
+     * to determine the matches of other elements.
      *
      * @param model the model of the element
-     * @return the result of the test of the model against the structural matcher
+     * @return the result of the test of the model against the structural matcher and the suggestion on how to proceed
+     * with the tree walk.
      */
-    public TestResult start(M model) {
+    public WalkInstruction start(M model) {
         // fast track if we have just a single test to make
         if (allSteps.size() == 1) {
             Step<M> s = allSteps.iterator().next().getObject();
@@ -152,8 +180,12 @@ public final class MatchingProgress<M> {
                 // use this as a kind of cache in the simple case
                 s.independentlyMatchingModels.put(model, null);
             }
-            return result;
+            return WalkInstruction.of(false, result);
         }
+
+        // make sure parent has access to the children
+        ProgressContext<M> parentProgress = progressStack.peek();
+        ProgressContext<M> progressContext = new ProgressContext<>(model);
 
         // ==== Processing the step dependencies ====
 
@@ -165,28 +197,51 @@ public final class MatchingProgress<M> {
         TestResult res = forEachPotential(n -> {
             Step<M> step = n.getObject();
             if (step.executionContext.isReturn) {
-                return step.resolutionCache.getOrDefault(model, DEFERRED);
+                TestResult tr = step.resolutionCache.getOrDefault(model, DEFERRED);
+                if (tr == PASSED && !n.getChildren().isEmpty()) {
+                    // we're starting the descend into the model, so it really cannot pass without the children passing,
+                    // too. We won't know that until finish(model) though.
+                    tr = DEFERRED;
+                }
+                return tr;
             } else {
                 return NOT_PASSED;
             }
         }, TestResult::or).orElseThrow(() -> new IllegalArgumentException("This should never happen." +
                 " forEachPotential() succeeded to run with empty set of potentials."));
 
+        // ==== Inform the parent about the outcome of this testing ====
+
+        // Note that we MUST NOT use the result that we're returning to the user here. The user is interested in the
+        // result of the returning matches whereas here, we want to update the parent on the result of matching of
+        // the current model regardless of whether it matches some returning matches or not.
+
+        TestResult rawResult = forEachPotential(n ->
+                n.getObject().resolutionCache.getOrDefault(model, NOT_PASSED), TestResult::or)
+                .orElseThrow(() -> new IllegalArgumentException("This should never happen." +
+                        " forEachPotential() succeeded to run with empty set of potentials."));
+
+        if (parentProgress != null) {
+            parentProgress.childrenEncountered = true;
+            parentProgress.childrenResolution = parentProgress.childrenResolution.and(rawResult);
+        }
+
         // ==== Prepare for evaluating the children ====
 
         // We're starting a new node, so for all matching potential matches (including the already active "up"), we
         // evaluate and determine the new set of potential matches for the children
-        List<Node<Step<M>>> newPotentials = determinePotentialMatchesFromHierarchy(model);
-        potentialMatches.add(0, newPotentials);
 
-        resolutionStack.push(res);
-        modelStack.push(model);
+        progressContext.potentialChildMatches = determineNextPotentialMatchesFromHierarchy(model);
+        progressContext.resolution = res;
+        progressStack.push(progressContext);
 
         if (res == DEFERRED) {
             deferredModels.add(model);
         }
 
-        return res;
+        boolean descend = !progressContext.potentialChildMatches.isEmpty();
+
+        return WalkInstruction.of(descend, res);
     }
 
     /**
@@ -208,29 +263,49 @@ public final class MatchingProgress<M> {
             return TestResult.fromBoolean(matched);
         }
 
-        potentialMatches.remove(0);
+        ProgressContext<M> progressContext = progressStack.peek();
 
-        if (modelStack.peek() != model) {
+        if (progressContext == null || progressContext.model != model) {
             throw new IllegalArgumentException("Unbalanced start/finish call.");
         } else {
-            modelStack.pop();
+            progressStack.pop();
         }
 
-        TestResult ret = resolutionStack.pop();
+        // get the result obtained in the #start()
+        TestResult ret = progressContext.resolution;
 
         if (ret == DEFERRED) {
-            ret = forEachPotential(n -> {
-                Step<M> step = n.getObject();
-                if (step.executionContext.isReturn) {
-                    return step.resolutionCache.getOrDefault(model, DEFERRED);
-                } else {
-                    return DEFERRED;
-                }
-            }, TestResult::or).orElse(DEFERRED);
+            ret = progressContext.potentialChildMatches.isEmpty()
+                    ? PASSED
+                    : TestResult.fromBoolean(progressContext.childrenEncountered);
+
+            ret = ret.and(progressContext.childrenResolution)
+                    // and at least one of the current potentials is a return and it passed.
+                    .and(() ->
+                            forEachPotential(n -> {
+                                Step<M> step = n.getObject();
+                                if (step.executionContext.isReturn) {
+                                    return step.resolutionCache.getOrDefault(model, DEFERRED);
+                                } else {
+                                    return DEFERRED;
+                                }
+                            }, TestResult::or).orElse(DEFERRED));
 
             if (ret != DEFERRED) {
                 deferredModels.remove(model);
             }
+        }
+
+        //make sure to update the parents notion of the results
+        if (!progressStack.isEmpty()) {
+            ProgressContext parentContext = requireNonNull(progressStack.peek());
+            // as in #start() we must not use the result returned to the user here, because we're interested in the
+            // "raw" passing or not passing of the model with the matches. The user on the other hand is only interested
+            // in matching of the returning matches.
+            parentContext.childrenResolution = parentContext.childrenResolution.and(() -> forEachPotential(n ->
+                    n.getObject().resolutionCache.getOrDefault(model, NOT_PASSED), TestResult::or)
+                    .orElseThrow(() -> new IllegalArgumentException("This should never happen." +
+                            " forEachPotential() succeeded to run with empty set of potentials.")));
         }
 
         return ret;
@@ -245,7 +320,7 @@ public final class MatchingProgress<M> {
      * @return the test results for the elements that have previously been {@link TestResult#DEFERRED}.
      */
     public Map<M, TestResult> finish() {
-        if (!resolutionStack.isEmpty()) {
+        if (!progressStack.isEmpty()) {
             throw new IllegalStateException("The matching progress is not yet complete. Please finish the progress" +
                     " on all models for which it has been started first (in a depth-first-search order).");
         }
@@ -270,27 +345,16 @@ public final class MatchingProgress<M> {
      */
     public void reset() {
         deferredModels.clear();
-        resolutionStack.clear();
-        modelStack.clear();
-        potentialMatches.clear();
-        potentialMatches.add(allSteps.stream()
-                .peek(n -> {
-                    n.getObject().independentlyMatchingModels.clear();
-                    n.getObject().resolutionCache.clear();
-                    n.getObject().dependentsResolutionCache.clear();
-                    n.getObject().dependenciesResolutionCache.clear();
-                })
-                .filter(n -> n.getParent() == null)
-                .collect(toList()));
+        progressStack.clear();
     }
 
-    private List<Node<Step<M>>> determinePotentialMatchesFromHierarchy(M model) {
+    private List<Node<Step<M>>> determineNextPotentialMatchesFromHierarchy(M model) {
         List<Node<Step<M>>> newPotentials = new ArrayList<>();
 
         forEachPotential(n -> {
             Step<M> step = n.getObject();
             if (step.independentlyMatchingModels.containsKey(model)) {
-                newPotentials.add(n);
+                newPotentials.addAll(n.getChildren());
             }
         });
 
@@ -438,13 +502,12 @@ public final class MatchingProgress<M> {
     }
 
     private <T> Optional<T> forEachPotential(Function<Node<Step<M>>, T> process, BinaryOperator<T> combiner) {
-        if (potentialMatches.isEmpty()) {
-            throw new IllegalStateException("The matching progress should never run out of potential matches to try" +
-                    " on an element. This is a bug.");
-        }
-
-        return potentialMatches.stream().flatMap(Collection::stream).map(process).reduce(combiner);
+        return (progressStack.isEmpty()
+                ? rootMatches.stream()
+                : requireNonNull(progressStack.peek()).potentialChildMatches.stream()
+        ).map(process).reduce(combiner);
     }
+
     //shamelessly copied from https://stackoverflow.com/a/35652538/1969945
     private static <T> List<List<T>> getCombinations(List<List<T>> lists) {
         if (lists.isEmpty()) {
@@ -497,11 +560,26 @@ public final class MatchingProgress<M> {
         final IdentityHashMap<M, TestResult> dependenciesResolutionCache = new IdentityHashMap<>();
         final IdentityHashMap<M, TestResult> dependentsResolutionCache = new IdentityHashMap<>();
 
+        boolean thisOrChildrenReturn;
+        boolean thisOrChildrenUseVariables;
+
         private Step(MatchExecutionContext executionContext, MatchContext<M> matchContext,
                 MatchContext<M> independentMatchContext) {
             this.executionContext = executionContext;
             this.blueprintMatchContext = matchContext;
             this.independentMatchContext = independentMatchContext;
+        }
+    }
+
+    private static final class ProgressContext<M> {
+        final M model;
+        TestResult resolution;
+        TestResult childrenResolution = PASSED;
+        List<Node<Step<M>>> potentialChildMatches;
+        boolean childrenEncountered;
+
+        ProgressContext(M model) {
+            this.model = model;
         }
     }
 
