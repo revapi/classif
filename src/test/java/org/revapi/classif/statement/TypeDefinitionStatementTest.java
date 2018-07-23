@@ -23,14 +23,12 @@ import static org.revapi.classif.Tester.assertNotPassed;
 import static org.revapi.classif.Tester.assertPassed;
 import static org.revapi.classif.Tester.test;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;

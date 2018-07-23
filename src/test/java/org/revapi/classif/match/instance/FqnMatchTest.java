@@ -21,7 +21,6 @@ import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.revapi.classif.TestResult.NOT_PASSED;
 import static org.revapi.classif.TestResult.PASSED;
-import static org.revapi.classif.Tester.assertPassed;
 import static org.revapi.classif.match.NameMatch.all;
 import static org.revapi.classif.match.NameMatch.any;
 import static org.revapi.classif.match.NameMatch.exact;
