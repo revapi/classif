@@ -146,4 +146,11 @@ class FieldStatementTest {
         assertNotPassed(res.get(AA));
         assertPassed(res.get(field));
     }
+
+    @Test
+    void testDeclaration() {
+        Map<Element, TestResult> res = test(env, "type * { public *.A::^field; }", builder().start(AA).add(field).end().build());
+        assertNotPassed(res.get(AA));
+        assertPassed(res.get(field));
+    }
 }

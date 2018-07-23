@@ -945,14 +945,17 @@ public final class Classif {
                         .map(ref -> ref.match)
                         .collect(toList()));
 
-                referenced.addAll(type.referencedVariables);
+                if (type != null) {
+                    referenced.addAll(type.referencedVariables);
+                }
 
                 if (declaringType != null) {
                     referenced.addAll(declaringType.referencedVariables);
                 }
 
                 return new FieldStatement(definedName, referenced, annos, modifiers, isReturn, negation, name,
-                        type.match, declaringType == null ? null : declaringType.match, fieldConstraints);
+                        type == null ? null : type.match, declaringType == null ? null : declaringType.match,
+                        fieldConstraints);
             }
         }
     }
