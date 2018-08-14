@@ -16,6 +16,7 @@
  */
 package org.revapi.classif.util;
 
+import static org.revapi.classif.TestResult.NOT_PASSED;
 import static org.revapi.classif.TestResult.PASSED;
 import static org.revapi.classif.Tester.assertNotPassed;
 import static org.revapi.classif.Tester.assertPassed;
@@ -59,6 +60,40 @@ class GlobTest {
         assertPassed(test(array(PASSED, PASSED, PASSED, PASSED), ALL));
     }
 
+    @Test
+    void testUnordered() {
+        assertPassed(testUnordered(array(PASSED, PASSED), TEST, TEST));
+
+        //this should pass, because it should see the combination of ANY matching NOT_PASSED
+        //and TEST matching PASSED.
+        assertPassed(testUnordered(array(PASSED, PASSED, NOT_PASSED), TEST, ANY, TEST));
+
+        // not passed, because there are more tests than elements available
+        assertNotPassed(testUnordered(array(PASSED, NOT_PASSED), TEST, ANY, TEST));
+
+        assertPassed(testUnordered(array(PASSED, PASSED), TEST, TEST, ALL));
+        assertPassed(testUnordered(array(PASSED, PASSED), TEST, ALL));
+
+        // ALL matches NOT_PASSED and TEST matches the single PASSED
+        assertPassed(testUnordered(array(PASSED, NOT_PASSED, NOT_PASSED), TEST, ALL));
+
+        assertPassed(testUnordered(array(NOT_PASSED, PASSED, NOT_PASSED), TEST, ANY, ALL));
+
+        // not passed because there is not enough tests to match the elements
+        assertNotPassed(testUnordered(array(PASSED, PASSED), TEST));
+    }
+
+    @Test
+    void testUnorderedWithOptionals() {
+        assertPassed(testUnorderedWithOptionals(array(PASSED, PASSED), array(NOT_PASSED), TEST, TEST));
+        assertNotPassed(testUnorderedWithOptionals(array(PASSED, PASSED), array(NOT_PASSED), TEST, TEST, TEST));
+        assertPassed(testUnorderedWithOptionals(array(PASSED, PASSED), array(NOT_PASSED), TEST, TEST, ANY));
+        assertPassed(testUnorderedWithOptionals(array(PASSED, PASSED), array(NOT_PASSED), TEST, ANY, TEST));
+        assertNotPassed(testUnorderedWithOptionals(array(PASSED, NOT_PASSED), array(NOT_PASSED), TEST, ANY, TEST));
+        assertNotPassed(testUnorderedWithOptionals(array(PASSED, NOT_PASSED), array(NOT_PASSED), TEST, ALL, TEST));
+        assertPassed(testUnorderedWithOptionals(array(PASSED, NOT_PASSED), array(NOT_PASSED, PASSED), TEST, ALL, TEST));
+    }
+
     private TestResult[] array(TestResult... vals) {
         return vals;
     }
@@ -72,8 +107,12 @@ class GlobTest {
     }
 
     private static TestResult testUnorderedWithOptionals(TestResult[] testResults, TestResult[] optionals, Matcher... matchers) {
-        return getGlob(matchers).testUnorderedWithOptionals(test(testResults), nIndices(testResults.length),
-                nIndices(optionals.length));
+        TestResult[] all = new TestResult[testResults.length + optionals.length];
+        System.arraycopy(testResults, 0, all, 0, testResults.length);
+        System.arraycopy(optionals, 0, all, testResults.length, optionals.length);
+
+        return getGlob(matchers).testUnorderedWithOptionals(test(all), nIndices(testResults.length),
+                nIndices(testResults.length, optionals.length));
     }
 
     private static <T> TestResult.BiPredicate<T, Integer> test(TestResult[] testResults) {
@@ -81,7 +120,11 @@ class GlobTest {
     }
 
     private static List<Integer> nIndices(int n) {
-        return Stream.iterate(0, i -> i + 1).limit(n).collect(Collectors.toList());
+        return nIndices(0, n);
+    }
+
+    private static List<Integer> nIndices(int start, int n) {
+        return Stream.iterate(start, i -> i + 1).limit(n).collect(Collectors.toList());
     }
 
     private static Glob<?> getGlob(Matcher... matchers) {
