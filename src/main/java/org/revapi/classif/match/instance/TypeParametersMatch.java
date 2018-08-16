@@ -22,6 +22,7 @@ import java.util.List;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ErrorType;
+import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.IntersectionType;
 import javax.lang.model.type.TypeVariable;
 
@@ -44,6 +45,11 @@ public final class TypeParametersMatch extends TypeInstanceMatch {
     @Override
     protected <M> TestResult testDeclared(DeclaredType type, MatchContext<M> matchContext) {
         return glob.test((m, t) -> m.testInstance(t, matchContext), type.getTypeArguments());
+    }
+
+    @Override
+    protected <M> TestResult testExecutable(ExecutableType method, MatchContext<M> matchContext) {
+        return glob.test((m, t) -> m.testInstance(t, matchContext), method.getTypeVariables());
     }
 
     @Override

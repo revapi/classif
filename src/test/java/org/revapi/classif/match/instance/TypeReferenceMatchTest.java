@@ -196,6 +196,13 @@ class TypeReferenceMatchTest {
     }
 
     @Test
+    void testNegationOfPrimitive() {
+        doTest("!int",
+                "TestClass", TestClass.asType(), PASSED,
+                "primitiveField", primitiveField.asType(), NOT_PASSED);
+    }
+
+    @Test
     void testGenericsToObject() {
         doTest("java.*.Object", // use a wildcard match for the fun of it
                 "TestClass", TestClass.asType(), NOT_PASSED,

@@ -16,15 +16,23 @@
  */
 package org.revapi.classif.match.instance;
 
+import static java.util.Collections.emptyList;
+
 import static org.revapi.classif.TestResult.NOT_PASSED;
 import static org.revapi.classif.TestResult.TestableStream.testable;
 
+import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.function.Function;
 
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ErrorType;
 import javax.lang.model.type.IntersectionType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
+import javax.lang.model.type.TypeVisitor;
 import javax.lang.model.type.WildcardType;
 
 import org.revapi.classif.TestResult;
@@ -70,7 +78,7 @@ public class TypeParameterMatch extends TypeInstanceMatch implements Globbed {
 
     @Override
     protected <M> TestResult testDeclared(DeclaredType t, MatchContext<M> matchContext) {
-        return testable(bounds).testAll(b -> b.testInstance(t, matchContext));
+        return bounds == null ? NOT_PASSED : testable(bounds).testAll(b -> b.testInstance(t, matchContext));
     }
 
     @Override
@@ -80,11 +88,63 @@ public class TypeParameterMatch extends TypeInstanceMatch implements Globbed {
 
     @Override
     protected <M> TestResult testTypeVariable(TypeVariable t, MatchContext<M> matchContext) {
-        return testInstance(t.getUpperBound(), matchContext);
+        if (wildcard != null) {
+            return testWildcard(((Function<TypeVariable, WildcardType>) x -> extendsWildcard(x.getUpperBound())).apply(t), matchContext);
+        } else {
+            return NOT_PASSED;
+        }
     }
 
     @Override
     protected <M> TestResult testWildcard(WildcardType t, MatchContext<M> matchContext) {
-        return wildcard != null ? wildcard.testInstance(t, matchContext) : NOT_PASSED;
+        return wildcard == null ? NOT_PASSED : wildcard.testInstance(t, matchContext);
+    }
+
+    private static WildcardType extendsWildcard(TypeMirror bound) {
+        return new SyntheticExtendsWildcardType(bound);
+    }
+
+    private static final class SyntheticExtendsWildcardType implements WildcardType {
+        private final TypeMirror bound;
+
+        private SyntheticExtendsWildcardType(TypeMirror bound) {
+            this.bound = bound;
+        }
+
+        @Override
+        public TypeMirror getExtendsBound() {
+            return bound;
+        }
+
+        @Override
+        public TypeMirror getSuperBound() {
+            return null;
+        }
+
+        @Override
+        public TypeKind getKind() {
+            return TypeKind.WILDCARD;
+        }
+
+        @Override
+        public <R, P> R accept(TypeVisitor<R, P> v, P p) {
+            return v.visitWildcard(this, p);
+        }
+
+        @Override
+        public List<? extends AnnotationMirror> getAnnotationMirrors() {
+            return emptyList();
+        }
+
+        @Override
+        public <A extends Annotation> A getAnnotation(Class<A> annotationType) {
+            return null;
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public <A extends Annotation> A[] getAnnotationsByType(Class<A> annotationType) {
+            return (A[]) new Object[0];
+        }
     }
 }

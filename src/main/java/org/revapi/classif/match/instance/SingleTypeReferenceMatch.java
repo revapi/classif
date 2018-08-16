@@ -111,9 +111,11 @@ public final class SingleTypeReferenceMatch extends TypeInstanceMatch implements
         return instance.accept(new SimpleTypeVisitor8<TestResult, Void>(NOT_PASSED) {
             @Override
             public TestResult visitPrimitive(PrimitiveType t, Void __) {
-                return fullyQualifiedName == null
+                TestResult ret = fullyQualifiedName == null
                         ? NOT_PASSED
                         : fullyQualifiedName.testInstance(instance, ctx);
+
+                return negation ? ret.negate() : ret;
             }
 
             @Override
@@ -165,9 +167,11 @@ public final class SingleTypeReferenceMatch extends TypeInstanceMatch implements
 
             @Override
             public TestResult visitNoType(NoType t, Void __) {
-                return fullyQualifiedName != null
+                TestResult ret = fullyQualifiedName != null
                         ? fullyQualifiedName.testInstance(t, ctx)
                         : NOT_PASSED;
+
+                return negation ? ret.negate() : ret;
             }
         }, null);
     }

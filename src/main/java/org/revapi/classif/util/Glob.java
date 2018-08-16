@@ -150,15 +150,16 @@ public final class Glob<T extends Globbed> {
             return NOT_PASSED;
         }
 
-        TestResult bestResult = NOT_PASSED;
-
         int nofMatches = state.numberOfConcreteMatches() + state.matchAnys;
 
-        // to limit the number of tests that we need to do, the individualMatches map doesn't contain results
-        // for * and **. This complicates things a little when computing the best result.
-
         Permutations permutations = new Permutations(state.getListSize());
+
+        TestResult bestResult = TestResult.fromBoolean(nofMatches == 0 && !permutations.hasNext());
+
         while (permutations.hasNext()) {
+            // to limit the number of tests that we need to do, the individualMatches map doesn't contain results
+            // for * and **. This complicates things a little when computing the best result.
+
             int[] resultIndices = permutations.next();
             Iterator<T> mit = state.concreteMatches().iterator();
 

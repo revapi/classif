@@ -49,11 +49,17 @@ import org.revapi.classif.match.declaration.AnnotationAttributeMatch;
 import org.revapi.classif.match.declaration.AnnotationMatch;
 import org.revapi.classif.match.declaration.AnnotationValueMatch;
 import org.revapi.classif.match.declaration.AnnotationsMatch;
+import org.revapi.classif.match.declaration.DeclarationMatch;
+import org.revapi.classif.match.declaration.DefaultValueMatch;
 import org.revapi.classif.match.declaration.ExtendsMatch;
 import org.revapi.classif.match.declaration.ImplementsMatch;
+import org.revapi.classif.match.declaration.MethodConstraintsMatch;
+import org.revapi.classif.match.declaration.MethodParameterMatch;
 import org.revapi.classif.match.declaration.ModifierClusterMatch;
 import org.revapi.classif.match.declaration.ModifierMatch;
 import org.revapi.classif.match.declaration.ModifiersMatch;
+import org.revapi.classif.match.declaration.OverridesMatch;
+import org.revapi.classif.match.declaration.ThrowsMatch;
 import org.revapi.classif.match.declaration.TypeConstraintsMatch;
 import org.revapi.classif.match.declaration.TypeKindMatch;
 import org.revapi.classif.match.declaration.UsedByMatch;
@@ -156,6 +162,27 @@ public final class Classif {
         }
     }
 
+    private static Operator toOperator(ClassifParser.OperatorContext ctx) {
+        Operator op;
+        if (ctx.EQ() != null) {
+            op = EQ;
+        } else if (ctx.NE() != null) {
+            op = NE;
+        } else if (ctx.LT() != null) {
+            op = LT;
+        } else if (ctx.LE() != null) {
+            op = LE;
+        } else if (ctx.GT() != null) {
+            op = GT;
+        } else if (ctx.GE() != null) {
+            op = GE;
+        } else {
+            throw new IllegalArgumentException("Operator " + ctx.getText() + " not supported.");
+        }
+
+        return op;
+    }
+    
     private static final class ProgramVisitor extends ClassifBaseVisitor<StructuralMatcher> {
         static final ProgramVisitor INSTANCE = new ProgramVisitor();
 
@@ -298,22 +325,7 @@ public final class Classif {
             } else {
                 NameMatch name = ctx.name().accept(NameVisitor.INSTANCE);
 
-                Operator op;
-                if (ctx.operator().EQ() != null) {
-                    op = EQ;
-                } else if (ctx.operator().NE() != null) {
-                    op = NE;
-                } else if (ctx.operator().LT() != null) {
-                    op = LT;
-                } else if (ctx.operator().LE() != null) {
-                    op = LE;
-                } else if (ctx.operator().GT() != null) {
-                    op = GT;
-                } else if (ctx.operator().GE() != null) {
-                    op = GE;
-                } else {
-                    throw new IllegalArgumentException("Operator " + ctx.operator().getText() + " not supported.");
-                }
+                Operator op = toOperator(ctx.operator());
 
                 ReferencedVariablesAnd<AnnotationValueMatch> value
                         = ctx.annotationValue().accept(new AnnotationValueVisitor(op));
@@ -860,12 +872,24 @@ public final class Classif {
         @Override
         public MethodStatement visitMethodAfterTypeParametersStatement(
                 ClassifParser.MethodAfterTypeParametersStatementContext ctx) {
+            ReferencedVariablesAnd<TypeReferenceMatch> returnType = null;
             ReferencedVariablesAnd<TypeReferenceMatch> declaringType = null;
-            if (ctx.typeReference() != null) {
-                declaringType = ctx.typeReference().accept(TypeReferenceVisitor.INSTANCE);
+
+            List<ClassifParser.TypeReferenceContext> types = ctx.typeReference();
+            if (types != null && !types.isEmpty()) {
+                if (ctx.DOUBLE_COLON() != null) {
+                    if (types.size() == 1) {
+                        declaringType = types.get(0).accept(TypeReferenceVisitor.INSTANCE);
+                    } else {
+                        returnType = types.get(0).accept(TypeReferenceVisitor.INSTANCE);
+                        declaringType = types.get(1).accept(TypeReferenceVisitor.INSTANCE);
+                    }
+                } else {
+                    returnType = types.get(0).accept(TypeReferenceVisitor.INSTANCE);
+                }
             }
 
-            return new MethodNameAndRestStatementVisitor(annotations, modifiers, declaringType)
+            return new MethodNameAndRestStatementVisitor(annotations, modifiers, returnType, typeParams, declaringType)
                     .visit(ctx.methodNameAndRestStatement());
         }
     }
@@ -925,8 +949,8 @@ public final class Classif {
             NameMatch name = ctx.name().accept(NameVisitor.INSTANCE);
 
             if (ctx.methodRestStatement() != null) {
-                // TODO implement
-                throw new UnsupportedOperationException("Method statements not supported yet.");
+                return new MethodRestStatementVisitor(annotations, modifiers, type, declaringType, null, isReturn, negation,
+                        name, definedName).visitMethodRestStatement(ctx.methodRestStatement());
             } else {
                 List<String> referenced = new ArrayList<>(4);
 
@@ -963,21 +987,191 @@ public final class Classif {
     private static final class MethodNameAndRestStatementVisitor extends ClassifBaseVisitor<MethodStatement> {
         private final List<ReferencedVariablesAnd<AnnotationMatch>> annotations;
         private final ModifiersMatch modifiers;
+        private final ReferencedVariablesAnd<TypeReferenceMatch> returnType;
         private final ReferencedVariablesAnd<TypeReferenceMatch> declaringType;
+        private final ReferencedVariablesAnd<TypeParametersMatch> typeParams;
 
         private MethodNameAndRestStatementVisitor(
                 List<ReferencedVariablesAnd<AnnotationMatch>> annotations,
                 ModifiersMatch modifiers,
+                ReferencedVariablesAnd<TypeReferenceMatch> returnType,
+                ReferencedVariablesAnd<TypeParametersMatch> typeParams,
                 ReferencedVariablesAnd<TypeReferenceMatch> declaringType) {
             this.annotations = annotations;
             this.modifiers = modifiers;
+            this.returnType = returnType;
+            this.typeParams = typeParams;
             this.declaringType = declaringType;
         }
 
         @Override
         public MethodStatement visitMethodNameAndRestStatement(ClassifParser.MethodNameAndRestStatementContext ctx) {
-            // TODO implement
-            return super.visitMethodNameAndRestStatement(ctx);
+            boolean isReturn = ctx.returned() != null;
+            boolean negation = ctx.not() != null;
+            NameMatch name = ctx.name().accept(NameVisitor.INSTANCE);
+            String definedName = ctx.assignment() == null ? null : ctx.assignment().resolvedName().getText();
+
+            return new MethodRestStatementVisitor(annotations, modifiers, returnType, declaringType, typeParams, isReturn, negation,
+                    name, definedName).visitMethodRestStatement(ctx.methodRestStatement());
+        }
+    }
+
+    private static final class MethodRestStatementVisitor extends ClassifBaseVisitor<MethodStatement> {
+        private final List<ReferencedVariablesAnd<AnnotationMatch>> annotations;
+        private final ModifiersMatch modifiers;
+        private final ReferencedVariablesAnd<TypeReferenceMatch> returnType;
+        private final ReferencedVariablesAnd<TypeReferenceMatch> declaringType;
+        private final ReferencedVariablesAnd<TypeParametersMatch> typeParams;
+        private final boolean isReturn;
+        private final boolean negation;
+        private final NameMatch name;
+        private final String definedName;
+
+        private MethodRestStatementVisitor(
+                List<ReferencedVariablesAnd<AnnotationMatch>> annotations,
+                ModifiersMatch modifiers,
+                ReferencedVariablesAnd<TypeReferenceMatch> returnType,
+                ReferencedVariablesAnd<TypeReferenceMatch> declaringType,
+                ReferencedVariablesAnd<TypeParametersMatch> typeParams, boolean isReturn, boolean negation,
+                NameMatch name, String definedName) {
+            this.annotations = annotations;
+            this.modifiers = modifiers;
+            this.returnType = returnType;
+            this.declaringType = declaringType;
+            this.typeParams = typeParams;
+            this.isReturn = isReturn;
+            this.negation = negation;
+            this.name = name;
+            this.definedName = definedName;
+        }
+
+        @Override
+        public MethodStatement visitMethodRestStatement(ClassifParser.MethodRestStatementContext ctx) {
+            ReferencedVariablesAnd<List<MethodParameterMatch>> params = null;
+            ReferencedVariablesAnd<MethodConstraintsMatch> constraints = null;
+
+            List<String> reffed = new ArrayList<>();
+
+            if (ctx.parameterList() != null) {
+                params = ctx.parameterList().accept(ParameterListVisitor.INSTANCE);
+                reffed.addAll(params.referencedVariables);
+            }
+
+            if (ctx.methodConstraints() != null) {
+                constraints = ctx.methodConstraints().accept(MethodConstraintsVisitor.INSTANCE);
+                reffed.addAll(constraints.referencedVariables);
+            }
+
+            AnnotationsMatch annos = null;
+            if (!annotations.isEmpty()) {
+                List<AnnotationMatch> ams = new ArrayList<>(annotations.size());
+                annotations.forEach(a -> {
+                    reffed.addAll(a.referencedVariables);
+                    ams.add(a.match);
+                });
+
+                annos = new AnnotationsMatch(ams);
+            }
+
+            if (returnType != null) {
+                reffed.addAll(returnType.referencedVariables);
+            }
+
+            if (declaringType != null) {
+                reffed.addAll(declaringType.referencedVariables);
+            }
+
+            if (typeParams != null) {
+                reffed.addAll(typeParams.referencedVariables);
+            }
+
+            return new MethodStatement(definedName, reffed, annos, modifiers, isReturn, name,
+                    returnType == null ? null : returnType.match, declaringType == null ? null : declaringType.match,
+                    typeParams == null ? null : typeParams.match, params == null ? emptyList() : params.match,
+                    constraints == null ? null : constraints.match, negation);
+        }
+    }
+
+    private static final class ParameterListVisitor extends ClassifBaseVisitor<ReferencedVariablesAnd<List<MethodParameterMatch>>> {
+        static final ParameterListVisitor INSTANCE = new ParameterListVisitor();
+
+        @Override
+        public ReferencedVariablesAnd<List<MethodParameterMatch>> visitParameterList(ClassifParser.ParameterListContext ctx) {
+            ReferencedVariablesAnd<List<MethodParameterMatch>> ret = new ReferencedVariablesAnd<>();
+            ret.match = new ArrayList<>();
+
+            ctx.methodParameter().forEach(p -> {
+                AnnotationsMatch annos = null;
+                if (p.annotations() != null) {
+                    annos = new AnnotationsMatch(p.annotations().annotation().stream()
+                            .map(a -> a.accept(AnnotationVisitor.INSTANCE))
+                            .peek(a -> ret.referencedVariables.addAll(a.referencedVariables))
+                            .map(a -> a.match)
+                            .collect(toList()));
+                }
+
+                ReferencedVariablesAnd<TypeReferenceMatch> type = p.typeReference().accept(TypeReferenceVisitor.INSTANCE);
+                ret.referencedVariables.addAll(type.referencedVariables);
+
+                ret.match.add(new MethodParameterMatch(annos, type.match));
+            });
+
+            return ret;
+        }
+    }
+
+    private static final class MethodConstraintsVisitor extends ClassifBaseVisitor<ReferencedVariablesAnd<MethodConstraintsMatch>> {
+        static final MethodConstraintsVisitor INSTANCE = new MethodConstraintsVisitor();
+
+        @Override
+        public ReferencedVariablesAnd<MethodConstraintsMatch> visitMethodConstraints(
+                ClassifParser.MethodConstraintsContext ctx) {
+
+            ReferencedVariablesAnd<MethodConstraintsMatch> ret = new ReferencedVariablesAnd<>();
+            List<ClassifParser.MethodConstraintContext> mCtxs = ctx.methodConstraint();
+            List<DeclarationMatch> constraints = new ArrayList<>(mCtxs.size());
+
+            for (ClassifParser.MethodConstraintContext mctx : mCtxs) {
+                if (mctx.USES() != null) {
+                    boolean directly = mctx.DIRECTLY() != null;
+                    ReferencedVariablesAnd<TypeReferenceMatch> type = mctx.typeReference().get(0).accept(TypeReferenceVisitor.INSTANCE);
+
+                    constraints.add(new UsesMatch(directly, type.match));
+                    ret.referencedVariables.addAll(type.referencedVariables);
+                } else if (mctx.THROWS() != null) {
+                    List<ClassifParser.TypeReferenceContext> thrownCtx = mctx.typeReference();
+                    List<TypeReferenceMatch> thrown = new ArrayList<>(thrownCtx.size());
+                    for (ClassifParser.TypeReferenceContext tctx : thrownCtx) {
+                        ReferencedVariablesAnd<TypeReferenceMatch> type = tctx.accept(TypeReferenceVisitor.INSTANCE);
+                        thrown.add(type.match);
+                        ret.referencedVariables.addAll(type.referencedVariables);
+                    }
+
+                    constraints.add(new ThrowsMatch(thrown));
+                } else if (mctx.OVERRIDES() != null) {
+                    List<ClassifParser.TypeReferenceContext> types = mctx.typeReference();
+                    ClassifParser.TypeReferenceContext typeCtx = types.isEmpty() ? null : types.get(0);
+                    ReferencedVariablesAnd<TypeReferenceMatch> type = typeCtx == null ? null : typeCtx.accept(TypeReferenceVisitor.INSTANCE);
+
+                    constraints.add(new OverridesMatch(type == null ? null : type.match));
+                    if (type != null) {
+                        ret.referencedVariables.addAll(type.referencedVariables);
+                    }
+                } else if (mctx.DEFAULT() != null) {
+                    ReferencedVariablesAnd<AnnotationValueMatch> match = mctx.NO() != null
+                            ? null
+                            : mctx.annotationValue().accept(new AnnotationValueVisitor(toOperator(mctx.operator())));
+
+                    constraints.add(new DefaultValueMatch(match == null ? null : match.match));
+                    if (match != null) {
+                        ret.referencedVariables.addAll(match.referencedVariables);
+                    }
+                }
+            }
+
+            ret.match = new MethodConstraintsMatch(constraints);
+
+            return ret;
         }
     }
 

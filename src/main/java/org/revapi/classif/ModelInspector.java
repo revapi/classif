@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 
@@ -134,4 +135,17 @@ public interface ModelInspector<M> {
      * @return the same as the above mentioned method would return
      */
     List<? extends TypeMirror> directSupertypes(TypeMirror type);
+
+    /**
+     * Assumed equivalent to
+     * {@link javax.lang.model.util.Elements#overrides(ExecutableElement, ExecutableElement, TypeElement)}.
+     *
+     * @param overrider the method that potentially overrides the overridden
+     * @param overridden the potentially overridden method
+     * @param type the type that declares the overrider
+     * @return true if the overrider overrides the overridden, false otherwise
+     *
+     * @see javax.lang.model.util.Elements#overrides(ExecutableElement, ExecutableElement, TypeElement)
+     */
+    boolean overrides(ExecutableElement overrider, ExecutableElement overridden, TypeElement type);
 }

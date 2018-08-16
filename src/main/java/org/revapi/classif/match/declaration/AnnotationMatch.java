@@ -56,6 +56,10 @@ public final class AnnotationMatch {
         return negation ? ret.negate() : ret;
     }
 
+    public boolean isNegation() {
+        return negation;
+    }
+
     //needed just to make the compiler happy
     @SuppressWarnings("unchecked")
     private Map<ExecutableElement, AnnotationValue> explicitAttributes(AnnotationMirror a) {

@@ -57,8 +57,8 @@ class TypeDefinitionStatementTest {
         assertPassed(test(typeParams, testClass, "class ^TestClass<**, java.lang.Cloneable>;"));
         assertPassed(test(typeParams, testClass, "class ^TestClass<**, java.lang.String>;"));
         assertPassed(test(typeParams, testClass, "class ^TestClass<*, ? extends java.*.Object, **>;"));
-        assertPassed(test(typeParams, testClass, "class ^TestClass<java.*.Object, **, ? extends /.*String/, **>;"));
-        assertPassed(test(typeParams, testClass, "class ^TestClass<**, ? extends /.*\\.String/ & java.lang.Cloneable>;"));
+        assertPassed(test(typeParams, testClass, "class ^TestClass<java.*.Object, **, ? extends **./.*String/, **>;"));
+        assertPassed(test(typeParams, testClass, "class ^TestClass<**, ? extends **.String & java.lang.Cloneable>;"));
         assertPassed(test(typeParams, testClass, "public class ^TestClass;"));
         assertNotPassed(test(typeParams, testClass, "private class ^TestClass;"));
         assertPassed(test(typeParams, testClass, "public type ^TestClass;"));
@@ -94,7 +94,7 @@ class TypeDefinitionStatementTest {
         assertPassed(test(constraints, GenericImplConcrete, "type ^ implements Implements.GenericIface;"));
 
         assertNotPassed(test(constraints, Impl, "type ^ implements Implements.GenericIface<java.lang.String, java.lang.String>;"));
-        assertPassed(test(constraints, GenericImplGeneric, "type ^ implements Implements.GenericIface<java.lang.String, java.lang.String>;"));
+        assertNotPassed(test(constraints, GenericImplGeneric, "type ^ implements Implements.GenericIface<java.lang.String, java.lang.String>;"));
         assertNotPassed(test(constraints, GenericImplConcrete, "type ^ implements Implements.GenericIface<java.lang.String, java.lang.String>;"));
 
         assertNotPassed(test(constraints, Impl, "type ^ implements Implements.GenericIface<java.lang.Object, java.lang.String>;"));
@@ -124,7 +124,7 @@ class TypeDefinitionStatementTest {
 
         assertPassed(test(constraints, GB, "type ^ extends Extends.GA<java.lang.String>;"));
         assertPassed(test(constraints, GC, "type ^ directly extends Extends.GA<? extends java.lang.Number>;"));
-        assertPassed(test(constraints, GC, "type ^ directly extends Extends.GA<java.lang.Number>;"));
+        assertNotPassed(test(constraints, GC, "type ^ directly extends Extends.GA<java.lang.Number>;"));
         assertPassed(test(constraints, GD, "type ^ extends Extends.GA<java.lang.Integer>;"));
         assertPassed(test(constraints, GD, "type ^ directly extends Extends.GC<java.lang.Integer>;"));
         assertPassed(test(constraints, GD, "type ^ directly extends Extends.GC<? extends java.lang.Integer>;"));

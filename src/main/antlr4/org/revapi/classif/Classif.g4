@@ -78,6 +78,8 @@ TRANSIENT: 'transient';
 SYNCHRONIZED: 'synchronized';
 USED_BY: 'usedby';
 EXACTLY: 'exactly';
+FROM: 'from';
+NO: 'no';
 
 //needs to be the last
 WORD: LETTER (LETTER | DIGIT)*;
@@ -233,7 +235,7 @@ elementStatement
     ;
 
 fieldOrMethodStatement
-    : typeParameters methodAfterTypeParametersStatement
+    : typeParameters WS methodAfterTypeParametersStatement
     | fieldOrMethodWithoutTypeParameters
     ;
 
@@ -246,7 +248,7 @@ fieldNameOrMethodWithoutReturnType
     ;
 
 methodAfterTypeParametersStatement
-    : (typeReference DOUBLE_COLON)? methodNameAndRestStatement
+    : (typeReference WS)? (typeReference DOUBLE_COLON)? methodNameAndRestStatement
     ;
 
 methodNameAndRestStatement
@@ -260,7 +262,7 @@ methodRestStatement
 
 resolvedName
     // everything that is not a Java keyword
-    : MATCH | TYPE | USES | PACKAGE_PRIVATE | OVERRIDES | DIRECTLY | USED_BY | EXACTLY | WORD
+    : MATCH | TYPE | USES | PACKAGE_PRIVATE | OVERRIDES | DIRECTLY | USED_BY | EXACTLY | FROM | NO | WORD
     ;
 
 name
@@ -302,7 +304,11 @@ fieldConstraints
     ;
 
 parameterList
-    : returned? assignment? typeReference (WS? COMMA WS? returned? assignment? typeReference)*
+    : methodParameter (WS? COMMA WS? methodParameter)*
+    ;
+
+methodParameter
+    : annotations typeReference
     ;
 
 methodConstraints
@@ -311,9 +317,10 @@ methodConstraints
 
 methodConstraint
     : (DIRECTLY WS)? USES WS typeReference
-    | THROWS WS typeReference
-    | (DIRECTLY WS)? OVERRIDES WS typeReference?
-    | DEFAULT WS annotationValue
+    | THROWS WS typeReference (WS? COMMA WS? typeReference)*
+    | OVERRIDES (WS FROM WS typeReference)?
+    | NO WS DEFAULT
+    | DEFAULT WS? operator WS? annotationValue
     ;
 
 typeKind

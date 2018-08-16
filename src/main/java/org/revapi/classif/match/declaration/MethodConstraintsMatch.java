@@ -20,29 +20,21 @@ import static org.revapi.classif.TestResult.TestableStream.testable;
 
 import java.util.List;
 
-import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
 
 import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
 
-public final class AnnotationsMatch extends DeclarationMatch {
-    private final List<AnnotationMatch> annotations;
+public final class MethodConstraintsMatch extends DeclarationMatch {
+    private final List<DeclarationMatch> constraints;
 
-    public AnnotationsMatch(List<AnnotationMatch> annotations) {
-        this.annotations = annotations;
+    public MethodConstraintsMatch(List<DeclarationMatch> constraints) {
+        this.constraints = constraints;
     }
 
     @Override
-    protected <M> TestResult defaultTest(Element e, TypeMirror inst, MatchContext<M> matchContext) {
-        return testable(annotations).testAll(m -> {
-                    List<? extends AnnotationMirror> annos = e.getAnnotationMirrors();
-                    if (annos.isEmpty()) {
-                        return TestResult.fromBoolean(m.isNegation());
-                    } else {
-                        return testable(annos).testAny(a -> m.test(a, matchContext));
-                    }
-                });
+    public <M> TestResult testDeclaration(Element declaration, TypeMirror instantiation, MatchContext<M> ctx) {
+        return testable(constraints).testAll(m -> m.testDeclaration(declaration, instantiation, ctx));
     }
 }

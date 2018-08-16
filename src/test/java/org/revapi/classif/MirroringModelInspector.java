@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
@@ -84,5 +85,10 @@ public class MirroringModelInspector implements ModelInspector<Element> {
     @Override
     public List<? extends TypeMirror> directSupertypes(TypeMirror type) {
         return types.directSupertypes(type);
+    }
+
+    @Override
+    public boolean overrides(ExecutableElement overrider, ExecutableElement overridden, TypeElement type) {
+        return elements.overrides(overrider, overridden, type);
     }
 }
