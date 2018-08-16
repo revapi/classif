@@ -90,6 +90,20 @@ public class TypeParameterMatch extends TypeInstanceMatch implements Globbed {
     protected <M> TestResult testTypeVariable(TypeVariable t, MatchContext<M> matchContext) {
         if (wildcard != null) {
             return testWildcard(((Function<TypeVariable, WildcardType>) x -> extendsWildcard(x.getUpperBound())).apply(t), matchContext);
+        } else if (bounds != null) {
+            // we can only test if the bounds match java.lang.Object here, because that is the only way
+            // a type variable can be declared without an "extends" clause.
+            TypeMirror bound = t.getUpperBound();
+            if (!(bound instanceof DeclaredType)) {
+                return NOT_PASSED;
+            } else {
+                DeclaredType b = (DeclaredType) bound;
+                if (matchContext.modelInspector.getJavaLangObjectElement().equals(b.asElement())) {
+                    return testable(bounds).testAll(m -> m.testInstance(bound, matchContext));
+                } else {
+                    return NOT_PASSED;
+                }
+            }
         } else {
             return NOT_PASSED;
         }

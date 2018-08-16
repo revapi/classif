@@ -54,8 +54,8 @@ class TypeDefinitionStatementTest {
         assertPassed(test(typeParams, testClass, "class ^TestClass<**>;"));
         assertPassed(test(typeParams, testClass, "class ^TestClass<*, **>;"));
         assertPassed(test(typeParams, testClass, "class ^TestClass<java.*.Object, **>;"));
-        assertPassed(test(typeParams, testClass, "class ^TestClass<**, java.lang.Cloneable>;"));
-        assertPassed(test(typeParams, testClass, "class ^TestClass<**, java.lang.String>;"));
+        assertPassed(test(typeParams, testClass, "class ^TestClass<**, ? extends java.lang.Cloneable>;"));
+        assertPassed(test(typeParams, testClass, "class ^TestClass<**, ? extends java.lang.String>;"));
         assertPassed(test(typeParams, testClass, "class ^TestClass<*, ? extends java.*.Object, **>;"));
         assertPassed(test(typeParams, testClass, "class ^TestClass<java.*.Object, **, ? extends **./.*String/, **>;"));
         assertPassed(test(typeParams, testClass, "class ^TestClass<**, ? extends **.String & java.lang.Cloneable>;"));
