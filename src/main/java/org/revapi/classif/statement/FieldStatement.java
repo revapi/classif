@@ -31,7 +31,7 @@ import org.revapi.classif.match.declaration.UsesMatch;
 import org.revapi.classif.match.instance.TypeReferenceMatch;
 import org.revapi.classif.util.Nullable;
 
-public class FieldStatement extends StatementStatement {
+public final class FieldStatement extends StatementStatement {
     private final boolean negation;
     private final NameMatch name;
     private final @Nullable TypeReferenceMatch fieldType;
@@ -55,7 +55,7 @@ public class FieldStatement extends StatementStatement {
     protected ModelMatch createExactMatcher() {
         return new ModelMatch() {
             @Override
-            public <M> TestResult testVariableUndecidedly(M var, MatchContext<M> ctx) {
+            public <M> TestResult testVariable(M var, MatchContext<M> ctx) {
                 Element element = ctx.modelInspector.toElement(var);
                 TypeMirror type = ctx.modelInspector.toMirror(var);
 

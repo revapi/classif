@@ -28,31 +28,11 @@ import org.revapi.classif.TestResult;
 import org.revapi.classif.util.TreeNode;
 
 public abstract class ModelMatch extends TreeNode<ModelMatch> {
-//    private final IdentityHashMap<Object, Boolean> decisionCache = new IdentityHashMap<>();
 
     public final <M> TestResult test(M model, MatchContext<M> ctx) {
-        model = requireNonNull(model);
-        ctx = requireNonNull(ctx);
+        requireNonNull(model);
+        requireNonNull(ctx);
 
-//        Boolean match = decisionCache.get(model);
-//        if (match == null) {
-//            match = dispatchTest(model, ctx);
-//
-//            if (match) {
-//                ModelMatch parent = getParent();
-//                if (parent != null) {
-//                    match = parent.test(ctx.modelInspector.getEnclosing(model), ctx);
-//                }
-//            }
-//
-//            decisionCache.put(model, match);
-//        }
-//
-//        return match;
-        return dispatchTest(model, ctx);
-    }
-
-    private <M> TestResult dispatchTest(M model, MatchContext<M> ctx) {
         return new SimpleElementVisitor8<TestResult, Void>() {
             @Override
             protected TestResult defaultAction(Element e, Void aVoid) {
@@ -61,30 +41,30 @@ public abstract class ModelMatch extends TreeNode<ModelMatch> {
 
             @Override
             public TestResult visitVariable(VariableElement e, Void __) {
-                return testVariableUndecidedly(model, ctx);
+                return testVariable(model, ctx);
             }
 
             @Override
             public TestResult visitType(TypeElement e, Void __) {
-                return testTypeUndecidedly(model, ctx);
+                return testType(model, ctx);
             }
 
             @Override
             public TestResult visitExecutable(ExecutableElement e, Void __) {
-                return testMethodUndecidedly(model, ctx);
+                return testMethod(model, ctx);
             }
         }.visit(ctx.modelInspector.toElement(model));
     }
 
-    public <M> TestResult testTypeUndecidedly(M type, MatchContext<M> ctx) {
+    public <M> TestResult testType(M type, MatchContext<M> ctx) {
         return defaultElementTest(type, ctx);
     }
 
-    public <M> TestResult testMethodUndecidedly(M method, MatchContext<M> ctx) {
+    public <M> TestResult testMethod(M method, MatchContext<M> ctx) {
         return defaultElementTest(method, ctx);
     }
 
-    public <M> TestResult testVariableUndecidedly(M var, MatchContext<M> ctx) {
+    public <M> TestResult testVariable(M var, MatchContext<M> ctx) {
         return defaultElementTest(var, ctx);
     }
 

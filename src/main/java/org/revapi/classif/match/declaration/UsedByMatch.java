@@ -32,7 +32,7 @@ import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.ModelMatch;
 
-public class UsedByMatch extends DeclarationMatch {
+public final class UsedByMatch extends DeclarationMatch {
 
     private final boolean onlyDirect;
     private final List<String> referencedVariables;

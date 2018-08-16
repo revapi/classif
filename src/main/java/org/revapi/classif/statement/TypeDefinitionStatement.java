@@ -29,7 +29,7 @@ import org.revapi.classif.match.instance.FqnMatch;
 import org.revapi.classif.match.instance.TypeParametersMatch;
 import org.revapi.classif.util.Nullable;
 
-public class TypeDefinitionStatement extends StatementStatement {
+public final class TypeDefinitionStatement extends StatementStatement {
     private final TypeKindMatch typeKind;
     private final FqnMatch fqn;
     private final @Nullable TypeParametersMatch typeParameters;
@@ -57,7 +57,7 @@ public class TypeDefinitionStatement extends StatementStatement {
     protected ModelMatch createExactMatcher() {
         return new ModelMatch() {
             @Override
-            public <M> TestResult testTypeUndecidedly(M type, MatchContext<M> ctx) {
+            public <M> TestResult testType(M type, MatchContext<M> ctx) {
 
                 TestResult ret = annotations.test(type, ctx)
                         .and(() -> modifiers.test(type, ctx))

@@ -29,7 +29,7 @@ import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.instance.TypeReferenceMatch;
 
-public class ExtendsMatch extends DeclarationMatch {
+public final class ExtendsMatch extends DeclarationMatch {
     private static final TypeVisitor<TypeMirror, Void> GET_SUPER_CLASS = new SimpleTypeVisitor8<TypeMirror, Void>() {
         @Override
         public TypeMirror visitDeclared(DeclaredType t, Void __) {

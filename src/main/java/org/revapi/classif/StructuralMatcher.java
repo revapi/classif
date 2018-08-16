@@ -35,15 +35,6 @@ public final class StructuralMatcher {
     }
 
     /**
-     * Tells whether this program can decide about some element solely based on the element itself or whether it needs
-     * to crawl around the element graph to establish the match.
-     */
-    public boolean isDecidableInPlace() {
-        //TODO is this even needed?
-        return false;
-    }
-
-    /**
      * Starts a matching progress using the provided model inspector.
      *
      * @param inspector the model inspector used when matching the model elements

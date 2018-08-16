@@ -34,7 +34,7 @@ import org.revapi.classif.match.instance.TypeReferenceMatch;
 import org.revapi.classif.util.Glob;
 import org.revapi.classif.util.Nullable;
 
-public class MethodStatement extends StatementStatement {
+public final class MethodStatement extends StatementStatement {
     private final NameMatch name;
     private final @Nullable TypeReferenceMatch returnType;
     private final @Nullable TypeReferenceMatch declaringType;
@@ -65,7 +65,7 @@ public class MethodStatement extends StatementStatement {
     protected ModelMatch createExactMatcher() {
         return new ModelMatch() {
             @Override
-            public <M> TestResult testMethodUndecidedly(M method, MatchContext<M> ctx) {
+            public <M> TestResult testMethod(M method, MatchContext<M> ctx) {
                 ExecutableElement element = (ExecutableElement) ctx.modelInspector.toElement(method);
                 TypeMirror type = ctx.modelInspector.toMirror(method);
 
