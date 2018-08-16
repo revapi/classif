@@ -475,11 +475,13 @@ public final class MatchingProgress<M> {
             Step<M> depStep = depNode.getObject();
 
             for (M depModel : depStep.independentlyMatchingModels.keySet()) {
-                cumulativeResult = cumulativeResult.or(() ->
+                // note that we need to process the dependencies and dependents eagerly even if we know the result
+                // already. That is so that all the dependents are updated correctly with the result from this node.
+                cumulativeResult = cumulativeResult.or(
                         //we're not interested in additional successes that might be added by the dependencies
                         //check of this dependent node. So let's just pass in a throw-away map
                         matchesWithDependencies(depNode, depModel, bounds, new HashMap<>())
-                                .and(() -> matchesWithDependents(depNode, depModel, successRoute)));
+                                .and(matchesWithDependents(depNode, depModel, successRoute)));
             }
         }
 
