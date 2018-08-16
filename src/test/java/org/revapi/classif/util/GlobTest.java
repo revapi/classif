@@ -61,6 +61,12 @@ class GlobTest {
     }
 
     @Test
+    void testAllWithNonPassingElements() {
+        assertPassed(test(array(NOT_PASSED), ALL));
+        assertPassed(test(array(PASSED, NOT_PASSED), ALL));
+    }
+
+    @Test
     void testUnordered() {
         assertPassed(testUnordered(array(PASSED, PASSED), TEST, TEST));
 

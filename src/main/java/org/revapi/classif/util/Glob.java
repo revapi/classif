@@ -91,6 +91,10 @@ public final class Glob<T extends Globbed> {
             List<MatchState<T>> next = branches.stream()
                     .flatMap(ms -> ms.nexts.entrySet().stream()
                             .map(e -> {
+                                if (e.getKey().isMatchAll() || e.getKey().isMatchAny()) {
+                                    return e.getValue();
+                                }
+
                                 switch (test.test(e.getKey(), t)) {
                                     case DEFERRED:
                                         isDeferred[0] = true;
