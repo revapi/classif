@@ -372,7 +372,7 @@ public final class MatchingProgress<M> {
                 return result;
             }
 
-            Map<Node<Step<M>>, M> successRoute = new HashMap<>();
+            Map<Node<Step<M>>, List<M>> successRoute = new HashMap<>();
 
             TestResult res = matchesWithDependencies(n, model, emptyMap(), successRoute)
                     .and(() -> matchesWithDependents(n, model, successRoute));
@@ -380,7 +380,7 @@ public final class MatchingProgress<M> {
             step.resolutionCache.compute(model, (__, existing) -> existing == null ? res : existing.or(res));
 
             if (res.toBoolean(false)) {
-                successRoute.forEach((sn, m) -> sn.getObject().resolutionCache.put(m, PASSED));
+                successRoute.forEach((sn, ms) -> ms.forEach(m -> sn.getObject().resolutionCache.put(m, PASSED)));
             }
 
             return res;
@@ -388,7 +388,7 @@ public final class MatchingProgress<M> {
     }
 
     private TestResult matchesWithDependencies(Node<Step<M>> node, M model, Map<Node<Step<M>>, M> boundVariables,
-            Map<Node<Step<M>>, M> successRoute) {
+            Map<Node<Step<M>>, List<M>> successRoute) {
         Step<M> nodeStep = node.getObject();
 
         if (!nodeStep.independentlyMatchingModels.containsKey(model)) {
@@ -399,7 +399,7 @@ public final class MatchingProgress<M> {
 
         TestResult cumulativeResult = nodeStep.dependenciesResolutionCache.get(model);
         if (cumulativeResult == PASSED) {
-            successRoute.put(node, model);
+            successRoute.computeIfAbsent(node, __ -> new ArrayList<>(8)).add(model);
             return cumulativeResult;
         } else {
             cumulativeResult = DEFERRED;
@@ -446,13 +446,13 @@ public final class MatchingProgress<M> {
         nodeStep.dependenciesResolutionCache.put(model, cumulativeResult);
 
         if (cumulativeResult.toBoolean(false)) {
-            successRoute.put(node, model);
+            successRoute.computeIfAbsent(node, __ -> new ArrayList<>(8)).add(model);
         }
 
         return cumulativeResult;
     }
 
-    private TestResult matchesWithDependents(Node<Step<M>> node, M model, Map<Node<Step<M>>, M> successRoute) {
+    private TestResult matchesWithDependents(Node<Step<M>> node, M model, Map<Node<Step<M>>, List<M>> successRoute) {
         Step<M> nodeStep = node.getObject();
 
         if (!nodeStep.independentlyMatchingModels.containsKey(model)) {
@@ -463,7 +463,7 @@ public final class MatchingProgress<M> {
 
         TestResult cumulativeResult = nodeStep.dependentsResolutionCache.get(model);
         if (cumulativeResult == PASSED) {
-            successRoute.put(node, model);
+            successRoute.computeIfAbsent(node, __ -> new ArrayList<>(8)).add(model);
             return cumulativeResult;
         } else {
             cumulativeResult = DEFERRED;
@@ -490,7 +490,7 @@ public final class MatchingProgress<M> {
         nodeStep.dependentsResolutionCache.put(model, cumulativeResult);
 
         if (cumulativeResult.toBoolean(false)) {
-            successRoute.put(node, model);
+            successRoute.computeIfAbsent(node, __ -> new ArrayList<>(8)).add(model);
         }
 
         return cumulativeResult;
