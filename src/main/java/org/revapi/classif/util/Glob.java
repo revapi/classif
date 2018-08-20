@@ -160,9 +160,17 @@ public final class Glob<T extends Globbed> {
 
         int nofMatches = state.numberOfConcreteMatches() + state.matchAnys;
 
-        Iterator<int[]> indices = state.potentiallyMatchingCombinations();
+        Iterator<int[]> indices = state.potentiallyMatchingPermutations();
 
-        TestResult bestResult = TestResult.fromBoolean(nofMatches == 0 && !indices.hasNext());
+        TestResult bestResult = TestResult.fromBoolean(
+                // if there are no permutations to try and there are no concrete matches to test
+                !indices.hasNext() && state.numberOfConcreteMatches() == 0 &&
+                        // and we can either match all
+                        (state.matchAll 
+                                // or the we have enough * to match all mandatory elements but not more than all
+                                // the elements provided, then we can match immediately
+                                || (state.matchAnys >= state.mandatories && state.matchAnys <= state.list.size()))
+        );
 
         while (indices.hasNext()) {
             // to limit the number of tests that we need to do, the individualMatches map doesn't contain results
@@ -267,6 +275,7 @@ public final class Glob<T extends Globbed> {
         final int matchAnys;
         final int mandatories;
         final boolean matchAll;
+        final boolean nonMatchingTest;
         final Map<T, List<Ctx<X>>> individualResults;
 
         UnorderedMatchState(TestResult.BiPredicate<T, X> test, Iterable<X> mandatories, Iterable<X> optionals,
@@ -287,6 +296,8 @@ public final class Glob<T extends Globbed> {
             int matchAnys = 0;
             individualResults = new HashMap<>();
 
+            boolean hasNonMatchingTest = false;
+
             for (T m : matches) {
                 if (m.isMatchAll()) {
                     matchAll = true;
@@ -296,11 +307,15 @@ public final class Glob<T extends Globbed> {
 
                     // deep copy of the list
                     List<Ctx<X>> l = new ArrayList<>(list.size());
+                    TestResult overall = NOT_PASSED;
                     for (Ctx<X> c : list) {
                         Ctx<X> copy = new Ctx<>(c.element, c.mandatory);
                         l.add(copy);
                         copy.testResult = test.test(m, c.element);
+                        overall = overall.or(copy.testResult);
                     }
+
+                    hasNonMatchingTest |= overall == NOT_PASSED;
 
                     individualResults.put(m, l);
                 }
@@ -308,9 +323,14 @@ public final class Glob<T extends Globbed> {
 
             this.matchAnys = matchAnys;
             this.matchAll = matchAll;
+            this.nonMatchingTest = hasNonMatchingTest;
         }
 
         boolean isDegenerate() {
+            if (nonMatchingTest) {
+                return true;
+            }
+
             int nofMatches = individualResults.size() + matchAnys;
 
             // we know we can't match anything if a) the number of matches is larger that the number
@@ -333,16 +353,10 @@ public final class Glob<T extends Globbed> {
         }
 
         Ctx<X> getResult(T match, int index) {
-            Ctx<X> ret = individualResults.get(match).get(index);
-
-            if (ret.testResult == null) {
-                ret.testResult = test.test(match, ret.element);
-            }
-
-            return ret;
+            return individualResults.get(match).get(index);
         }
 
-        Iterator<int[]> potentiallyMatchingCombinations() {
+        Iterator<int[]> potentiallyMatchingPermutations() {
             if (individualResults.isEmpty()) {
                 return new Iterator<int[]>() {
                     @Override
