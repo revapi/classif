@@ -152,7 +152,7 @@ public final class MatchingProgress<M> {
         return ret;
     }
 
-    // TODO get rid of the generic statements. They're superfluous and just complicate things
+    // TODO Make the generic statements work again. They're just too convenient to be left out...
 
     /**
      * Starts a tree-walk of the provided java element. The caller is expected to continue the walk of the model

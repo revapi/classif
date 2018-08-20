@@ -24,6 +24,7 @@ import static org.revapi.classif.TestResult.PASSED;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -31,7 +32,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.IntStream;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -135,6 +136,9 @@ public final class Glob<T extends Globbed> {
      * <p>
      * The {@link Globbed#isMatchAll() "all"} match only matches the "rest" of the elements, once all of the other
      * matches in this glob are taken into the account.
+     * <p>
+     * Note that this is a very expensive operation scaling with the <b>factorial</b> of the combined size of mandatory
+     * and optional sets.
      *
      * @param test      the method to perform the test given a match from this glob and an element from either the mandatory
      *                  or optional set
@@ -146,7 +150,7 @@ public final class Glob<T extends Globbed> {
      */
     public <X> TestResult testUnorderedWithOptionals(TestResult.BiPredicate<T, X> test, Iterable<X> mandatory,
             Iterable<X> optional) {
-        
+
         UnorderedMatchState<T, X> state = new UnorderedMatchState<>(test, mandatory, optional, matches);
 
         // quickly deal with non-sensical corner cases
@@ -156,15 +160,15 @@ public final class Glob<T extends Globbed> {
 
         int nofMatches = state.numberOfConcreteMatches() + state.matchAnys;
 
-        Permutations permutations = new Permutations(state.getListSize());
+        Iterator<int[]> indices = state.potentiallyMatchingCombinations();
 
-        TestResult bestResult = TestResult.fromBoolean(nofMatches == 0 && !permutations.hasNext());
+        TestResult bestResult = TestResult.fromBoolean(nofMatches == 0 && !indices.hasNext());
 
-        while (permutations.hasNext()) {
+        while (indices.hasNext()) {
             // to limit the number of tests that we need to do, the individualMatches map doesn't contain results
             // for * and **. This complicates things a little when computing the best result.
 
-            int[] resultIndices = permutations.next();
+            int[] resultIndices = indices.next();
             Iterator<T> mit = state.concreteMatches().iterator();
 
             TestResult mandatoryResult = null;
@@ -172,25 +176,29 @@ public final class Glob<T extends Globbed> {
             int mandatorySize = 0;
             int optionalSize = 0;
             for (int i = 0; i < resultIndices.length; ++i) {
-                Ctx<?> res;
+                TestResult res;
+                boolean resMandatory;
                 boolean increaseCount;
 
                 if (mit.hasNext()) {
-                    res = state.getResult(mit.next(), resultIndices[i]);
+                    Ctx<?> r = state.getResult(mit.next(), resultIndices[i]);
+                    res = r.testResult;
+                    resMandatory = r.mandatory;
                     increaseCount = true;
                 } else {
-                    res = state.getUnevaluated(resultIndices[i]);
-                    res = new Ctx<>(res.element, res.mandatory, PASSED);
+                    Ctx<?> r = state.getUnevaluated(resultIndices[i]);
+                    res = PASSED;
+                    resMandatory = r.mandatory;
                     increaseCount = false;
                 }
 
-                if (res.mandatory) {
-                    mandatoryResult = mandatoryResult == null ? res.testResult : mandatoryResult.and(res.testResult);
+                if (resMandatory) {
+                    mandatoryResult = mandatoryResult == null ? res : mandatoryResult.and(res);
                     if (increaseCount) {
                         mandatorySize++;
                     }
                 } else {
-                    optionalResult = optionalResult == null ? res.testResult : optionalResult.and(res.testResult);
+                    optionalResult = optionalResult == null ? res : optionalResult.and(res);
                     if (increaseCount) {
                         optionalSize++;
                     }
@@ -253,7 +261,7 @@ public final class Glob<T extends Globbed> {
         }
     }
 
-    private static class UnorderedMatchState<T extends Globbed, X> {
+    private static final class UnorderedMatchState<T extends Globbed, X> {
         final TestResult.BiPredicate<T, X> test;
         final List<Ctx<X>> list;
         final int matchAnys;
@@ -285,10 +293,13 @@ public final class Glob<T extends Globbed> {
                 } else if (m.isMatchAny()) {
                     matchAnys++;
                 } else {
+
                     // deep copy of the list
                     List<Ctx<X>> l = new ArrayList<>(list.size());
                     for (Ctx<X> c : list) {
-                        l.add(new Ctx<>(c.element, c.mandatory));
+                        Ctx<X> copy = new Ctx<>(c.element, c.mandatory);
+                        l.add(copy);
+                        copy.testResult = test.test(m, c.element);
                     }
 
                     individualResults.put(m, l);
@@ -307,10 +318,6 @@ public final class Glob<T extends Globbed> {
             // elements. b) only applies if there is no matchAll match which supplements the lack of the
             // concrete tests.
             return nofMatches > list.size() || (!matchAll && nofMatches < mandatories);
-        }
-
-        int getListSize() {
-            return list.size();
         }
 
         int numberOfConcreteMatches() {
@@ -335,70 +342,114 @@ public final class Glob<T extends Globbed> {
             return ret;
         }
 
-    }
-
-    private static final class Permutations implements Iterator<int[]> {
-        private final int[] currentIndices;
-        private boolean hasNext;
-        private boolean first;
-
-        Permutations(int size) {
-            currentIndices = IntStream.iterate(0, i -> i + 1).limit(size).toArray();
-            hasNext = size > 0;
-            first = true;
-        }
-
-        @Override
-        public boolean hasNext() {
-            return hasNext;
-        }
-
-        @Override
-        public int[] next() {
-            if (!hasNext) {
-                throw new NoSuchElementException();
-            }
-
-            computeNextIndices();
-
-            return currentIndices;
-        }
-
-        // heavily inspired by https://stackoverflow.com/a/14444037/1969945
-        private void computeNextIndices() {
-            if (first) {
-                first = false;
-                return;
-            }
-
-            hasNext = false;
-            for (int tail = currentIndices.length - 1; tail > 0; tail--) {
-                if (currentIndices[tail - 1] < currentIndices[tail]) { // still increasing
-
-                    // find last element which does not exceed ind[tail-1]
-                    int s = currentIndices.length - 1;
-                    while (currentIndices[tail - 1] >= currentIndices[s]) {
-                        s--;
+        Iterator<int[]> potentiallyMatchingCombinations() {
+            if (individualResults.isEmpty()) {
+                return new Iterator<int[]>() {
+                    @Override
+                    public boolean hasNext() {
+                        return false;
                     }
 
-                    swap(currentIndices, tail - 1, s);
-
-                    // reverse order of elements in the tail
-                    for (int i = tail, j = currentIndices.length - 1; i < j; i++, j--) {
-                        swap(currentIndices, i, j);
+                    @Override
+                    public int[] next() {
+                        throw new NoSuchElementException();
                     }
+                };
+            }
 
-                    hasNext = true;
-                    break;
+            return new Iterator<int[]>() {
+                final int[][] iterables;
+                final int[] iterationPositions;
+
+                {
+                    Map<T, int[]> matchingIndicesPerMatch = individualResults.entrySet().stream()
+                            .collect(Collectors.toMap(Map.Entry::getKey, e -> {
+                                List<Ctx<X>> ctxs = e.getValue();
+                                return ctxs.stream()
+                                        .filter(c -> c.testResult.toBoolean(true))
+                                        .mapToInt(ctxs::indexOf)
+                                        .toArray();
+                            }));
+
+                    iterables = matchingIndicesPerMatch.values().toArray(new int[matchingIndicesPerMatch.values().size()][]);
+
+                    iterationPositions = new int[iterables.length];
+                    iterationPositions[0] = -1;
                 }
 
-            }
-        }
+                HashSet<Integer> permutationChecker = new HashSet<>(iterationPositions.length);
 
-        private static void swap(int[] arr, int i, int j) {
-            int t = arr[i];
-            arr[i] = arr[j];
-            arr[j] = t;
+                boolean consumed = true;
+
+                @Override
+                public boolean hasNext() {
+                    if (consumed) {
+                        do {
+                            boolean canHaveNext = false;
+
+                            for (int i = 0; i < iterationPositions.length; ++i) {
+                                if (iterationPositions[i] < iterables[i].length - 1) {
+                                    canHaveNext = true;
+                                    break;
+                                }
+                            }
+
+                            if (!canHaveNext) {
+                                return false;
+                            }
+
+                            computeNext();
+                        } while (!isValidPermutation());
+
+                        consumed = false;
+                    }
+
+                    return true;
+                }
+
+                @Override
+                public int[] next() {
+                    if (!hasNext()) {
+                        throw new NoSuchElementException();
+                    }
+
+                    int[] ret = new int[iterationPositions.length];
+                    for (int i = 0; i < ret.length; ++i) {
+                        ret[i] = iterables[i][iterationPositions[i]];
+                    }
+
+                    consumed = true;
+                    return ret;
+                }
+
+                private void computeNext() {
+                    if (!consumed) {
+                        return;
+                    }
+
+                    for (int i = 0; i < iterationPositions.length; ++i) {
+                        if (iterationPositions[i] == -1 || iterationPositions[i] < iterables[iterationPositions[i]].length - 1) {
+                            iterationPositions[i]++;
+                            for (int j = 0; j < i; ++j) {
+                                iterationPositions[j] = 0;
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                private boolean isValidPermutation() {
+                    permutationChecker.clear();
+                    for (int i = 0; i < iterationPositions.length; ++i) {
+                        boolean newlyAdded = permutationChecker.add(iterables[i][iterationPositions[i]]);
+                        if (!newlyAdded) {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                }
+            };
         }
     }
 }
