@@ -208,65 +208,65 @@ class MethodStatementTest {
                 .end()
                 .build());
 
-//        tests.test("type * { java.lang.String ^*(java.lang.Object);}",
-//                useClassTypeParamsMethod, PASSED,
-//                ownTypeParamsMethod, NOT_PASSED,
-//                bareWildcardMethod, NOT_PASSED,
-//                extendingWildcardMethod, NOT_PASSED,
-//                superWildcardMethod, NOT_PASSED,
-//                classTypeParamsBasedWildcard, NOT_PASSED,
-//                ownTypeParamBasedWildcard, NOT_PASSED);
-//
-//        tests.test("type * { <java.lang.Object, ? extends java.lang.Number> * ^*(java.lang.Number);}",
-//                useClassTypeParamsMethod, NOT_PASSED,
-//                ownTypeParamsMethod, PASSED,
-//                bareWildcardMethod, NOT_PASSED,
-//                extendingWildcardMethod, NOT_PASSED,
-//                superWildcardMethod, NOT_PASSED,
-//                classTypeParamsBasedWildcard, NOT_PASSED,
-//                ownTypeParamBasedWildcard, NOT_PASSED
-//        );
-//
-//        tests.test("type * { * ^*(java.util.Set<?>);}",
-//                useClassTypeParamsMethod, NOT_PASSED,
-//                ownTypeParamsMethod, NOT_PASSED,
-//                bareWildcardMethod, PASSED,
-//                extendingWildcardMethod, PASSED,
-//                superWildcardMethod, PASSED,
-//                classTypeParamsBasedWildcard, PASSED,
-//                ownTypeParamBasedWildcard, PASSED
-//        );
-//
-//        tests.test("type * { * ^*(java.util.Set<? extends java.lang.String>);}",
-//                useClassTypeParamsMethod, NOT_PASSED,
-//                ownTypeParamsMethod, NOT_PASSED,
-//                bareWildcardMethod, NOT_PASSED,
-//                extendingWildcardMethod, PASSED,
-//                superWildcardMethod, NOT_PASSED,
-//                classTypeParamsBasedWildcard, PASSED,
-//                ownTypeParamBasedWildcard, NOT_PASSED
-//        );
-//
-//        tests.test("type * { * ^*(java.util.Set<? super java.lang.Comparable<?>>);}",
-//                useClassTypeParamsMethod, NOT_PASSED,
-//                ownTypeParamsMethod, NOT_PASSED,
-//                bareWildcardMethod, NOT_PASSED,
-//                extendingWildcardMethod, NOT_PASSED,
-//                superWildcardMethod, PASSED,
-//                classTypeParamsBasedWildcard, NOT_PASSED,
-//                ownTypeParamBasedWildcard, NOT_PASSED
-//        );
-//
-//        tests.test("type * { * ^*(java.util.Set<? extends java.lang.Number>);}",
-//                useClassTypeParamsMethod, NOT_PASSED,
-//                ownTypeParamsMethod, NOT_PASSED,
-//                bareWildcardMethod, NOT_PASSED,
-//                extendingWildcardMethod, NOT_PASSED,
-//                superWildcardMethod, NOT_PASSED,
-//                classTypeParamsBasedWildcard, NOT_PASSED,
-//                ownTypeParamBasedWildcard, PASSED
-//        );
-//
+        tests.test("type * { java.lang.String ^*(java.lang.Object);}",
+                useClassTypeParamsMethod, PASSED,
+                ownTypeParamsMethod, NOT_PASSED,
+                bareWildcardMethod, NOT_PASSED,
+                extendingWildcardMethod, NOT_PASSED,
+                superWildcardMethod, NOT_PASSED,
+                classTypeParamsBasedWildcard, NOT_PASSED,
+                ownTypeParamBasedWildcard, NOT_PASSED);
+
+        tests.test("type * { <java.lang.Object, ? extends java.lang.Number> * ^*(java.lang.Number);}",
+                useClassTypeParamsMethod, NOT_PASSED,
+                ownTypeParamsMethod, PASSED,
+                bareWildcardMethod, NOT_PASSED,
+                extendingWildcardMethod, NOT_PASSED,
+                superWildcardMethod, NOT_PASSED,
+                classTypeParamsBasedWildcard, NOT_PASSED,
+                ownTypeParamBasedWildcard, NOT_PASSED
+        );
+
+        tests.test("type * { * ^*(java.util.Set<?>);}",
+                useClassTypeParamsMethod, NOT_PASSED,
+                ownTypeParamsMethod, NOT_PASSED,
+                bareWildcardMethod, PASSED,
+                extendingWildcardMethod, PASSED,
+                superWildcardMethod, PASSED,
+                classTypeParamsBasedWildcard, PASSED,
+                ownTypeParamBasedWildcard, PASSED
+        );
+
+        tests.test("type * { * ^*(java.util.Set<? extends java.lang.String>);}",
+                useClassTypeParamsMethod, NOT_PASSED,
+                ownTypeParamsMethod, NOT_PASSED,
+                bareWildcardMethod, NOT_PASSED,
+                extendingWildcardMethod, PASSED,
+                superWildcardMethod, NOT_PASSED,
+                classTypeParamsBasedWildcard, PASSED,
+                ownTypeParamBasedWildcard, NOT_PASSED
+        );
+
+        tests.test("type * { * ^*(java.util.Set<? super java.lang.Comparable<?>>);}",
+                useClassTypeParamsMethod, NOT_PASSED,
+                ownTypeParamsMethod, NOT_PASSED,
+                bareWildcardMethod, NOT_PASSED,
+                extendingWildcardMethod, NOT_PASSED,
+                superWildcardMethod, PASSED,
+                classTypeParamsBasedWildcard, NOT_PASSED,
+                ownTypeParamBasedWildcard, NOT_PASSED
+        );
+
+        tests.test("type * { * ^*(java.util.Set<? extends java.lang.Number>);}",
+                useClassTypeParamsMethod, NOT_PASSED,
+                ownTypeParamsMethod, NOT_PASSED,
+                bareWildcardMethod, NOT_PASSED,
+                extendingWildcardMethod, NOT_PASSED,
+                superWildcardMethod, NOT_PASSED,
+                classTypeParamsBasedWildcard, NOT_PASSED,
+                ownTypeParamBasedWildcard, PASSED
+        );
+
         tests.test("type * { * ^*(java.util.Set<java.lang.Number>);}",
                 useClassTypeParamsMethod, NOT_PASSED,
                 ownTypeParamsMethod, NOT_PASSED,
