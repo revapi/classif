@@ -67,8 +67,12 @@ public final class MatchingProgress<M> {
     private final List<Node<Step<M>>> rootMatches;
     private final Deque<ProgressContext<M>> progressStack = new ArrayDeque<>();
     private final Set<M> deferredModels = new HashSet<>();
+    private final StructuralMatcher.Configuration configuration;
 
-    MatchingProgress(DependencyGraph matchGraph, ModelInspector<M> inspector) {
+    MatchingProgress(StructuralMatcher.Configuration configuration, DependencyGraph matchGraph,
+            ModelInspector<M> inspector) {
+        this.configuration = configuration;
+
         IdentityHashMap<Node<MatchExecutionContext>, Node<Step<M>>> cache =
                 new IdentityHashMap<>(matchGraph.getAllNodes().size());
 
@@ -180,7 +184,7 @@ public final class MatchingProgress<M> {
                 s.independentlyMatchingModels.put(model, null);
             }
 
-            return WalkInstruction.of(true, result);
+            return WalkInstruction.of(!configuration.isStrictHierarchy(), result);
         }
 
         // make sure parent has access to the children
@@ -239,7 +243,7 @@ public final class MatchingProgress<M> {
             deferredModels.add(model);
         }
 
-        boolean descend = true; //once we have an option to follow a strict hierarchy, we can do: !progressContext.potentialChildMatches.isEmpty();
+        boolean descend = !configuration.isStrictHierarchy() || !progressContext.potentialChildMatches.isEmpty();
 
         return WalkInstruction.of(descend, res);
     }

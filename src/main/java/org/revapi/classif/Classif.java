@@ -193,7 +193,19 @@ public final class Classif {
             List<AbstractStatement> exprs = ctx.statement().stream()
                     .map(s -> s.accept(StatementVisitor.INSTANCE)).collect(toList());
 
-            return new StructuralMatcher(namedMatches, exprs);
+            boolean strictHierarchy = false;
+            ClassifParser.PragmasContext pragmas = ctx.pragmas();
+            if (pragmas != null) {
+                for (ClassifParser.PragmaContext pctx : pragmas.pragma()) {
+                    if (pctx.STRICT_HIERARCHY() != null) {
+                        strictHierarchy = true;
+                    }
+                }
+            }
+
+            StructuralMatcher.Configuration config = new StructuralMatcher.Configuration(strictHierarchy);
+
+            return new StructuralMatcher(config, namedMatches, exprs);
         }
     }
 

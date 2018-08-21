@@ -29,9 +29,11 @@ import org.revapi.classif.util.execution.DependencyGraph;
  */
 public final class StructuralMatcher {
     private final DependencyGraph matchTree;
+    private final Configuration configuration;
 
-    StructuralMatcher(List<String> namedMatches, List<AbstractStatement> statements) {
+    StructuralMatcher(Configuration configuration, List<String> namedMatches, List<AbstractStatement> statements) {
         this.matchTree = new DependencyGraph(namedMatches, statements);
+        this.configuration = configuration;
     }
 
     /**
@@ -42,6 +44,18 @@ public final class StructuralMatcher {
      * @return a matching progress
      */
     public <M> MatchingProgress<M> with(ModelInspector<M> inspector) {
-        return new MatchingProgress<>(matchTree, inspector);
+        return new MatchingProgress<>(configuration, matchTree, inspector);
+    }
+
+    public static final class Configuration {
+        private final boolean strictHierarchy;
+
+        Configuration(boolean strictHierarchy) {
+            this.strictHierarchy = strictHierarchy;
+        }
+
+        public boolean isStrictHierarchy() {
+            return strictHierarchy;
+        }
     }
 }

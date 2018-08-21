@@ -18,11 +18,15 @@ grammar Classif;
 
 fragment LETTER: 'a'..'z' | 'A'..'Z' | '$' | '_';
 fragment DIGIT: '0'..'9';
+
+COMMENT: '/' '/' .*? '\r'? '\n' -> skip;
+
 WS: [ \t\r\n]+;
 REGEX: '/' (~('/') | '\\/')+ '/';
 STRING: '\'' (~'\'' | '\\\'')* '\'';
 MATCH: 'match';
 VAR_PREFIX: '%';
+PRAGMA_PREFIX: '#';
 STATEMENT_END: ';';
 ANY: '*';
 ANY_NUMBER_OF_THINGS: '**';
@@ -80,12 +84,21 @@ USED_BY: 'usedby';
 EXACTLY: 'exactly';
 FROM: 'from';
 NO: 'no';
+STRICT_HIERARCHY: 'strictHierarchy';
 
 //needs to be the last
 WORD: LETTER (LETTER | DIGIT)*;
 
 program
-    : matchStatement? statement+ WS? EOF
+    : pragmas? matchStatement? statement+ WS? EOF
+    ;
+
+pragmas
+    : (WS? PRAGMA_PREFIX pragma end)+
+    ;
+
+pragma
+    : STRICT_HIERARCHY
     ;
 
 matchStatement
@@ -262,7 +275,8 @@ methodRestStatement
 
 resolvedName
     // everything that is not a Java keyword
-    : MATCH | TYPE | USES | PACKAGE_PRIVATE | OVERRIDES | DIRECTLY | USED_BY | EXACTLY | FROM | NO | WORD
+    : MATCH | TYPE | USES | PACKAGE_PRIVATE | OVERRIDES | DIRECTLY | USED_BY | EXACTLY | FROM | NO | STRICT_HIERARCHY
+    | WORD
     ;
 
 name

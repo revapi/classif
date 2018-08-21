@@ -16,10 +16,15 @@
  */
 package org.revapi.classif.statement;
 
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
+import static org.revapi.classif.Tester.assertNotPassed;
 import static org.revapi.classif.Tester.assertPassed;
 import static org.revapi.classif.Tester.test;
 
+import java.util.Map;
+
+import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
@@ -28,6 +33,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.revapi.classif.TestResult;
 import org.revapi.classif.Tester;
 import org.revapi.testjars.CompiledJar;
 import org.revapi.testjars.junit5.CompiledJarExtension;
@@ -512,5 +518,18 @@ class GenericStatementTest {
         assertPassed(test(nestedEnv, "@%a ^; type %a=Annotated;", Tester.Hierarchy.builder().start(Inherited).add(annotatedMethod).end().add(Annotated).build())
                 .get(annotatedMethod));
 
+    }
+
+    @Test
+    void testDoesntFindsNestedElementsIfStrictHierarchy() {
+        // testing the optimized progress path in case of a single match step
+        Map<Element, TestResult>  results = test(nestedEnv, "#strictHierarchy; @Annotated ^;", Tester.Hierarchy.builder().start(Inherited).add(annotatedMethod).end().build());
+        assertNull(results.get(annotatedMethod));
+        assertNotPassed(results.get(Inherited));
+
+        // testing the full-blown matching with multiple steps
+        results = test(nestedEnv, "#strictHierarchy; @%a ^; type %a=Annotated;", Tester.Hierarchy.builder().start(Inherited).add(annotatedMethod).end().add(Annotated).build());
+        assertNull(results.get(annotatedMethod));
+        assertNotPassed(results.get(Inherited));
     }
 }
