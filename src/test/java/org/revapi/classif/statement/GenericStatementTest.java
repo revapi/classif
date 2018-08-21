@@ -20,24 +20,28 @@ import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 import static org.revapi.classif.Tester.assertPassed;
 import static org.revapi.classif.Tester.test;
 
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.ElementFilter;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.revapi.classif.Tester;
 import org.revapi.testjars.CompiledJar;
 import org.revapi.testjars.junit5.CompiledJarExtension;
 import org.revapi.testjars.junit5.JarSources;
 
 @TestInstance(PER_CLASS)
 @ExtendWith(CompiledJarExtension.class)
-@Disabled
 class GenericStatementTest {
 
     @JarSources(root = "/sources/annotations/", sources = "TestClass.java")
     private CompiledJar.Environment environment;
+
+    @JarSources(root = "/sources/methods/", sources = {"Annotated.java", "Base.java", "Inherited.java"})
+    private CompiledJar.Environment nestedEnv;
 
     private TypeElement TestClass;
 
@@ -86,6 +90,10 @@ class GenericStatementTest {
     private TypeElement SingleParam_stringArray2;
     private TypeElement SingleParam_annotationArray2;
     private TypeElement SingleParam_classArray2;
+
+    private TypeElement Inherited;
+    private ExecutableElement annotatedMethod;
+    private TypeElement Annotated;
 
     @BeforeAll
     void setup() {
@@ -136,6 +144,13 @@ class GenericStatementTest {
         SingleParam_stringArray2 = environment.elements().getTypeElement("TestClass.SingleParam_stringArray2");
         SingleParam_annotationArray2 = environment.elements().getTypeElement("TestClass.SingleParam_annotationArray2");
         SingleParam_classArray2 = environment.elements().getTypeElement("TestClass.SingleParam_classArray2");
+
+        Inherited = nestedEnv.elements().getTypeElement("Inherited");
+        Annotated = nestedEnv.elements().getTypeElement("Annotated");
+        annotatedMethod = ElementFilter.methodsIn(Inherited.getEnclosedElements()).stream()
+                .filter(m -> m.getSimpleName().contentEquals("annotatedMethod"))
+                .findFirst()
+                .get();
     }
 
     @Test
@@ -234,7 +249,7 @@ class GenericStatementTest {
         assertPassed(test(environment, SingleParam_int, "@TestClass.My(intValue = 1, longValue = 0) ^;"));
         assertPassed(test(environment, SingleParam_int, "@TestClass.My(intValue != 0, longValue != 1) ^;"));
         assertPassed(test(environment, SingleParam_int, "@TestClass.My(intValue >= 0, longValue >= -1) ^;"));
-        assertPassed(test(environment, SingleParam_int, "@TestClass.My(intValue > 0, longValue > 1) ^;"));
+        assertPassed(test(environment, SingleParam_int, "@TestClass.My(intValue > 0, longValue <= 1) ^;"));
         assertPassed(test(environment, SingleParam_int, "@TestClass.My(intValue <= 2, longValue <= 1) ^;"));
         assertPassed(test(environment, SingleParam_int, "@TestClass.My(intValue < 2, longValue < 1) ^;"));
 
@@ -485,5 +500,17 @@ class GenericStatementTest {
         assertPassed(test(environment, SingleParam_classArray2, "@TestClass.My(classArray != {}) ^;"));
         assertPassed(test(environment, SingleParam_classArray2, "@TestClass.My(classArray != {java.lang.Object.class}) ^;"));
         assertPassed(test(environment, SingleParam_classArray2, "@TestClass.My(classArray != {java.lang.String.class, java.lang.String.class}) ^;"));
+    }
+
+    @Test
+    void testFindsNestedElements() {
+        // testing the optimized progress path in case of a single match step
+        assertPassed(test(nestedEnv, "@Annotated ^;", Tester.Hierarchy.builder().start(Inherited).add(annotatedMethod).end().build())
+                .get(annotatedMethod));
+
+        // testing the full-blown matching with multiple steps
+        assertPassed(test(nestedEnv, "@%a ^; type %a=Annotated;", Tester.Hierarchy.builder().start(Inherited).add(annotatedMethod).end().add(Annotated).build())
+                .get(annotatedMethod));
+
     }
 }

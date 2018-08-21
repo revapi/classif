@@ -39,6 +39,7 @@ import java.util.Set;
 import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.ModelMatch;
@@ -152,8 +153,6 @@ public final class MatchingProgress<M> {
         return ret;
     }
 
-    // TODO Make the generic statements work again. They're just too convenient to be left out...
-
     /**
      * Starts a tree-walk of the provided java element. The caller is expected to continue the walk of the model
      * elements in the depth-first search manner. The returned instruction tells the caller the result of the test
@@ -180,7 +179,8 @@ public final class MatchingProgress<M> {
                 // use this as a kind of cache in the simple case
                 s.independentlyMatchingModels.put(model, null);
             }
-            return WalkInstruction.of(false, result);
+
+            return WalkInstruction.of(true, result);
         }
 
         // make sure parent has access to the children
@@ -239,7 +239,7 @@ public final class MatchingProgress<M> {
             deferredModels.add(model);
         }
 
-        boolean descend = !progressContext.potentialChildMatches.isEmpty();
+        boolean descend = true; //once we have an option to follow a strict hierarchy, we can do: !progressContext.potentialChildMatches.isEmpty();
 
         return WalkInstruction.of(descend, res);
     }
@@ -506,7 +506,7 @@ public final class MatchingProgress<M> {
     private <T> Optional<T> forEachPotential(Function<Node<Step<M>>, T> process, BinaryOperator<T> combiner) {
         return (progressStack.isEmpty()
                 ? rootMatches.stream()
-                : requireNonNull(progressStack.peek()).potentialChildMatches.stream()
+                : Stream.concat(rootMatches.stream(), requireNonNull(progressStack.peek()).potentialChildMatches.stream())
         ).map(process).reduce(combiner);
     }
 

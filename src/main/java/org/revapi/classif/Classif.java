@@ -714,14 +714,16 @@ public final class Classif {
                 boolean negation = ctx.not() != null;
                 String variable = ctx.assignment() == null ? null : ctx.assignment().resolvedName().getText();
 
-                ReferencedVariablesAnd<UsesMatch> uses = null;
+                UsesMatch uses = null;
 
                 if (ctx.genericConstraints() != null) {
-                    uses = GenericConstraintVisitor.INSTANCE.visit(ctx.genericConstraints());
+                    ReferencedVariablesAnd<UsesMatch> usesAndVars =
+                            GenericConstraintVisitor.INSTANCE.visit(ctx.genericConstraints());
+                    referenced.addAll(usesAndVars.referencedVariables);
+                    uses = usesAndVars.match;
                 }
 
-                return new GenericStatement(variable, uses == null ? emptyList() : uses.referencedVariables,
-                        annotations, modifiers, isMatch, negation, uses == null ? null : uses.match);
+                return new GenericStatement(variable, referenced, annotations, modifiers, isMatch, negation, uses);
             }
         }
     }
