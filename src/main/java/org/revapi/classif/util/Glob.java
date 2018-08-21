@@ -166,7 +166,7 @@ public final class Glob<T extends Globbed> {
                 // if there are no permutations to try and there are no concrete matches to test
                 !indices.hasNext() && state.numberOfConcreteMatches() == 0 &&
                         // and we can either match all
-                        (state.matchAll 
+                        (state.matchAll
                                 // or the we have enough * to match all mandatory elements but not more than all
                                 // the elements provided, then we can match immediately
                                 || (state.matchAnys >= state.mandatories && state.matchAnys <= state.list.size()))
