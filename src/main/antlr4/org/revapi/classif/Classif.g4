@@ -85,6 +85,7 @@ EXACTLY: 'exactly';
 FROM: 'from';
 NO: 'no';
 STRICT_HIERARCHY: 'strictHierarchy';
+STRICTFP: 'strictfp';
 
 //needs to be the last
 WORD: LETTER (LETTER | DIGIT)*;
@@ -292,12 +293,11 @@ modifiers
     ;
 
 modifier
-    : not? (PUBLIC | PROTECTED | PACKAGE_PRIVATE | PRIVATE | STATIC | FINAL | ABSTRACT | VOLATILE | NATIVE | TRANSIENT | SYNCHRONIZED)
+    : not? (PUBLIC | PROTECTED | PACKAGE_PRIVATE | PRIVATE | STATIC | FINAL | ABSTRACT | VOLATILE | NATIVE | TRANSIENT | SYNCHRONIZED | DEFAULT | STRICTFP)
     ;
 
 modifierCluster
-    : modifier
-    | LPAR modifier (WS? OR WS? modifier)* RPAR
+    : modifier (WS? OR WS? modifier)*
     ;
 
 typeReference

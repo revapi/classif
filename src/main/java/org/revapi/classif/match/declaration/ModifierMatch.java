@@ -61,6 +61,18 @@ public final class ModifierMatch extends DeclarationMatch {
             case "strictfp":
                 this.modifier = Modifier.STRICTFP;
                 break;
+            case "native":
+                this.modifier = Modifier.NATIVE;
+                break;
+            case "transient":
+                this.modifier = Modifier.TRANSIENT;
+                break;
+            case "synchronized":
+                this.modifier = Modifier.SYNCHRONIZED;
+                break;
+            case "default":
+                this.modifier = Modifier.DEFAULT;
+                break;
             default:
                 throw new IllegalArgumentException("Unsupported modifier: " + modifier);
         }
