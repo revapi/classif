@@ -214,7 +214,7 @@ public final class Glob<T extends Globbed> {
             }
 
             if (mandatoryResult == null) {
-                mandatoryResult = NOT_PASSED;
+                mandatoryResult = TestResult.fromBoolean(mandatorySize == 0);
             }
 
             if (optionalResult == null) {
