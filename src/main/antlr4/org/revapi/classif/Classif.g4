@@ -176,6 +176,7 @@ annotationValue
     | fqn DOT name
     | annotation
     | OPEN_BRACE annotationValueArrayContents? CLOSE_BRACE
+    | DEFAULT
     ;
 
 annotationValueArrayContents

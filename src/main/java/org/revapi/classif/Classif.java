@@ -331,9 +331,9 @@ public final class Classif {
             ReferencedVariablesAnd<AnnotationAttributeMatch> ret = new ReferencedVariablesAnd<>();
 
             if (ctx.ANY() != null) {
-                ret.match = new AnnotationAttributeMatch(true, false, null, null);
+                ret.match = new AnnotationAttributeMatch(true, false, null, null, null);
             } else if (ctx.ANY_NUMBER_OF_THINGS() != null) {
-                ret.match = new AnnotationAttributeMatch(false, true, null, null);
+                ret.match = new AnnotationAttributeMatch(false, true, null, null, null);
             } else {
                 NameMatch name = ctx.name().accept(NameVisitor.INSTANCE);
 
@@ -344,7 +344,8 @@ public final class Classif {
 
                 ret.referencedVariables.addAll(value.referencedVariables);
 
-                ret.match = new AnnotationAttributeMatch(false, false, name, value.match);
+                ret.match = new AnnotationAttributeMatch(false, false, name, value.match == null ? op : null,
+                        value.match);
             }
 
             return ret;
@@ -377,6 +378,8 @@ public final class Classif {
                 ret.match = AnnotationValueMatch.bool(operator, val);
             } else if (ctx.ANY() != null) {
                 ret.match = AnnotationValueMatch.any(operator);
+            } else if (ctx.DEFAULT() != null) {
+                ret.match = null;
             } else if (ctx.typeReference() != null) {
                 ReferencedVariablesAnd<TypeReferenceMatch> type
                         = ctx.typeReference().accept(TypeReferenceVisitor.INSTANCE);

@@ -509,6 +509,33 @@ class GenericStatementTest {
     }
 
     @Test
+    void testAnnotations_compareToDefault() {
+        assertPassed(test(environment, Empty, "@TestClass.My(booleanValue = default) class ^;"));
+        assertPassed(test(environment, Empty, "@TestClass.My(byteValue = default) class ^;"));
+        assertPassed(test(environment, Empty, "@TestClass.My(shortValue = default) class ^;"));
+        assertPassed(test(environment, Empty, "@TestClass.My(intValue = default) class ^;"));
+        assertPassed(test(environment, Empty, "@TestClass.My(longValue = default) class ^;"));
+        assertPassed(test(environment, Empty, "@TestClass.My(floatValue = default) class ^;"));
+        assertPassed(test(environment, Empty, "@TestClass.My(doubleValue = default) class ^;"));
+        assertPassed(test(environment, Empty, "@TestClass.My(charValue = default) class ^;"));
+        assertPassed(test(environment, Empty, "@TestClass.My(stringValue = default) class ^;"));
+        assertPassed(test(environment, Empty, "@TestClass.My(annotationValue = default) class ^;"));
+        assertPassed(test(environment, Empty, "@TestClass.My(classValue = default) class ^;"));
+
+        assertPassed(test(environment, Empty, "@TestClass.My(booleanArray = default) class ^;"));
+        assertPassed(test(environment, Empty, "@TestClass.My(byteArray = default) class ^;"));
+        assertPassed(test(environment, Empty, "@TestClass.My(shortArray = default) class ^;"));
+        assertPassed(test(environment, Empty, "@TestClass.My(intArray = default) class ^;"));
+        assertPassed(test(environment, Empty, "@TestClass.My(longArray = default) class ^;"));
+        assertPassed(test(environment, Empty, "@TestClass.My(floatArray = default) class ^;"));
+        assertPassed(test(environment, Empty, "@TestClass.My(doubleArray = default) class ^;"));
+        assertPassed(test(environment, Empty, "@TestClass.My(charArray = default) class ^;"));
+        assertPassed(test(environment, Empty, "@TestClass.My(stringArray = default) class ^;"));
+        assertPassed(test(environment, Empty, "@TestClass.My(annotationArray = default) class ^;"));
+        assertPassed(test(environment, Empty, "@TestClass.My(classArray = default) class ^;"));
+    }
+
+    @Test
     void testFindsNestedElements() {
         // testing the optimized progress path in case of a single match step
         assertPassed(test(nestedEnv, "@Annotated ^;", Tester.Hierarchy.builder().start(Inherited).add(annotatedMethod).end().build())
