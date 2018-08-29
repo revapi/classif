@@ -2,62 +2,68 @@
 
 image:https://travis-ci.org/revapi/classif.svg?branch=master[Build Status,link=https://travis-ci.org/revapi/classif]
 
-WARNING: This is a work in progress and may eat your kittens. Use at your own risk ;)
-
 A library to sift through java classes using a structural search.
 
 Why would anyone want something like this? Because there are policies on how the code should be organized, what is safe
 to use and how, etc. Classif is the first stepping stone for tools that can check such policies. There are tools that
 can do similar things with the source code but Classif works on the bytecode level.
 
+Classif is not usable on its own. It can sift through the Java code elements that are thrown at it but it cannot find
+them on its own. To use Classif, you need something that will scan the "classpath" (whatever that might mean in your
+case) and inform Classif about what you found. Classif can then run its queries on top of your findings. See
+`Developer Guide` below for more thorough explanation on how to do that.
+
+:toc:
+
 === Examples
 
-NOTE: Up to all of the below examples don't work yet. The grammar for parsing the expressions is ready but
-the implementation is not :)
-
-Match anything annotated by annotation `Anno` with attribute `a` equal to `'x'`:
+Match anything annotated by annotation `Anno` with attribute `a` equal to `'x'` (not implemented yet):
 ```
 @a.Anno(a = 'x') ^;
 ```
 
-Match anything that is annotated by annotation `Anno` with attribute `a` not equal to `'x'`:
+Match anything that is annotated by annotation `Anno` with attribute `a` not equal to `'x'` (not implemented yet):
 ```
 @a.Anno(a != 'x') ^;
 ```
 
-Match anything that is not annotated by `Anno`:
+Match anything that is not annotated by `Anno` (not implemented yet):
 ```
 !@a.Anno ^;
 ```
 
 Match any type in the package `P`:
 ```
-type ^P.* {}
+type ^P.*;
 ```
 
-Match any class (i.e. not an interface, enum or annotation type) that not in the package `P`:
+Match any class (i.e. not an interface, enum or annotation type) that not in the package `P` (notice the use of regex):
 ```
-class ^!P.* {}
+class ^/[^P]/.*;
 ```
 
 Match any interface in package `P` or any subpackage of it:
 ```
-interface ^P.** {}
+interface ^P.**;
 ```
 
-Match any type whose name ends in `Private`:
+Match any type whose name ends in `Private` and which is part of any package:
 ```
-type ^/.*Private/ {}
+type ^**./.*Private/ {}
 ```
 
-Match anything that (indirectly) uses a class annotated as `@Unstable`:
+Match anything that (indirectly) uses a class annotated as `@Unstable` (not implemented yet):
 ```
 ^ uses %c; @Unstable class %c=*;
 ```
 
-Match any type that is annotated `@Unstable` and is used by something annotated `@Stable`:
+Match any type that is annotated `@Unstable` and is used by something annotated `@Stable` (not implemented yet):
 ```
 match %e; @Unstable type %e=*; @Stable * uses %e;
+```
+or
+```
+@Unstable type ^ usedby %c; @Stable %c=*;
 ```
 
 Match anything that uses some direct implementation of an interface `Iface`:
@@ -88,13 +94,307 @@ class * extends %b implements %i {
   ^m(**);
 }
 
-class %b=x.y.* extends java.io.InputStream {}
+class %b=x.y.* extends java.io.InputStream;
 
 interface %i=* {
   k(**);
 }
 
-@interface %a {
+@interface %a=* {
     int attr() default 3;
 }
 ```
+
+=== User Guide
+
+Classif matches Java elements with certain structure. You define the needed structure using a "query" that strongly
+resembles the actual Java declarations.
+
+Quite often you will want to express dependencies between different declarations and for that you can use variables
+within the query.
+
+So without further ado, let dive in and learn to write the queries.
+
+==== Basics
+
+===== What to return
+
+In a simple query, you specify what you want to be the result of the query by using the `^` in front of the name of the
+element. E.g. query
+
+```
+class ^java.lang.Object;
+```
+
+will return the `java.lang.Object` class.
+
+In case you want to match more things (like for example a class and some method), you might want to use a different way
+of declaring what to match by the query.
+
+```
+match %class | %method;
+
+class %class=java.lang.Object;
+
+type * {
+  %method=/_.*/(**);
+}
+```
+
+Whoa, that's a bit of a mouthful. But what can be seen there is that you can declare variables that match certain
+elements in the query (in the example above the `%class` and `%method` are variables "assigned" to the matching
+elements) and use them in the `match` statement (which needs to be the first statement in the query).
+
+Btw. the above example will match the `java.lang.Object` class and any method with name beginning with and underscore
+that has any number of parameters and is present in any type (regardless of whether it is a class, interface, enum,
+etc).
+
+===== What's not specified is not matched
+
+This is the general principle. You can match different elements by visibility, annotation presence, contents, usage,
+etc.
+
+For example:
+
+```
+public class *;
+```
+
+will match all public classes (but not interfaces, enums or annotation types), while
+
+```
+class *;
+```
+
+will match the classes regardless of their visibility - all private, package private, protected and public classes will
+be matched.
+
+==== Matching Types
+
+===== Matching by modifiers
+
+If you want to constrain the matched types by their visibility, you can do so by using one of the `public`, `protected`,
+`private` or Classif's own `packageprivate` qualifiers. The `packageprivate` modifier is required to distinguish
+between "any visibility", which in Classif is expressed by the lack of any visibility modifier, and "package private
+visibility" which is what Java assumes when there is on other visibility modifier.
+
+There are also other modifiers supported on the types: `static`, `final`, `abstract` and `strictfp`, each as understood
+by your favorite Java compiler..
+
+Some examples:
+
+```
+public final type **./.*Impl/;
+```
+
+matches all final types in any package whose names end with "Impl".
+
+```
+packageprivate enum *;
+```
+
+matches all package private enums.
+
+[TIP]
+--
+As mentioned above, to return anything from a query, you need to use the `^` operator in front of the name of
+the returned element or the `match` statement mentioning the named elements. So to *return* all the package private
+enums, you'd write:
+
+```
+packageprivate enum ^*;
+```
+
+--
+
+In addition to specifying single modifiers, you can also "or" multiple together likeso:
+
+```
+public|protected final static class *;
+```
+
+will match all public or protected static final classes.
+
+Finally, you can also negate the modifiers:
+
+```
+!public static !final class *;
+```
+
+matches all classes that are static, not final and not public.
+
+```
+!public|static type *;
+```
+
+matches all types that are either not public or static.
+
+===== Matching by annotations
+
+You can match not only by annotation presence on an element, but also by basic checks on the attribute values.
+
+Specifying an annotation again resembles the declarations in the Java source code.
+
+NOTE: Classif doesn't assume anything about the annotation retention. If the calling code is able to supply also
+annotations with the source retention, they will be considered. If on the other hand the calling code obtains the
+declarations from the compiled bytecode, the annotation with the source retention wil not be available and therefore
+not considered.
+
+Basic example:
+
+```
+@javax.persistence.Entity
+public class *;
+```
+
+will return all public classes annotated as JPA entities.
+
+To find something that is not annotated by some annotation you can write:
+
+```
+!@javax.persistence.Entity
+@com.acme.MyAnno
+type *;
+```
+
+which will find all types that are not annotated by the `javax.persistence.Entity` annotation but are annotated by the
+`com.acme.MyAnno` annotation.
+
+To match by annotation attributes, you can write something like this:
+
+```
+@javax.persistence.Entity(name != "")
+class *;
+```
+
+which will match all JPA entities with an explicitly assigned name (this stems from the fact that the `name` attribute
+of the `Entity` annotation happens to have an empty string as its default value).
+
+Notice that you can use more than just assignment when matching the attribute values. The allowed operators are:
+`=`, `!=`, `>`, `>=`, `<` or `+<=+`. Obviously the inequality operators only make sense on the numeric attribute values.
+
+When it comes to specifying the value of an attribute to match, there is again a couple of options. You can either
+specify the value as in the source code, e.g.
+
+```
+@MyAnnotation(stringAttribute = "val", intAttribute > 3, typeAttribute != java.lang.Object.class, enumAttribute = MyEnum.VALUE, arrayAttribute = {1, 2}, annotationAttribute = @MyOtherAnnotation(attribute = 42)) class *;
+```
+
+or you can try using regular expressions for matching strings:
+
+```
+@javax.persistence.Entity(name != /.*Private/) class *;
+```
+
+which will match all JPA entity classes with an explicit name attribute which doesn't end with "Private".
+
+additionally, you can specify that you don't actually care about the value using `*`.
+
+Finally, you can check whether an annotation attribute has a value different from its default value like so:
+
+```
+@javax.persistence.Entity(name != default) class *;
+```
+
+This will match all JPA entity classes with an explicit name. Note that this is essentially the same as our first
+example above with the only difference being that you don't have to know the default value.
+
+The annotation attributes also support globbing. I.e. you can put a wildcard in place of a single or many attributes.
+
+```
+@com.acme.Acme(*) type *;
+```
+
+will match any type annotated with the `@com.acme.Acme` annotation with a single attribute specified.
+
+`@com.acme.
+===== Matching by names
+
+In the above examples we were mostly using `+*+` in place of a type name. That is one of the special symbols supported by
+Classif. A single `+*+` stands for "any type in any package". Sometimes though we need to be more specific. That's why
+Classif also supports full featured globbing of the fully qualified type names.
+
+The single `+*+` is a special case put in place for convenience. In a normal case the fully qualified type names are
+globbed similarly to Ant path expressions.
+
+* `+*+` stands for single part of the hierarchical name
+* `+**+` stands for any number of parts (0 to many) of the hierarchical name
+* a sequence of characters stands for the single part of the hierarchical name with the same name
+* the parts of the hierarchical name are separated by `.`
+* instead of a sequence of characters, one can also use a regex enclosed in a pair of `/`.
+
+Ok, that's a little bit dense so let's explore it on a couple of examples. Let's suppose we want to match the type with
+the fully qualified name `com.acme.util.StringUtils`. Here is a couple of ways how to do it using the above described
+globbing features:
+
+`com.acme.util.StringUtils`::
+The simplest thing to do is to simply write down all parts of the hierarchical fully qualified name in full.
+
+`+com.*.util.*+`::
+In here we're matching the `acme` and `StringUtils` parts of the name using a `+*+`. This expression would of course
+match any other class in any package with 3 hierarchical name parts first of which would be `com` and the third one
+`util` with the middle being anything. This expression would not match `com.util.Clazz` though because it has too few
+parts of the name as well as it would not match `com.acme.util.internal.Misc` because that has too many parts of the
+fully qualified name.
+
+`+**.StringUtils+`::
+This expression will match a class called `StringUtils` located in any package no matter how deep the hierarchy of the
+package name. Contrast that to `+*.StringUtils+` which would only match the class `StringUtils` in packages with a single
+part (i.e. the package name without any dots in them). Also notice that the `+**+` doesn't match just the packages. It
+merely matches parts of the hierarchical name, so if the class `StringUtils` was an inner class of another class (of any
+name, in this concrete example) it would be matched also.
+
+`+com.**.StringUtils+`::
+Similar to the above example but showing that you can put the `+**+` wildcard in any place of the hierarchical name.
+
+`+**./.*Utils/+`::
+In this example we're using a regular expression `+.*Utils+` to match the class name and the `+**+` wildcard to match
+a package of any depth.
++
+NOTE: The regular expression always matches only a single part of the hierarchical name.
+
+===== Matching by contents
+
+Often you will want to match a type by its "contents". I.e. what fields and methods are declared in it. Taking
+inspiration from the regular Java syntax, Classif can express such requirements like this:
+
+```
+public type **./.*Util/ {
+  public <init>(**) {}
+}
+```
+
+This would match any class ending in "Util" in any package that happens to have a public constructor with any number
+of arguments (0 or more). This is usually considered a code smell because utility classes usually only contain static
+helper methods and therefore should not usually be instantiated.
+
+NOTE: As explained further down, Classif uses `<init>` to refer to a constructor so that it can match it without having
+to know the name of the enclosing class.
+
+===== Matching by usage
+
+==== Matching Methods
+
+===== Matching by annotations
+
+===== Matching by names
+
+===== Matching by return type
+
+===== Matching by parameters
+
+===== Matching by throws declarations
+
+===== Matching by usage
+
+==== Matching Fields
+
+===== Matching by annotations
+
+===== Matching by names
+
+===== Matching by type
+
+==== Matching different types of elements in a single statement
+
+=== Developer Guide
