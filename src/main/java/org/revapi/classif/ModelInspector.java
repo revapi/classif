@@ -59,20 +59,6 @@ public interface ModelInspector<M> {
     TypeMirror toMirror(M model);
 
     /**
-     * @param model the model representation of an element
-     * @return a model representation of the element directly enclosing the provided element or null if there is none.
-     */
-    M getEnclosing(M model);
-
-    /**
-     * The set of model representations of the elements directly enclosed in the provided one.
-     *
-     * @param model the model representation of the element
-     * @return the set of enclosed elements
-     */
-    Set<M> getEnclosed(M model);
-
-    /**
      * Provides the model representations of the types that are directly used by the element. The provided model
      * is guaranteed to represent a Java type.
      *
@@ -108,15 +94,6 @@ public interface ModelInspector<M> {
      * such set cannot be provided at the time the method is called.
      */
     @Nullable Set<M> getUseSites(M model);
-
-    /**
-     * Tells whether the provided element is inherited from some super type. The method is only ever called on
-     * inheritable like fields and methods.
-     *
-     * @param model the model representation of the field or method element
-     * @return true if the element is inherited, false otherwise
-     */
-    boolean isInherited(M model);
 
     /**
      * Transforms the provided element back to its model representation. The model representation must be usable by the

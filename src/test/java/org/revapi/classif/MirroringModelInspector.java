@@ -17,7 +17,6 @@
 package org.revapi.classif;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -53,16 +52,6 @@ public class MirroringModelInspector implements ModelInspector<Element> {
     }
 
     @Override
-    public Element getEnclosing(Element model) {
-        return model.getEnclosingElement();
-    }
-
-    @Override
-    public Set<Element> getEnclosed(Element model) {
-        return new HashSet<>(model.getEnclosedElements());
-    }
-
-    @Override
     public Set<Element> getUses(Element model) {
         return Collections.emptySet();
     }
@@ -70,11 +59,6 @@ public class MirroringModelInspector implements ModelInspector<Element> {
     @Override
     public Set<Element> getUseSites(Element model) {
         return Collections.emptySet();
-    }
-
-    @Override
-    public boolean isInherited(Element model) {
-        return false;
     }
 
     @Override
