@@ -23,16 +23,15 @@ import static org.revapi.classif.TestResult.NOT_PASSED;
 import static org.revapi.classif.TestResult.PASSED;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -172,6 +171,10 @@ public final class Glob<T extends Globbed> {
                                 || (state.matchAnys >= state.mandatories && state.matchAnys <= state.list.size()))
         );
 
+        if (bestResult == PASSED) {
+            return bestResult;
+        }
+
         while (indices.hasNext()) {
             // to limit the number of tests that we need to do, the individualMatches map doesn't contain results
             // for * and **. This complicates things a little when computing the best result.
@@ -294,7 +297,7 @@ public final class Glob<T extends Globbed> {
 
             boolean matchAll = false;
             int matchAnys = 0;
-            individualResults = new HashMap<>();
+            individualResults = new LinkedHashMap<>();
 
             boolean hasNonMatchingTest = false;
 
@@ -374,21 +377,30 @@ public final class Glob<T extends Globbed> {
             return new Iterator<int[]>() {
                 final int[][] iterables;
                 final int[] iterationPositions;
+                final int[] ret;
 
                 {
-                    Map<T, int[]> matchingIndicesPerMatch = individualResults.entrySet().stream()
-                            .collect(Collectors.toMap(Map.Entry::getKey, e -> {
-                                List<Ctx<X>> ctxs = e.getValue();
-                                return ctxs.stream()
-                                        .filter(c -> c.testResult.toBoolean(true))
-                                        .mapToInt(ctxs::indexOf)
-                                        .toArray();
-                            }));
+                    iterables = individualResults.values().stream()
+                            .map(ctxs -> {
+                                int[] all = new int[ctxs.size()];
+                                int allIdx = 0;
+                                for (int i = 0; i < ctxs.size(); ++i) {
+                                    Ctx<X> c = ctxs.get(i);
+                                    if (c.testResult.toBoolean(true)) {
+                                        all[allIdx++] = i;
+                                    }
+                                }
 
-                    iterables = matchingIndicesPerMatch.values().toArray(new int[matchingIndicesPerMatch.values().size()][]);
+                                int[] ret = new int[allIdx];
+                                System.arraycopy(all, 0, ret, 0, allIdx);
+
+                                return ret;
+                            })
+                            .toArray(int[][]::new);
 
                     iterationPositions = new int[iterables.length];
                     iterationPositions[0] = -1;
+                    ret = new int[iterables.length];
                 }
 
                 HashSet<Integer> permutationChecker = new HashSet<>(iterationPositions.length);
@@ -427,7 +439,6 @@ public final class Glob<T extends Globbed> {
                         throw new NoSuchElementException();
                     }
 
-                    int[] ret = new int[iterationPositions.length];
                     for (int i = 0; i < ret.length; ++i) {
                         ret[i] = iterables[i][iterationPositions[i]];
                     }
@@ -442,7 +453,7 @@ public final class Glob<T extends Globbed> {
                     }
 
                     for (int i = 0; i < iterationPositions.length; ++i) {
-                        if (iterationPositions[i] == -1 || iterationPositions[i] < iterables[iterationPositions[i]].length - 1) {
+                        if (iterationPositions[i] == -1 || iterationPositions[i] < iterables[i].length - 1) {
                             iterationPositions[i]++;
                             for (int j = 0; j < i; ++j) {
                                 iterationPositions[j] = 0;
