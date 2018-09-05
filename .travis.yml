@@ -1,11 +1,15 @@
 language: java
 jdk:
   - oraclejdk8
+  - oraclejdk9
 
 notifications:
   email: false
 
 sudo: false
+
+git:
+  depth: false
 
 cache:
   directories:
@@ -14,7 +18,11 @@ cache:
 #delete all our historic build artifacts so that the stale versions do
 #not pollute the build.
 before_script:
-  - rm -Rf $HOME/.m2/repository/org/revapi
+  - rm -Rf $HOME/.m2/repository/org/revapi/classif
 
 script:
   - mvn clean verify --batch-mode --fail-at-end
+
+after_success:
+- bash <(curl -s https://codecov.io/bash) -X gcov -X coveragepy -X xcode
+

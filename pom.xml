@@ -89,6 +89,21 @@
                 <artifactId>maven-compiler-plugin</artifactId>
             </plugin>
             <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>org/revapi/classif/ClassifBaseListener*</exclude>
+                        <exclude>org/revapi/classif/ClassifBaseVisitor*</exclude>
+                        <exclude>org/revapi/classif/ClassifLexer*</exclude>
+                        <exclude>org/revapi/classif/ClassifParser*</exclude>
+                        <exclude>org/revapi/classif/ClassifVisitor*</exclude>
+                        <exclude>org/revapi/classif/ClassifListener*</exclude>
+                        <exclude>org/revapi/classif/ClassifParser$*</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <configuration>
                     <!-- exclude the generated-sources from checkstyle -->

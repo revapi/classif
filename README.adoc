@@ -1,6 +1,7 @@
 == Classif
 
 image:https://travis-ci.org/revapi/classif.svg?branch=master[Build Status,link=https://travis-ci.org/revapi/classif]
+image:http://codecov.io/github/revapi/classif/coverage.svg?branch=master[Code Coverage,link=https://codecov.io/github/revapi/classif?branch=master]
 
 A library to sift through java classes using a structural search.
 
@@ -11,7 +12,7 @@ can do similar things with the source code but Classif works on the bytecode lev
 Classif is not usable on its own. It can sift through the Java code elements that are thrown at it but it cannot find
 them on its own. To use Classif, you need something that will scan the "classpath" (whatever that might mean in your
 case) and inform Classif about what you found. Classif can then run its queries on top of your findings. See
-`Developer Guide` below for more thorough explanation on how to do that.
+<<Developer Guide>> below for more thorough explanation on how to do that.
 
 :toc:
 
@@ -307,7 +308,26 @@ The annotation attributes also support globbing. I.e. you can put a wildcard in 
 
 will match any type annotated with the `@com.acme.Acme` annotation with a single attribute specified.
 
-`@com.acme.
+```
+@com.acme.Acme(**) type *;
+```
+
+will match any annotated with the `@com.acme.Acme` annotation with zero or more attributes of any name with any value.
+
+Values can be replaced by a `*`, too, meaning, somewhat obviously, "any value". If you happen to match an array value,
+like for example:
+
+```
+@java.lang.annotation.Target(value = {java.lang.annotation.ElementType.TYPE, **}) @interface *;
+```
+
+you can use globbing of the values as well, as you probably have guessed from the provided example. The example will
+match any annotation type that is itself annotated with the `@java.lang.annotation.Target` annotation with the value
+attribute having the `TYPE` as the first element in its values, followed by zero or more other element types. Requiring
+the `TYPE` to be the first in the array is somewhat restrictive, so you could update it to read
+`{**, java.lang.annotation.ElementType.TYPE, **}` which would make the query match with `TYPE` on any position in the
+array.
+
 ===== Matching by names
 
 In the above examples we were mostly using `+*+` in place of a type name. That is one of the special symbols supported by
@@ -353,6 +373,14 @@ a package of any depth.
 +
 NOTE: The regular expression always matches only a single part of the hierarchical name.
 
+The whole name can further be negated:
+
+```
+type !java.lang.**;
+```
+
+would return all types that are not from the java.lang package or any of its sub-packages.
+
 ===== Matching by contents
 
 Often you will want to match a type by its "contents". I.e. what fields and methods are declared in it. Taking
@@ -373,15 +401,198 @@ to know the name of the enclosing class.
 
 ===== Matching by usage
 
+If the type structure provider connected to Classif supports it (by default, Classif doesn't provide any), the queries
+can also match types by their usage in other classes/methods/fields declarations (not in the code of the methods).
+
+For example, to find all types used in declarations of another type, you could write:
+
+```
+type ^* directly usedby %field | %method;
+
+class MyClass {
+  %field=*;
+  %method=*(**);
+}
+
+```
+
+If you haven't specified the `directly` before `usedby` the search for usages would be recursive.
+
+A more useful example of this could be:
+
+```
+match %type | %method | %field;
+
+@Stable type %type=* uses %unstable;
+
+@Stable type * {
+  public %method=*(**) uses %unstable;
+}
+
+@Stable type * {
+  public %field=* uses %unstable;
+}
+
+@Unstable public|protected type *;
+```
+
+If we had `@Stable` and `@Unstable` annotations that would mark types in the codebase as stable or unstable parts of
+the API, the above would match all the types, fields or methods from the stable API that use some unstable API. Note
+that because we haven't declared `directly uses` but merely `uses`, the search is performed recursively.
+
+NOTE: It is not prescribed what is exactly meant by "use". It is up to the type structure provider supplied to
+Classif to establish that.
+
+===== Matching Hierarchy
+
+You now may wonder what exactly is matched by `type *;`. Only top level types or also inner classes? The answer is
+that it depends :) By default this would match all types, top-level and inner. If on the other hand you want to really
+only match top-level types, you need to tell Classif about it like so:
+
+```
+#strictHierarchy;
+
+type *;
+```
+
+The `#strictHierarchy` is a "pragma" that tells Classif to consider the hierarchy precisely. `type *;` will only ever
+match top-level types, because it itself is a top-level declaration.
+
+This takes into account the structure of the types, of course. If you for example wanted to find all types that have
+some inner type, you could write:
+
+```
+type ^ {
+  type *;
+}
+```
+
+Without the `#strictHierarchy` pragma, this would match all types that have an inner class, regardless of whether they
+themselves are top-level or inner. With the pragma, it would only return top-level types with an inner class.
+
 ==== Matching Methods
+
+We've already seen some example of the fact that Classif can work with methods. In this chapter we will go into the
+details of what is possible and how.
+
+In the normal Java code, methods are always enclosed in some class. This is of course reflected in Classif quries.
+
+```
+interface * {
+  default ^*(**);
+}
+```
+
+would return all default methods of any interface (public or private).
+
+Let's try to decipher that. First we declare what type should the method be in (it should be an interface type with any
+name and any visibility (because we don't require any visibility)). Then we declare the method in that type - it should
+be a `default` method with any name (`+*+`) and any number of results (glob `+**+`). The `^` tells the query to return
+the method as the result of the query.
+
+If our query looked like this:
+
+```
+interface ^* {
+  default *(**);
+}
+```
+
+we'd be looking for all interface types that have at least one default method.
 
 ===== Matching by annotations
 
+Similarly to types, methods, too, can be queried by the declared annotations.
+
+NOTE: Classif currently doesn't support type-use annotations introduced in Java 8.
+
+If you wanted to convert all method-based JPA definitions to field-based definitions, because your project policy
+dictates so, you could find all the violators like this:
+
+```
+type * {
+  @javax.persistence.*
+  ^*(**);
+}
+```
+
+The above query could be rephrased as "In all types, look for any method with any number of parameters that is annotated
+by an annotation from the `javax.persistence` package.
+
+As with types, Classif supports specifying the required annotation attributes.
+
 ===== Matching by names
+
+This is very much the same as with <<Matching by names,types>> except the fact that method names are simple identifiers and don't contain
+any hierarchy. It therefore doesn't make sense to use the `**` glob to match them.
+
+The method names can either be spelled out in full, matched by the `*` glob or matched using a regular expression:
+
+```
+type * {
+  namedMethod();
+
+  *(int);
+
+  /__.*/(**);
+}
+```
+
+This would match any type that would have a method called `namedMethod` that would have no parameters, in addition
+the type would also have a method of any name with a single parameter of type `int` and finally the type would have
+a method with any number of parameters and a name starting with `__`.
 
 ===== Matching by return type
 
+You may have noticed that in all the examples above, the methods we were looking for lacked any information about their
+return type. In accordance with the Classif principles, we didn't care about the return type and therefore we didn't
+declare any.
+
+If you wanted to match methods based on the return type though, you could certainly do so.
+
+```
+type * {
+   !void /set.*/(*);
+}
+```
+
+This could be rephrased as "find all setters that don't return void". We see a couple of things here. First we don't
+specify the visibility, so it is not considered. Then we specify the return type (as we would in Java code) but we
+negate it. Then we use a regular expression to match the name of the method. Finally we require that the method has
+a single parameter of any type.
+
 ===== Matching by parameters
+
+We've already seen examples of matching by method parameters in the sections above. That's because Classif can only
+distinguish a field declaration from a method declaration by the presence of the parameters on the method (this is the
+only violation of the "what's not specified is not considered" principle).
+
+Therefore you always need to specify what kind of parameters a method should have. The parameters are matched using
+a glob, so you can either spell out their type names, use `*` for matching any type or `**` to match any number of
+parameters.
+
+```
+type * {
+  methodWithNoParameters();
+
+  methodWithOneParameter(*);
+
+  methodWithZeroOrMoreParameters(**);
+
+  methodWithIntAndPossiblySomeOtherParameters(int, **);
+}
+```
+
+Of course, you can also match methods based on the presence of annotations on the method parameters.
+
+```
+type * {
+  *(@javax.enterprise.event.Observes *);
+}
+```
+
+This will find all the CDI event handlers. In any type, look for methods with any name that have a single parameter
+of any type that is annotated by the `@Observes` annotation.
 
 ===== Matching by throws declarations
 
