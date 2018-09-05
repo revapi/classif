@@ -1,4 +1,5 @@
-== Classif
+= Classif
+:toc:
 
 image:https://travis-ci.org/revapi/classif.svg?branch=master[Build Status,link=https://travis-ci.org/revapi/classif]
 image:http://codecov.io/github/revapi/classif/coverage.svg?branch=master[Code Coverage,link=https://codecov.io/github/revapi/classif?branch=master]
@@ -16,7 +17,7 @@ case) and inform Classif about what you found. Classif can then run its queries 
 
 :toc:
 
-=== Examples
+== Examples
 
 Match anything annotated by annotation `Anno` with attribute `a` equal to `'x'` (not implemented yet):
 ```
@@ -106,7 +107,7 @@ interface %i=* {
 }
 ```
 
-=== User Guide
+== User Guide
 
 Classif matches Java elements with certain structure. You define the needed structure using a "query" that strongly
 resembles the actual Java declarations.
@@ -116,9 +117,9 @@ within the query.
 
 So without further ado, let dive in and learn to write the queries.
 
-==== Basics
+=== Basics
 
-===== What to return
+==== What to return
 
 In a simple query, you specify what you want to be the result of the query by using the `^` in front of the name of the
 element. E.g. query
@@ -150,7 +151,7 @@ Btw. the above example will match the `java.lang.Object` class and any method wi
 that has any number of parameters and is present in any type (regardless of whether it is a class, interface, enum,
 etc).
 
-===== What's not specified is not matched
+==== What's not specified is not matched
 
 This is the general principle. You can match different elements by visibility, annotation presence, contents, usage,
 etc.
@@ -170,9 +171,9 @@ class *;
 will match the classes regardless of their visibility - all private, package private, protected and public classes will
 be matched.
 
-==== Matching Types
+=== Matching Types
 
-===== Matching by modifiers
+==== Matching by modifiers
 
 If you want to constrain the matched types by their visibility, you can do so by using one of the `public`, `protected`,
 `private` or Classif's own `packageprivate` qualifiers. The `packageprivate` modifier is required to distinguish
@@ -230,7 +231,7 @@ matches all classes that are static, not final and not public.
 
 matches all types that are either not public or static.
 
-===== Matching by annotations
+==== Matching by annotations
 
 You can match not only by annotation presence on an element, but also by basic checks on the attribute values.
 
@@ -328,7 +329,7 @@ the `TYPE` to be the first in the array is somewhat restrictive, so you could up
 `{**, java.lang.annotation.ElementType.TYPE, **}` which would make the query match with `TYPE` on any position in the
 array.
 
-===== Matching by names
+==== Matching by names
 
 In the above examples we were mostly using `+*+` in place of a type name. That is one of the special symbols supported by
 Classif. A single `+*+` stands for "any type in any package". Sometimes though we need to be more specific. That's why
@@ -381,7 +382,7 @@ type !java.lang.**;
 
 would return all types that are not from the java.lang package or any of its sub-packages.
 
-===== Matching by contents
+==== Matching by contents
 
 Often you will want to match a type by its "contents". I.e. what fields and methods are declared in it. Taking
 inspiration from the regular Java syntax, Classif can express such requirements like this:
@@ -399,7 +400,7 @@ helper methods and therefore should not usually be instantiated.
 NOTE: As explained further down, Classif uses `<init>` to refer to a constructor so that it can match it without having
 to know the name of the enclosing class.
 
-===== Matching by usage
+==== Matching by usage
 
 If the type structure provider connected to Classif supports it (by default, Classif doesn't provide any), the queries
 can also match types by their usage in other classes/methods/fields declarations (not in the code of the methods).
@@ -443,7 +444,7 @@ that because we haven't declared `directly uses` but merely `uses`, the search i
 NOTE: It is not prescribed what is exactly meant by "use". It is up to the type structure provider supplied to
 Classif to establish that.
 
-===== Matching Hierarchy
+==== Matching Hierarchy
 
 You now may wonder what exactly is matched by `type *;`. Only top level types or also inner classes? The answer is
 that it depends :) By default this would match all types, top-level and inner. If on the other hand you want to really
@@ -470,7 +471,7 @@ type ^ {
 Without the `#strictHierarchy` pragma, this would match all types that have an inner class, regardless of whether they
 themselves are top-level or inner. With the pragma, it would only return top-level types with an inner class.
 
-==== Matching Methods
+=== Matching Methods
 
 We've already seen some example of the fact that Classif can work with methods. In this chapter we will go into the
 details of what is possible and how.
@@ -500,7 +501,7 @@ interface ^* {
 
 we'd be looking for all interface types that have at least one default method.
 
-===== Matching by annotations
+==== Matching by annotations
 
 Similarly to types, methods, too, can be queried by the declared annotations.
 
@@ -521,7 +522,7 @@ by an annotation from the `javax.persistence` package.
 
 As with types, Classif supports specifying the required annotation attributes.
 
-===== Matching by names
+==== Matching by names
 
 This is very much the same as with <<Matching by names,types>> except the fact that method names are simple identifiers and don't contain
 any hierarchy. It therefore doesn't make sense to use the `**` glob to match them.
@@ -542,7 +543,7 @@ This would match any type that would have a method called `namedMethod` that wou
 the type would also have a method of any name with a single parameter of type `int` and finally the type would have
 a method with any number of parameters and a name starting with `__`.
 
-===== Matching by return type
+==== Matching by return type
 
 You may have noticed that in all the examples above, the methods we were looking for lacked any information about their
 return type. In accordance with the Classif principles, we didn't care about the return type and therefore we didn't
@@ -561,7 +562,7 @@ specify the visibility, so it is not considered. Then we specify the return type
 negate it. Then we use a regular expression to match the name of the method. Finally we require that the method has
 a single parameter of any type.
 
-===== Matching by parameters
+==== Matching by parameters
 
 We've already seen examples of matching by method parameters in the sections above. That's because Classif can only
 distinguish a field declaration from a method declaration by the presence of the parameters on the method (this is the
@@ -594,18 +595,18 @@ type * {
 This will find all the CDI event handlers. In any type, look for methods with any name that have a single parameter
 of any type that is annotated by the `@Observes` annotation.
 
-===== Matching by throws declarations
+==== Matching by throws declarations
 
-===== Matching by usage
+==== Matching by usage
 
-==== Matching Fields
+=== Matching Fields
 
-===== Matching by annotations
+==== Matching by annotations
 
-===== Matching by names
+==== Matching by names
 
-===== Matching by type
+==== Matching by type
 
-==== Matching different types of elements in a single statement
+=== Matching different types of elements in a single statement
 
-=== Developer Guide
+== Developer Guide
