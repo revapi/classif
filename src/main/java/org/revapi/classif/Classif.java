@@ -1175,7 +1175,7 @@ public final class Classif {
                         ret.referencedVariables.addAll(type.referencedVariables);
                     }
                 } else if (mctx.DEFAULT() != null) {
-                    ReferencedVariablesAnd<AnnotationValueMatch> match = mctx.NO() != null
+                    ReferencedVariablesAnd<AnnotationValueMatch> match = mctx.not() != null
                             ? null
                             : mctx.annotationValue().accept(new AnnotationValueVisitor(toOperator(mctx.operator())));
 

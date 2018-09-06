@@ -83,7 +83,6 @@ SYNCHRONIZED: 'synchronized';
 USED_BY: 'usedby';
 EXACTLY: 'exactly';
 FROM: 'from';
-NO: 'no';
 STRICT_HIERARCHY: 'strictHierarchy';
 STRICTFP: 'strictfp';
 
@@ -277,7 +276,7 @@ methodRestStatement
 
 resolvedName
     // everything that is not a Java keyword
-    : MATCH | TYPE | USES | PACKAGE_PRIVATE | OVERRIDES | DIRECTLY | USED_BY | EXACTLY | FROM | NO | STRICT_HIERARCHY
+    : MATCH | TYPE | USES | PACKAGE_PRIVATE | OVERRIDES | DIRECTLY | USED_BY | EXACTLY | FROM | STRICT_HIERARCHY
     | WORD
     ;
 
@@ -334,7 +333,7 @@ methodConstraint
     : (DIRECTLY WS)? USES WS typeReference
     | THROWS WS typeReference (WS? COMMA WS? typeReference)*
     | OVERRIDES (WS FROM WS typeReference)?
-    | NO WS DEFAULT
+    | not? DEFAULT
     | DEFAULT WS? operator WS? annotationValue
     ;
 
