@@ -15,8 +15,6 @@ them on its own. To use Classif, you need something that will scan the "classpat
 case) and inform Classif about what you found. Classif can then run its queries on top of your findings. See
 <<Developer Guide>> below for more thorough explanation on how to do that.
 
-:toc:
-
 == Examples
 
 Match anything annotated by annotation `Anno` with attribute `a` equal to `'x'` (not implemented yet):
@@ -382,6 +380,16 @@ type !java.lang.**;
 
 would return all types that are not from the java.lang package or any of its sub-packages.
 
+==== Matching by type parameters
+
+Types can of course be parameterized. To match types by their type parameters, Classif has you covered, of course.
+
+```
+type ^*<?, **>
+```
+
+TODO finish this
+
 ==== Matching by contents
 
 Often you will want to match a type by its "contents". I.e. what fields and methods are declared in it. Taking
@@ -597,16 +605,118 @@ of any type that is annotated by the `@Observes` annotation.
 
 ==== Matching by throws declarations
 
+As you can declare what exceptions can be thrown from a java method, you can also match the methods using the thrown
+exceptions with Classif.
+
+```
+type * {
+  ^*(**) throws %e;
+}
+
+class %e=* extends java.lang.RuntimeException;
+```
+
+This will return all the methods in all types that are declared to throw any exception that inherits from
+`RuntimeException`. Methods don't need to declare that and so this may be flagged in some way.
+
 ==== Matching by usage
+
+Similarly to <<Matching by usage, types>>, methods can also be matched by what types they use. This can either
+be a direct usage (e.g. the return type of a method, one of its parameters, ...) or indirect usage as well.
+The semantics of what determines an indirect usage of a type is left to the structure provider that is supplied to
+Classif.
+
+```
+type * {
+  public ^*(**) uses sun.misc.Unsafe;
+}
+```
+
+This will return all the methods that somehow reference the `sun.misc.Unsafe` class. Again the semantics of what is
+a use of a type is left to the structure provider.
+
+==== Matching by overriding
+
+You can also match all methods that override some other method.
+
+```
+type * {
+    ^*(**) overrides;
+}
+```
+
+This will return all methods in all types that override some other method from any supertype.
+
+```
+type ^* {
+  *(**) overrides from %t;
+}
+
+@com.acme.DoNotOverride
+type %t=*;
+```
+
+This will return all types that declare some methods that override methods declared in any type
+annotated by the `@com.acme.DoNotOverride` annotation. Yes, this is a contrived example.. :)
+
+==== Matching by default value
+
+If you want want to for example find all annotation types that declare some attributes without a default
+value, you could:
+
+```
+@interface ^* {
+  *() !default;
+}
+```
+
+NOTE: Because what is not specified is not considered, Classif somehow needs to express the lack of a default
+differently than Java, which merely omits the declaration of the default value.
+
+It is also possible to match by certain default value:
+
+```
+@interface * {
+  ^*() default = {*, *, **}
+}
+```
+
+This will return all the annotation attributes of any annotation type that have a default value which is
+an array with 2 or more elements.
+
+==== Matching by type parameters
+
+This is very much the same as in the case of <<Matching by type parameters, types>>.
 
 === Matching Fields
 
-==== Matching by annotations
+Matching fields is very similar to matching methods, only simpler, because fields don't have that many moving parts.
 
-==== Matching by names
+```
+type ^* {
+  public !final *;
+}
+```
 
-==== Matching by type
+This will match any type that has a public mutable field of any name and any type.
 
 === Matching different types of elements in a single statement
 
+It sometimes might be too verbose to wrap everything in a `type * {...}`. Classif therefore supports "generic" matches
+that can match types, fields or methods using a single declaration. Because all these types don't share many common
+characteristics, you can only match by visibility, the annotations present on them or on the fact whether they use some
+type. Notice that you cannot even match them by name, because that type names are hierarchical, whereas method and field
+names aren't.
+
+```
+@com.acme.Stable public|protected ^* uses %u;
+
+@com.acme.Unstable type %u=*;
+```
+
+This will return any public or protected type, method or field annotated as `@Stable` that uses, in any sense determined
+by the structure provider, a type that is annotated as `@Unstable`.
+
 == Developer Guide
+
+TODO
