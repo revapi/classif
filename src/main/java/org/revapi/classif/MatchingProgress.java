@@ -345,6 +345,35 @@ public final class MatchingProgress<M> {
     }
 
     /**
+     * This method can be used to obtain the known test result for any element that has already been analyzed.
+     *
+     * @param model the model element to test
+     * @return the test result
+     */
+    public TestResult test(M model) {
+        TestResult ret = NOT_PASSED;
+        for (Node<Step<M>> n : allSteps) {
+            Step<M> s = n.getObject();
+            if (!s.executionContext.isReturn) {
+                continue;
+            }
+
+            TestResult sr = s.resolutionCache.get(model);
+            if (sr != null) {
+                ret = ret.or(sr);
+            } else {
+                ret = ret.or(DEFERRED);
+            }
+
+            if (ret.toBoolean(false)) {
+                return ret;
+            }
+        }
+
+        return ret;
+    }
+
+    /**
      * Lose all progress and get ready to start matching models anew.
      */
     public void reset() {
