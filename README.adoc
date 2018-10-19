@@ -384,11 +384,95 @@ would return all types that are not from the java.lang package or any of its sub
 
 Types can of course be parameterized. To match types by their type parameters, Classif has you covered, of course.
 
+NOTE: Classif conflates wildcards and type variables into a single concept referred to simply as `?`. This is because with
+Classif it is not possible to reference the type variables in the later declarations. This may change in the future.
+
+Let's go through some examples of why conflating the wildcards and type variables is kinda ok for a tool like Classif
+and also to explain how to use the matching by type parameters.
+
 ```
-type ^*<?, **>
+type * extends java.util.Collection<java.io.Serializable>
 ```
 
-TODO finish this
+This simple example will match any type with any name that extends `Collection<Serializable>`. The type may or may not
+be parameterized itself (we don't declare any requirements on the type variables so they're not considered in
+the match).
+
+The above declaration will match types like:
+
+```java
+// imports ommitted
+public interface SerializableCol extends Collection<Serializable> {
+  //...
+}
+```
+
+but will NOT match:
+
+```java
+public interface StringCol extends Collection<String> {
+  // ...
+}
+```
+
+That's because we're matching for a concrete type parameter and we're not checking any of its qualities. So for Classif,
+`Collection<Serializable>` is just different from `Collection<String>` (as is for Java compiler, too, actually).
+
+Another example:
+
+```
+type *<? extends java.io.Serializable>
+```
+
+This will match any type with a single type parameter that extends `Serializable` (notice that we don't specify any
+"name" of the type pamareter, we just use `?`).
+
+This will match types declared like this for example:
+
+```java
+public class Serializator<T extends java.io.Serializable> {
+  // ...
+}
+```
+
+But it will NOT match a type declared like this (however such declaration is silly):
+
+```java
+public class StringSerializator<T extends java.lang.String> extends Serializator<T> {
+  // ...
+}
+```
+
+because the type variable bounds do not match (even though `String` implements `Serializable`). To match both
+`Serializator` and `StringSerializator` (and any other type like them), you'd need to write:
+
+```
+type ^*<? extends %s|%es>;
+
+type %s=java.io.Serializable;
+type %es=* extends java.io.Serializable;
+```
+
+Now if you for example wanted to match all types with a single type parameter no matter their type or anything, you can
+use Classif globbing:
+
+```
+type ^* extends java.util.Collection<*>
+```
+
+This will match any type that extends `Collection` and it doesn't matter if the type parameter of the collection is a
+concrete type or a type variable.
+
+You can also use globbing for saying "I don't care about type parameters":
+
+```
+type ^*<**, ? extends *[], **>;
+```
+
+This says, "find me all types that for some silly reasons require their type parameters to be arrays (of any type)".
+The `**` before and after are saying that any other type parameters (if any at all) may precede or succeed
+the array-requiring type parameter.
+
 
 ==== Matching by contents
 
