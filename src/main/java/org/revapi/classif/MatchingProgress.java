@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -402,6 +402,7 @@ public final class MatchingProgress<M> {
             if (result.toBoolean(false)) {
                 step.independentlyMatchingModels.put(model, null);
             } else {
+                step.resolutionCache.put(model, result);
                 return result;
             }
 
