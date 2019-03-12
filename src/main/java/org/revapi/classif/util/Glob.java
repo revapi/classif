@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -80,6 +80,13 @@ public final class Glob<T extends Globbed> {
         currents.forEach(ms -> ms.terminal = true);
 
         startState = start;
+    }
+
+    /**
+     * More of a diagnostic method.
+     */
+    public List<T> getMatches() {
+        return matches;
     }
 
     public <X> TestResult test(TestResult.BiPredicate<T, X> test, Iterable<X> elements) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +21,7 @@ import static org.revapi.classif.TestResult.NOT_PASSED;
 import static org.revapi.classif.TestResult.TestableStream.testable;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.lang.model.element.Element;
@@ -72,5 +73,11 @@ public final class UsedByMatch extends DeclarationMatch {
                         .or(() -> testRecursively(visitor.visit(us.asType()), ctx, visitor));
             }));
         }
+    }
+
+    @Override
+    public String toString() {
+        return (onlyDirect ? "directly " : "")
+                + referencedVariables.stream().map(v -> "%" + v).collect(Collectors.joining(" | "));
     }
 }

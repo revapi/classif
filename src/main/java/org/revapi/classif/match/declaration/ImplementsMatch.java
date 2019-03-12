@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,7 @@ import static org.revapi.classif.TestResult.TestableStream.testable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -55,6 +56,15 @@ public final class ImplementsMatch extends DeclarationMatch {
         } else {
             return glob.testUnordered((m, t) -> m.testInstance(t, ctx), getImplemented(instantiation, ctx.modelInspector));
         }
+    }
+
+    @Override
+    public String toString() {
+        List<?> list = types == null ? glob.getMatches() : types;
+        return
+                (onlyDirect ? "directly " : "")
+                        + (types != null ? "exactly " : "")
+                        + "implements " + list.stream().map(Object::toString).collect(Collectors.joining(", "));
     }
 
     private List<DeclaredType> getImplemented(TypeMirror type, ModelInspector<?> insp) {

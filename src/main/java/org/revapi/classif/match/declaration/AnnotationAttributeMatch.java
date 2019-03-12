@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -93,6 +93,26 @@ public final class AnnotationAttributeMatch implements Globbed {
                         return valueMatch.test(attribute.getValue(), matchContext);
                     }
                 });
+    }
+
+    @Override
+    public String toString() {
+        if (isAny) {
+            return "*";
+        }
+
+        if (isAll) {
+            return "**";
+        }
+
+        String ret = "" + name;
+        if (matchAgainstDefault != null) {
+            ret += matchAgainstDefault + " default";
+        } else {
+            ret += valueMatch;
+        }
+
+        return ret;
     }
 
     private boolean matchAgainstDefault(ExecutableElement attribute, AnnotationValue val) {

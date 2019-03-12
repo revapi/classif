@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +19,7 @@ package org.revapi.classif.match.instance;
 import static org.revapi.classif.TestResult.TestableStream.testable;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ErrorType;
@@ -60,5 +61,10 @@ public final class TypeParametersMatch extends TypeInstanceMatch {
     @Override
     protected <M> TestResult testTypeVariable(TypeVariable t, MatchContext<M> matchContext) {
         return testInstance(t.getUpperBound(), matchContext);
+    }
+
+    @Override
+    public String toString() {
+        return glob.getMatches().stream().map(Object::toString).collect(Collectors.joining(", "));
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,5 +43,15 @@ public final class DefaultValueMatch extends DeclarationMatch {
         return valueMatch == null
                 ? TestResult.NOT_PASSED
                 : valueMatch.test(defaultValue, ctx);
+    }
+
+    @Override
+    public String toString() {
+        String ret = "default";
+        if (valueMatch != null) {
+            ret += " " + valueMatch;
+        }
+
+        return ret;
     }
 }

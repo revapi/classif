@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -73,6 +73,36 @@ public final class TypeDefinitionStatement extends StatementStatement {
                 }
 
                 return negation ? ret.negate() : ret;
+            }
+
+            @Override
+            public String toString() {
+                StringBuilder bld = new StringBuilder(typeKind.toString());
+
+                if (isMatch()) {
+                    bld.append("^");
+                }
+
+                insertVariable(bld);
+
+                if (negation) {
+                    bld.append("!");
+                }
+
+                bld.append(fqn);
+
+                if (typeParameters != null) {
+                    bld.append("<");
+                    bld.append(typeParameters);
+                    bld.append(">");
+                }
+
+                if (constraints != null) {
+                    bld.append(" ");
+                    bld.append(constraints);
+                }
+
+                return bld.toString();
             }
         };
     }

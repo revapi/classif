@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,20 +20,22 @@ import static org.revapi.classif.TestResult.PASSED;
 import static org.revapi.classif.TestResult.TestableStream.testable;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
 
 import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
+import org.revapi.classif.util.Nullable;
 
 public final class TypeConstraintsMatch extends DeclarationMatch {
     private final List<ImplementsMatch> implemented;
-    private final ExtendsMatch extended;
+    private final @Nullable ExtendsMatch extended;
     private final List<UsesMatch> uses;
     private final List<UsedByMatch> usedBys;
 
-    public TypeConstraintsMatch(List<ImplementsMatch> implemented, ExtendsMatch extended, List<UsesMatch> uses,
+    public TypeConstraintsMatch(List<ImplementsMatch> implemented, @Nullable ExtendsMatch extended, List<UsesMatch> uses,
             List<UsedByMatch> usedBys) {
         this.implemented = implemented;
         this.extended = extended;
@@ -47,5 +49,30 @@ public final class TypeConstraintsMatch extends DeclarationMatch {
                 .and(() -> testable(uses).testAll(m -> m.testDeclaration(declaration, instantiation, ctx)))
                 .and(() -> testable(usedBys).testAll(m -> m.testDeclaration(declaration, instantiation, ctx)))
                 .and(() -> extended == null ? PASSED : extended.testDeclaration(declaration, instantiation, ctx));
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder bld = new StringBuilder();
+        if (extended != null) {
+            bld.append(extended);
+        }
+
+        if (bld.length() > 0 && !implemented.isEmpty()) {
+            bld.append(" ");
+        }
+        bld.append(implemented.stream().map(Object::toString).collect(Collectors.joining(" ")));
+
+        if (bld.length() > 0 && !uses.isEmpty()) {
+            bld.append(" ");
+        }
+        bld.append(uses.stream().map(Object::toString).collect(Collectors.joining(" ")));
+
+        if (bld.length() > 0 && !usedBys.isEmpty()) {
+            bld.append(" ");
+        }
+        bld.append(usedBys.stream().map(Object::toString).collect(Collectors.joining(" ")));
+
+        return bld.toString();
     }
 }

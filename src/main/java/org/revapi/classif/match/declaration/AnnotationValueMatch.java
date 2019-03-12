@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,6 +22,7 @@ import static org.revapi.classif.util.Operator.NE;
 
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -121,6 +122,11 @@ public abstract class AnnotationValueMatch implements Globbed {
         public <M> TestResult test(AnnotationValue value, MatchContext<M> ctx) {
             return visitor.visit(value);
         }
+
+        @Override
+        public String toString() {
+            return operator + " " + stringMatch;
+        }
     }
 
     private static final class PatternValue extends AnnotationValueMatch {
@@ -203,6 +209,11 @@ public abstract class AnnotationValueMatch implements Globbed {
 
             return operator == EQ ? match : match.negate();
         }
+
+        @Override
+        public String toString() {
+            return operator + " /" + pattern + "/";
+        }
     }
 
     private static final class NumberValue extends AnnotationValueMatch {
@@ -250,6 +261,11 @@ public abstract class AnnotationValueMatch implements Globbed {
         public <M> TestResult test(AnnotationValue value, MatchContext<M> ctx) {
             return visitor.visit(value);
         }
+
+        @Override
+        public String toString() {
+            return operator + " " + number;
+        }
     }
 
     private static final class BooleanValue extends AnnotationValueMatch {
@@ -265,6 +281,11 @@ public abstract class AnnotationValueMatch implements Globbed {
             Object val = value.getValue();
             return TestResult.fromBoolean(val instanceof Boolean && operator.satisfied((Boolean) val, matchValue));
         }
+
+        @Override
+        public String toString() {
+            return operator + " " + matchValue;
+        }
     }
 
     private static final class AnyValue extends AnnotationValueMatch {
@@ -276,7 +297,12 @@ public abstract class AnnotationValueMatch implements Globbed {
         public <M> TestResult test(AnnotationValue value, MatchContext<M> ctx) {
             return TestResult.fromBoolean(operator == EQ);
         }
-    }
+
+        @Override
+        public String toString() {
+            return operator + " *";
+        }
+}
 
     private static final class AllValue extends AnnotationValueMatch {
         private AllValue() {
@@ -286,6 +312,11 @@ public abstract class AnnotationValueMatch implements Globbed {
         @Override
         public <M> TestResult test(AnnotationValue value, MatchContext<M> ctx) {
             return TestResult.PASSED;
+        }
+
+        @Override
+        public String toString() {
+            return operator + " **";
         }
     }
 
@@ -317,6 +348,11 @@ public abstract class AnnotationValueMatch implements Globbed {
             TestResult res = visitor.visit(value, ctx);
             return (operator == EQ) ? res : res.negate();
         }
+
+        @Override
+        public String toString() {
+            return operator + " " + fqn + "." + name;
+        }
     }
 
     private static final class TypeValue extends AnnotationValueMatch {
@@ -344,6 +380,11 @@ public abstract class AnnotationValueMatch implements Globbed {
             TestResult res = visitor.visit(value, ctx);
             return (operator == EQ) ? res : res.negate();
         }
+
+        @Override
+        public String toString() {
+            return operator + " " + type;
+        }
     }
 
     private static final class AnnoValue extends AnnotationValueMatch {
@@ -369,6 +410,11 @@ public abstract class AnnotationValueMatch implements Globbed {
 
             TestResult res = visitor.visit(value, ctx);
             return (operator == EQ) ? res : res.negate();
+        }
+
+        @Override
+        public String toString() {
+            return operator + " " + match;
         }
     }
 
@@ -396,6 +442,12 @@ public abstract class AnnotationValueMatch implements Globbed {
 
             TestResult res = visitor.visit(value, ctx);
             return (operator == EQ) ? res : res.negate();
+        }
+
+        @Override
+        public String toString() {
+            return operator + " [" + match.getMatches().stream().map(Object::toString).collect(Collectors.joining(", "))
+                    + "]";
         }
     }
 }

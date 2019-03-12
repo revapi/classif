@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +19,7 @@ package org.revapi.classif.match.declaration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -58,6 +59,22 @@ public final class AnnotationMatch {
 
     public boolean isNegation() {
         return negation;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder bld = new StringBuilder();
+        if (negation) {
+            bld.append("!");
+        }
+
+        bld.append("@").append(type);
+
+        bld.append("(");
+        bld.append(attributes.getMatches().stream().map(Object::toString).collect(Collectors.joining(", ")));
+        bld.append(")");
+
+        return bld.toString();
     }
 
     //needed just to make the compiler happy

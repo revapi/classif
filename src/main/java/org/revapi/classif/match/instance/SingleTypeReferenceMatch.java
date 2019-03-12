@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -174,6 +174,26 @@ public final class SingleTypeReferenceMatch extends TypeInstanceMatch implements
                 return negation ? ret.negate() : ret;
             }
         }, null);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder ret = new StringBuilder(negation ? "!" : "");
+        if (fullyQualifiedName != null) {
+            ret.append(fullyQualifiedName.toString());
+        } else {
+            ret.append("%").append(variable);
+        }
+
+        if (typeParameters != null) {
+            ret.append("<").append(typeParameters.toString()).append(">");
+        }
+
+        for (int i = 0; i < arrayDimension; ++i) {
+            ret.append("[]");
+        }
+
+        return ret.toString();
     }
 
     private <M> TestResult doTest(TypeMirror instance, MatchContext<M> ctx) {

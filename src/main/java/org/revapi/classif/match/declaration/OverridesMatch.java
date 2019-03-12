@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -73,6 +73,17 @@ public final class OverridesMatch extends DeclarationMatch {
         }
 
         return TestResult.NOT_PASSED;
+    }
+
+    @Override
+    public String toString() {
+        String ret = "overrides";
+
+        if (declaringType != null) {
+            ret += " " + declaringType;
+        }
+
+        return ret;
     }
 
     private static List<TypeMirror> allSuperTypes(TypeMirror type, ModelInspector<?> insp) {

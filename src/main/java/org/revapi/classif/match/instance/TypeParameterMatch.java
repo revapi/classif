@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,6 +24,7 @@ import static org.revapi.classif.TestResult.TestableStream.testable;
 import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.type.DeclaredType;
@@ -116,6 +117,13 @@ public final class TypeParameterMatch extends TypeInstanceMatch implements Globb
         } else {
             return NOT_PASSED;
         }
+    }
+
+    @Override
+    public String toString() {
+        return wildcard != null
+                ? wildcard.toString()
+                : bounds.isEmpty() ? "?" : bounds.stream().map(Object::toString).collect(Collectors.joining(" & "));
     }
 
     private static boolean isJavaLangObject(TypeMirror t, MatchContext<?> ctx) {

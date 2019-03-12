@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -74,6 +74,44 @@ public final class FieldStatement extends StatementStatement {
                 }
 
                 return negation ? res.negate() : res;
+            }
+
+            @Override
+            public String toString() {
+                StringBuilder bld = new StringBuilder();
+                if (fieldType != null) {
+                    bld.append(fieldType.toString());
+                }
+
+                if (declaringType != null) {
+                    if (bld.length() > 0) {
+                        bld.append(" ");
+                    }
+
+                    bld.append(declaringType.toString());
+                    bld.append("::");
+                }
+
+                if (isMatch()) {
+                    if (bld.length() > 0) {
+                        bld.append(" ");
+                    }
+                    bld.append("^");
+                }
+
+                insertVariable(bld);
+
+                if (negation) {
+                    bld.append("!");
+                }
+
+                bld.append(name.toString());
+
+                if (fieldConstraints != null) {
+                    bld.append(fieldConstraints.toString());
+                }
+
+                return bld.toString();
             }
         };
     }

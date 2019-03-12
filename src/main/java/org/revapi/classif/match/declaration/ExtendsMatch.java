@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -57,6 +57,11 @@ public final class ExtendsMatch extends DeclarationMatch {
         } else {
             return someSuperTypeMatches(declaration.getSuperclass(), ctx);
         }
+    }
+
+    @Override
+    public String toString() {
+        return (onlyDirect ? "directly " : "") + "extends " + superTypeMatch.toString();
     }
 
     private <M> TestResult someSuperTypeMatches(TypeMirror superType, MatchContext<M> ctx) {

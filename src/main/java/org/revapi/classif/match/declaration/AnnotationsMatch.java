@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +19,7 @@ package org.revapi.classif.match.declaration;
 import static org.revapi.classif.TestResult.TestableStream.testable;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
@@ -44,5 +45,10 @@ public final class AnnotationsMatch extends DeclarationMatch {
                         return testable(annos).testAny(a -> m.test(a, matchContext));
                     }
                 });
+    }
+
+    @Override
+    public String toString() {
+        return annotations.stream().map(Object::toString).collect(Collectors.joining(" "));
     }
 }

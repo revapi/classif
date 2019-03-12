@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +21,7 @@ import static org.revapi.classif.TestResult.PASSED;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -84,6 +85,13 @@ public final class FqnMatch extends TypeInstanceMatch implements Globbed {
         }
 
         return glob.test((m, n) -> TestResult.fromBoolean(m.matches(n)), split(fqn));
+    }
+
+    @Override
+    public String toString() {
+        return glob == null
+                ? (matchAny ? "*" : "**")
+                : glob.getMatches().stream().map(NameMatch::toString).collect(Collectors.joining("."));
     }
 
     private static List<String> split(String fqn) {

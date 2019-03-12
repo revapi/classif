@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,5 +33,9 @@ public abstract class StatementStatement extends AbstractStatement {
         super(definedVariable, referencedVariables, Collections.emptyList(), isMatch);
         this.annotations = annotations;
         this.modifiers = modifiers;
+    }
+
+    protected String toStringPrefix() {
+        return annotations.toString() + (modifiers.isEmpty() ? "" : " ") + modifiers.toString();
     }
 }

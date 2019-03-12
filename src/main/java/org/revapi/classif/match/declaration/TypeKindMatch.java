@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -58,5 +58,33 @@ public final class TypeKindMatch extends DeclarationMatch {
         boolean matches = kind == ElementKind.OTHER || type.getKind() == kind;
 
         return TestResult.fromBoolean(negation != matches);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder bld = new StringBuilder();
+        if (negation) {
+            bld.append("!");
+        }
+
+        switch (kind) {
+        case CLASS:
+            bld.append("class");
+            break;
+        case INTERFACE:
+            bld.append("interface");
+            break;
+        case ENUM:
+            bld.append("enum");
+            break;
+        case ANNOTATION_TYPE:
+            bld.append("@interface");
+            break;
+        case OTHER:
+            bld.append("type");
+            break;
+        }
+
+        return bld.toString();
     }
 }

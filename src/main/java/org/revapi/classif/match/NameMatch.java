@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -77,6 +77,11 @@ public abstract class NameMatch implements Globbed {
         public boolean matches(String name) {
             return match.equals(name);
         }
+
+        @Override
+        public String toString() {
+            return match;
+        }
     }
 
     private static final class MatchPattern extends NameMatch {
@@ -95,6 +100,11 @@ public abstract class NameMatch implements Globbed {
         public boolean matches(String name) {
             return pattern.matcher(name).matches();
         }
+
+        @Override
+        public String toString() {
+            return "/" + pattern.toString() + "/";
+        }
     }
 
     private static final class MatchAny extends NameMatch {
@@ -106,6 +116,11 @@ public abstract class NameMatch implements Globbed {
         @Override
         public boolean matches(String name) {
             return true;
+        }
+
+        @Override
+        public String toString() {
+            return "*";
         }
     }
 
@@ -119,6 +134,11 @@ public abstract class NameMatch implements Globbed {
         @Override
         public boolean isMatchAll() {
             return true;
+        }
+
+        @Override
+        public String toString() {
+            return "**";
         }
     }
 }

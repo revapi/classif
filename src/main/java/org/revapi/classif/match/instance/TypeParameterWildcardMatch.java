@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +19,7 @@ package org.revapi.classif.match.instance;
 import static org.revapi.classif.TestResult.TestableStream.testable;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.WildcardType;
@@ -44,5 +45,11 @@ public final class TypeParameterWildcardMatch extends TypeInstanceMatch {
 
         final TypeMirror b = bound;
         return testable(bounds).testAll(m -> m.testInstance(b, matchContext));
+    }
+
+    @Override
+    public String toString() {
+        return "?" + (isExtends ? " extends " : " super ")
+                + bounds.stream().map(Object::toString).collect(Collectors.joining(" & "));
     }
 }

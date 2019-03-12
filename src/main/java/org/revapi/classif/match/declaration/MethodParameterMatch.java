@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -51,5 +51,12 @@ public final class MethodParameterMatch extends DeclarationMatch implements Glob
     @Override
     public boolean isMatchAll() {
         return type.isMatchAll();
+    }
+
+    @Override
+    public String toString() {
+        String ret = annotations == null ? "" : (annotations.toString() + " ");
+        ret += type;
+        return ret;
     }
 }

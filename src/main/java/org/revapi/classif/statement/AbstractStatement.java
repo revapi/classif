@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -67,8 +67,31 @@ public abstract class AbstractStatement extends TreeNode<AbstractStatement> {
 
                 return testable(innerMatchers).testAll(m -> m.test(el, t, ctx)).and(() -> exact.test(model, ctx));
             }
+
+            @Override
+            public String toString() {
+                String prefix = toStringPrefix();
+
+                return prefix + " " + exact.toString();
+            }
         };
     }
 
     protected abstract ModelMatch createExactMatcher();
+
+    protected abstract String toStringPrefix();
+
+    protected void insertVariable(StringBuilder bld) {
+        if (definedVariable != null) {
+            if (bld.length() > 0) {
+                bld.append(" ");
+            }
+            bld.append("%").append(definedVariable).append("=");
+        }
+    }
+
+    @Override
+    public String toString() {
+        return createMatcher().toString();
+    }
 }

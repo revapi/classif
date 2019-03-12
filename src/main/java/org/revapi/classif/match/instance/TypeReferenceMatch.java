@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +19,7 @@ package org.revapi.classif.match.instance;
 import static org.revapi.classif.TestResult.TestableStream.testable;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.lang.model.type.TypeMirror;
 
@@ -46,5 +47,10 @@ public final class TypeReferenceMatch extends TypeInstanceMatch implements Globb
     @Override
     public <M> TestResult testInstance(TypeMirror instantiation, MatchContext<M> ctx) {
         return testable(matches).testAny(m -> m.testInstance(instantiation, ctx));
+    }
+
+    @Override
+    public String toString() {
+        return matches.stream().map(Object::toString).collect(Collectors.joining(" | "));
     }
 }

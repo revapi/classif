@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,7 @@
 package org.revapi.classif.statement;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
@@ -99,6 +100,57 @@ public final class MethodStatement extends StatementStatement {
                 }
 
                 return negation ? res.negate() : res;
+            }
+
+            @Override
+            public String toString() {
+                StringBuilder bld = new StringBuilder();
+
+                if (typeParameters != null) {
+                    bld.append("<");
+                    bld.append(typeParameters.toString());
+                    bld.append(">");
+                }
+
+                if (returnType != null) {
+                    if (bld.length() > 0) {
+                        bld.append(" ");
+                    }
+
+                    bld.append(returnType);
+                }
+
+                if (declaringType != null) {
+                    if (bld.length() > 0) {
+                        bld.append(" ");
+                    }
+
+                    bld.append(declaringType);
+                    bld.append("::");
+                }
+
+                if (isMatch()) {
+                    bld.append("^");
+                }
+
+                insertVariable(bld);
+
+                if (negation) {
+                    bld.append("!");
+                }
+
+                bld.append(name);
+
+                bld.append("(");
+                bld.append(parameters.getMatches().stream().map(Object::toString).collect(Collectors.joining(", ")));
+                bld.append(")");
+
+                if (constraints != null) {
+                    bld.append(" ");
+                    bld.append(constraints);
+                }
+
+                return bld.toString();
             }
         };
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,7 @@
 package org.revapi.classif.match.declaration;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.ExecutableType;
@@ -46,5 +47,10 @@ public final class ThrowsMatch extends DeclarationMatch {
         List<? extends TypeMirror> thrown = method.getThrownTypes();
 
         return thrownTypes.testUnordered((m, t) -> m.testInstance(t, ctx), thrown);
+    }
+
+    @Override
+    public String toString() {
+        return "throws " + thrownTypes.getMatches().stream().map(Object::toString).collect(Collectors.joining(", "));
     }
 }

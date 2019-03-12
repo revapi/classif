@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,6 +35,26 @@ public enum Operator {
                 return o1.compareTo(o2) >= 0;
             default:
                 return true;
+        }
+    }
+
+    @Override
+    public String toString() {
+        switch (this) {
+        case EQ:
+            return "=";
+        case NE:
+            return "!=";
+        case LT:
+            return "<";
+        case LE:
+            return "<=";
+        case GT:
+            return ">";
+        case GE:
+            return ">=";
+        default:
+            return "??";
         }
     }
 }

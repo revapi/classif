@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,7 +31,7 @@ import org.revapi.classif.util.Nullable;
 
 public final class GenericStatement extends StatementStatement {
     private final boolean negation;
-    private final UsesMatch usesMatch;
+    private final @Nullable UsesMatch usesMatch;
 
     public GenericStatement(@Nullable String definedVariable, List<String> referencedVariables,
             AnnotationsMatch annotations, ModifiersMatch modifiers,
@@ -55,6 +55,17 @@ public final class GenericStatement extends StatementStatement {
                 }
 
                 return negation ? ret.negate() : ret;
+            }
+
+            @Override
+            public String toString() {
+                String ret = (isMatch() ? "^" : "*");
+
+                if (usesMatch != null) {
+                    ret += usesMatch.toString();
+                }
+
+                return ret;
             }
         };
     }
