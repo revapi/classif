@@ -17,62 +17,80 @@ case) and inform Classif about what you found. Classif can then run its queries 
 
 == Examples
 
-Match anything annotated by annotation `Anno` with attribute `a` equal to `'x'` (not implemented yet):
+Each of these is actually implemented as a test
+link:src/main/test/java/org/revapi/classif/readme/Exampletest.java[here].
+
+. Match anything annotated by annotation `Anno` with attribute `a` equal to `'x'`:
++
 ```
 @a.Anno(a = 'x') ^;
 ```
 
-Match anything that is annotated by annotation `Anno` with attribute `a` not equal to `'x'` (not implemented yet):
+. Match anything that is annotated by annotation `Anno` with attribute `a` not equal to `'x':
++
 ```
 @a.Anno(a != 'x') ^;
 ```
 
-Match anything that is not annotated by `Anno` (not implemented yet):
+. Match anything that is not annotated by `Anno`:
++
 ```
 !@a.Anno ^;
 ```
 
-Match any type in the package `P`:
+. Match any type in the package `pkg`:
++
 ```
-type ^P.*;
-```
-
-Match any class (i.e. not an interface, enum or annotation type) that not in the package `P` (notice the use of regex):
-```
-class ^/[^P]/.*;
+type ^pkg.*;
 ```
 
-Match any interface in package `P` or any subpackage of it:
+. Match any class (i.e. not an interface, enum or annotation type) that not in the package `pkg` (notice the use of
+negation and regex):
++
 ```
-interface ^P.**;
+class ^!/p[kK]g/.*;
 ```
 
-Match any type whose name ends in `Private` and which is part of any package:
+. Match any interface in package `pkg` or any subpackage of it:
++
+```
+interface ^pkg.**;
+```
+
+. Match any type whose name ends in `Private` and which is part of any package:
++
 ```
 type ^**./.*Private/ {}
 ```
 
-Match anything that (indirectly) uses a class annotated as `@Unstable` (not implemented yet):
+. Match anything that (indirectly) uses a class annotated as `@Unstable`:
++
 ```
 ^ uses %c; @Unstable class %c=*;
 ```
 
-Match any type that is annotated `@Unstable` and is used by something annotated `@Stable` (not implemented yet):
+. Match any type that is annotated `@Unstable` and is used by something annotated `@Stable`:
++
 ```
 match %e; @Unstable type %e=*; @Stable * uses %e;
 ```
++
 or
++
 ```
 @Unstable type ^ usedby %c; @Stable %c=*;
 ```
+(the latter only works if supported by the underlying structure provider, while the former should always work)
 
-Match anything that uses some direct implementation of an interface `Iface`:
+. Match anything that uses some direct implementation of an interface `Iface`:
++
 ```
 ^ uses %impl; type %impl=* directly implements Iface;
 ```
 
-Match anything that uses some type that is either itself annotated `@Beta` or extends or implements a type
+. Match anything that uses some type that is either itself annotated `@Beta` or extends or implements a type
 annotated as `@Beta`:
++
 ```
 ^ uses [%beta | %extendsBeta | %implementsBeta];
 
@@ -83,11 +101,11 @@ type %extendsBeta=* extends %beta {}
 type %implementsBeta=* implements %beta {}
 ```
 
-Match a method called `m` with any number of parameters that is declared in a class that extends a class declared in the
+. Match a method called `m` with any number of parameters that is declared in a class that extends a class declared in the
 package `x.y` that extends `java.io.InputStream`. Additionally the class with the method `m` implements an interface
 that declares a method `k` with any number of parameters. The method `m` is annotated with an annotation that has
 an attribute called `attr` with default value of 3:
-
++
 ```
 class * extends %b implements %i {
   @%a

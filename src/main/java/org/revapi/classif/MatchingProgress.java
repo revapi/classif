@@ -335,11 +335,7 @@ public final class MatchingProgress<M> {
                 .filter(e -> deferredModels.contains(e.getKey()))
                 .collect(toMap(Map.Entry::getKey, e -> e.getValue().decide(false)));
 
-        deferredModels.forEach(m -> {
-            if (!ret.containsKey(m)) {
-                ret.put(m, NOT_PASSED);
-            }
-        });
+        deferredModels.forEach(m -> ret.putIfAbsent(m, NOT_PASSED));
 
         return ret;
     }
@@ -604,6 +600,11 @@ public final class MatchingProgress<M> {
             this.executionContext = executionContext;
             this.blueprintMatchContext = matchContext;
             this.independentMatchContext = independentMatchContext;
+        }
+
+        @Override
+        public String toString() {
+            return "Step{match='" + executionContext.match + "'}";
         }
     }
 
