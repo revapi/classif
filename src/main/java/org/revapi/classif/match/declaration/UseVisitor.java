@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -89,11 +89,15 @@ final class UseVisitor {
 
                 try {
                     depth++;
-                    for (TypeMirror typeMirror : t.getTypeArguments()) {
-                        ret = concat(ret, visit(typeMirror, null));
-                    }
-
                     if (depth == 1) {
+                        for (TypeMirror typeMirror : t.getTypeArguments()) {
+                            ret = concat(ret, visit(typeMirror, null));
+                        }
+
+                        for (TypeMirror st : insp.directSupertypes(t)) {
+                            ret = concat(ret, visit(st, null));
+                        }
+
                         // we're looking for uses of the type, so just append anything the inspector wants us to consider
                         // a use on top of what we already know ourselves.
                         TypeElement type = (TypeElement) t.asElement();
