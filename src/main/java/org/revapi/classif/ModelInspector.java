@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +27,7 @@ import javax.lang.model.type.TypeMirror;
 import org.revapi.classif.util.Nullable;
 
 /**
- * Provides {@link Classif} with the means to navigate the element hierarchy. In addition to providing
+ * Provides {@link ClassifDSL} with the means to navigate the element hierarchy. In addition to providing
  * the conversion from and to the {@link Element} instances (to enable analysis of the elements) the implementors also
  * need to provide additional information not readily available in the {@code javax.lang.model} APIs.
  */

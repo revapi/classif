@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,7 +23,7 @@ import org.revapi.classif.util.execution.DependencyGraph;
 
 /**
  * The main entry point for matching the elements against a recipe. An instance of this class can be obtained from
- * {@link Classif#compile(String)}.
+ * {@link ClassifDSL#compile(String)}.
  *
  * @see #with(ModelInspector)
  */

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2019 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -81,7 +81,7 @@ import org.revapi.classif.util.Operator;
 /**
  * Classif is a structural matcher for Java declarations. It supports variables and nested statements and is cool.
  */
-public final class Classif {
+public final class ClassifDSL {
 
     private static final DecimalFormat NUMBER_FORMAT = (DecimalFormat) DecimalFormat.getNumberInstance(Locale.ROOT);
 
@@ -92,7 +92,7 @@ public final class Classif {
         NUMBER_FORMAT.setDecimalFormatSymbols(symbols);
     }
 
-    private Classif() {
+    private ClassifDSL() {
         throw new AssertionError("I shall not be summoned.");
     }
 
