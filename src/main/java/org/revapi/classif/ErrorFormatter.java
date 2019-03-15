@@ -35,14 +35,14 @@ final class ErrorFormatter {
             sb.append(lines[curLine++]).append("\n");
         }
 
-        int charsUntilCol = col - 1 + maxDigits + 3;
+        int charsUntilCol = col + maxDigits + 3;
 
         appendNTimes(sb, '-', charsUntilCol);
         sb.append('^');
         appendNTimes(sb, '-', maxLineLength - charsUntilCol - 1);
         sb.append("\n");
 
-        appendNTimes(sb, ' ', col - 1 + maxDigits + 3);
+        appendNTimes(sb, ' ', col + maxDigits + 3);
         sb.append("|\n");
         sb.append(errorMessage).append("\n");
 

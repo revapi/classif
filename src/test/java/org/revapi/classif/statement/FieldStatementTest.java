@@ -80,7 +80,7 @@ class FieldStatementTest {
     @Test
     void testFieldTypeByReference() {
         Map<Element, TestResult> res =
-                test(env, "type ^ { public %t field; } class %t=*.B;", builder().start(A).add(field).end().add(AA).add(B).build());
+                test(env, "type ^ { public %t field; } class %t=*.B {}", builder().start(A).add(field).end().add(AA).add(B).build());
 
         assertPassed(res.get(A));
         assertNotPassed(res.get(B));
@@ -94,7 +94,7 @@ class FieldStatementTest {
     @Test
     void testReturnField() {
         Map<Element, TestResult> res =
-                test(env, "type * { public %t ^field; } class %t=*.B;", builder().start(A).add(field).end().add(AA).add(B).build());
+                test(env, "type * { public %t ^field; } class %t=*.B {}", builder().start(A).add(field).end().add(AA).add(B).build());
 
         assertNotPassed(res.get(A));
         assertNotPassed(res.get(B));
@@ -139,7 +139,7 @@ class FieldStatementTest {
         };
 
         Map<Element, TestResult> res =
-                test(insp, "type * { public * ^field uses *.AA; } class %t=*.B;", builder().start(A).add(field).end().add(AA).add(B).build());
+                test(insp, "type * { public * ^field uses *.AA; } class %t=*.B {}", builder().start(A).add(field).end().add(AA).add(B).build());
 
         assertNotPassed(res.get(A));
         assertNotPassed(res.get(B));

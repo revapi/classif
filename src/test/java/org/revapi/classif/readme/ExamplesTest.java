@@ -24,7 +24,6 @@ import static org.revapi.classif.Tester.test;
 import java.util.Map;
 
 import javax.lang.model.element.Element;
-import javax.lang.model.util.ElementFilter;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -100,7 +99,7 @@ class ExamplesTest {
         Element example4 = env.elements().getTypeElement("pkg.Example4");
         Element example5 = env.elements().getTypeElement("pkg2.Example5");
 
-        Map<Element, TestResult> res = test(env, "class ^pkg.*;", Hierarchy.builder()
+        Map<Element, TestResult> res = test(env, "class ^pkg.* {}", Hierarchy.builder()
                 .add(example4)
                 .add(example5)
                 .build());
@@ -114,7 +113,7 @@ class ExamplesTest {
         Element example4 = env.elements().getTypeElement("pkg.Example4");
         Element example5 = env.elements().getTypeElement("pkg2.Example5");
 
-        Map<Element, TestResult> res = test(env, "class ^!/p[kK]g/.*;", Hierarchy.builder()
+        Map<Element, TestResult> res = test(env, "class ^!/p[kK]g/.* {}", Hierarchy.builder()
                 .add(example4)
                 .add(example5)
                 .build());
@@ -129,7 +128,7 @@ class ExamplesTest {
         Element example6_2 = env.elements().getTypeElement("pkg.pkg.Example6_2");
         Element example6_3 = env.elements().getTypeElement("pkg.Example6_3");
 
-        Map<Element, TestResult> res = test(env, "interface ^pkg.**;", Hierarchy.builder()
+        Map<Element, TestResult> res = test(env, "interface ^pkg.** {}", Hierarchy.builder()
                 .add(example6_1)
                 .add(example6_2)
                 .add(example6_3)
@@ -160,7 +159,7 @@ class ExamplesTest {
 //        Element unfinished = env.elements().getTypeElement("Example8.Unfinished");
 //        Element method = ElementFilter.methodsIn(example8.getEnclosedElements()).get(0);
 //
-//        Map<Element, TestResult> res = test(env, "^ uses %c; @Unstable class %c=*;", Hierarchy.builder()
+//        Map<Element, TestResult> res = test(env, "^ uses %c; @Unstable class %c=* {}", Hierarchy.builder()
 //                .start(example8)
 //                .add(unfinished)
 //                .add(method)
@@ -177,7 +176,7 @@ class ExamplesTest {
 //        Element unfinished = env.elements().getTypeElement("Example9.Unfinished");
 //        Element finished = env.elements().getTypeElement("Example9.Finished");
 //
-//        Map<Element, TestResult> res = test(env, "match %e; @Unstable type %e=*; @Stable * uses %e;", Hierarchy.builder()
+//        Map<Element, TestResult> res = test(env, "match %e; @Unstable type %e=* {} @Stable * uses %e;", Hierarchy.builder()
 //                .add(unfinished)
 //                .add(finished)
 //                .build());
@@ -195,7 +194,7 @@ class ExamplesTest {
 //        Element method1 = ElementFilter.methodsIn(user.getEnclosedElements()).get(0);
 //        Element method2 = ElementFilter.methodsIn(user.getEnclosedElements()).get(1);
 //
-//        Map<Element, TestResult> res = test(env, "^ directly uses %impl; type %impl=* directly implements Iface;",
+//        Map<Element, TestResult> res = test(env, "^ directly uses %impl; type %impl=* directly implements Iface {}",
 //                Hierarchy.builder()
 //                        .add(iface)
 //                        .add(base)

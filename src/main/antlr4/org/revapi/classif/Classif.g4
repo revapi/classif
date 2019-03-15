@@ -110,11 +110,18 @@ statement
     ;
 
 typeDefinitionOrGenericStatement
-    : typeKind WS (returned | returned? possibleTypeAssignment) (WS typeConstraints)? WS?
-        (OPEN_BRACE elementStatement* WS? CLOSE_BRACE | end)
-    | (returned | returned? not? assignment? ANY) (WS genericConstraints)? end
+    : typeDefinition
+    | genericStatement
     ;
 
+typeDefinition
+    : typeKind WS (returned | returned? possibleTypeAssignment) (WS typeConstraints)? WS?
+        OPEN_BRACE elementStatement* WS? CLOSE_BRACE
+    ;
+
+genericStatement
+    : (returned | returned? not? assignment? ANY) (WS genericConstraints)? end
+    ;
 not
     : NOT
     ;
@@ -245,12 +252,13 @@ annotationValueArray_annotations_next
     ;
 
 elementStatement
-    : WS? annotations modifiers fieldOrMethodStatement end
+    : WS? annotations modifiers fieldOrMethodOrTypeStatement
     ;
 
-fieldOrMethodStatement
-    : typeParameters WS methodAfterTypeParametersStatement
-    | fieldOrMethodWithoutTypeParameters
+fieldOrMethodOrTypeStatement
+    : typeParameters WS methodAfterTypeParametersStatement end
+    | fieldOrMethodWithoutTypeParameters end
+    | typeDefinition
     ;
 
 fieldOrMethodWithoutTypeParameters

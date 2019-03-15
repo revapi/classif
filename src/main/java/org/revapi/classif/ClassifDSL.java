@@ -285,8 +285,13 @@ public final class ClassifDSL {
                             }).collect(toList())))
                     .collect(toList()));
 
-            return new TypeDefinitionOrGenericStatementVisitor(annos, modifiers)
-                    .visitTypeDefinitionOrGenericStatement(ctx.typeDefinitionOrGenericStatement());
+            if (ctx.typeDefinitionOrGenericStatement().typeDefinition() != null) {
+                return new TypeDefinitionVisitor(annos, modifiers)
+                        .visitTypeDefinition(ctx.typeDefinitionOrGenericStatement().typeDefinition());
+            } else {
+                return new GenericStatementVisitor(annos, modifiers)
+                        .visitGenericStatement(ctx.typeDefinitionOrGenericStatement().genericStatement());
+            }
         }
     }
 
@@ -650,12 +655,12 @@ public final class ClassifDSL {
         }
     }
 
-    private static final class TypeDefinitionOrGenericStatementVisitor extends ClassifBaseVisitor<StatementStatement> {
+    private static final class TypeDefinitionVisitor extends ClassifBaseVisitor<TypeDefinitionStatement> {
         private final AnnotationsMatch annotations;
         private final ModifiersMatch modifiers;
         private final List<String> referenced;
 
-        private TypeDefinitionOrGenericStatementVisitor(
+        private TypeDefinitionVisitor(
                 List<ReferencedVariablesAnd<AnnotationMatch>> annotations, ModifiersMatch modifiers) {
             this.referenced = new ArrayList<>();
             this.annotations = new AnnotationsMatch(annotations.stream().map(a -> {
@@ -666,80 +671,94 @@ public final class ClassifDSL {
         }
 
         @Override
-        public StatementStatement visitTypeDefinitionOrGenericStatement(
-                ClassifParser.TypeDefinitionOrGenericStatementContext ctx) {
-            if (ctx.typeKind() != null) {
-                // type definition
-                TypeKindMatch typeKind = TypeKindVisitor.INSTANCE.visitTypeKind(ctx.typeKind());
-                boolean isMatch = ctx.returned() != null;
-                List<String> reffed = new ArrayList<>(2);
+        public TypeDefinitionStatement visitTypeDefinition(ClassifParser.TypeDefinitionContext ctx) {
+            TypeKindMatch typeKind = TypeKindVisitor.INSTANCE.visitTypeKind(ctx.typeKind());
+            boolean isMatch = ctx.returned() != null;
+            List<String> reffed = new ArrayList<>(2);
 
-                TypeConstraintsMatch constraints = null;
+            TypeConstraintsMatch constraints = null;
 
-                if (ctx.typeConstraints() != null) {
-                    ReferencedVariablesAnd<TypeConstraintsMatch> constrs =
-                            TypeConstraintsVisitor.INSTANCE.visit(ctx.typeConstraints());
-                    reffed.addAll(constrs.referencedVariables);
-                    constraints = constrs.match;
-                }
-
-                if (ctx.possibleTypeAssignment() == null) {
-                    reffed.addAll(referenced);
-                    TypeDefinitionStatement type = new TypeDefinitionStatement(null, reffed, annotations, modifiers,
-                            typeKind, new FqnMatch(singletonList(NameMatch.any())), null, constraints, false, isMatch);
-
-                    for (ClassifParser.ElementStatementContext elementStatementContext : ctx.elementStatement()) {
-                        type.getChildren().add(ElementStatementVisitor.INSTANCE.visit(elementStatementContext));
-                    }
-
-                    return type;
-                } else {
-                    FqnMatch fqn = FqnVisitor.INSTANCE.visit(ctx.possibleTypeAssignment().fqn());
-                    ReferencedVariablesAnd<TypeParametersMatch> tps = null;
-                    if (ctx.possibleTypeAssignment().typeParameters() != null) {
-                        tps = TypeParametersVisitor.INSTANCE.visit(ctx.possibleTypeAssignment().typeParameters());
-                    }
-
-                    boolean negation = ctx.possibleTypeAssignment().not() != null;
-
-                    String variable = null;
-                    if (ctx.possibleTypeAssignment().assignment() != null) {
-                        variable = ctx.possibleTypeAssignment().assignment().resolvedName().getText();
-                    }
-
-                    if (tps != null) {
-                        reffed.addAll(tps.referencedVariables);
-                    }
-
-                    reffed.addAll(referenced);
-
-                    TypeDefinitionStatement type =
-                            new TypeDefinitionStatement(variable, reffed, annotations, modifiers, typeKind, fqn,
-                            tps == null ? null : tps.match, constraints, negation, isMatch);
-
-                    for (ClassifParser.ElementStatementContext elementStatementContext : ctx.elementStatement()) {
-                        type.getChildren().add(ElementStatementVisitor.INSTANCE.visit(elementStatementContext));
-                    }
-
-                    return type;
-                }
-            } else {
-                // generic statement
-                boolean isMatch = ctx.returned() != null;
-                boolean negation = ctx.not() != null;
-                String variable = ctx.assignment() == null ? null : ctx.assignment().resolvedName().getText();
-
-                UsesMatch uses = null;
-
-                if (ctx.genericConstraints() != null) {
-                    ReferencedVariablesAnd<UsesMatch> usesAndVars =
-                            GenericConstraintVisitor.INSTANCE.visit(ctx.genericConstraints());
-                    referenced.addAll(usesAndVars.referencedVariables);
-                    uses = usesAndVars.match;
-                }
-
-                return new GenericStatement(variable, referenced, annotations, modifiers, isMatch, negation, uses);
+            if (ctx.typeConstraints() != null) {
+                ReferencedVariablesAnd<TypeConstraintsMatch> constrs =
+                        TypeConstraintsVisitor.INSTANCE.visit(ctx.typeConstraints());
+                reffed.addAll(constrs.referencedVariables);
+                constraints = constrs.match;
             }
+
+            if (ctx.possibleTypeAssignment() == null) {
+                reffed.addAll(referenced);
+                TypeDefinitionStatement type = new TypeDefinitionStatement(null, reffed, annotations, modifiers,
+                        typeKind, new FqnMatch(singletonList(NameMatch.any())), null, constraints, false, isMatch);
+
+                for (ClassifParser.ElementStatementContext elementStatementContext : ctx.elementStatement()) {
+                    type.getChildren().add(ElementStatementVisitor.INSTANCE.visit(elementStatementContext));
+                }
+
+                return type;
+            } else {
+                FqnMatch fqn = FqnVisitor.INSTANCE.visit(ctx.possibleTypeAssignment().fqn());
+                ReferencedVariablesAnd<TypeParametersMatch> tps = null;
+                if (ctx.possibleTypeAssignment().typeParameters() != null) {
+                    tps = TypeParametersVisitor.INSTANCE.visit(ctx.possibleTypeAssignment().typeParameters());
+                }
+
+                boolean negation = ctx.possibleTypeAssignment().not() != null;
+
+                String variable = null;
+                if (ctx.possibleTypeAssignment().assignment() != null) {
+                    variable = ctx.possibleTypeAssignment().assignment().resolvedName().getText();
+                }
+
+                if (tps != null) {
+                    reffed.addAll(tps.referencedVariables);
+                }
+
+                reffed.addAll(referenced);
+
+                TypeDefinitionStatement type =
+                        new TypeDefinitionStatement(variable, reffed, annotations, modifiers, typeKind, fqn,
+                        tps == null ? null : tps.match, constraints, negation, isMatch);
+
+                for (ClassifParser.ElementStatementContext elementStatementContext : ctx.elementStatement()) {
+                    type.getChildren().add(ElementStatementVisitor.INSTANCE.visit(elementStatementContext));
+                }
+
+                return type;
+            }
+        }
+    }
+
+    private static final class GenericStatementVisitor extends ClassifBaseVisitor<GenericStatement> {
+        private final AnnotationsMatch annotations;
+        private final ModifiersMatch modifiers;
+        private final List<String> referenced;
+
+        private GenericStatementVisitor(
+                List<ReferencedVariablesAnd<AnnotationMatch>> annotations, ModifiersMatch modifiers) {
+            this.referenced = new ArrayList<>();
+            this.annotations = new AnnotationsMatch(annotations.stream().map(a -> {
+                referenced.addAll(a.referencedVariables);
+                return a.match;
+            }).collect(toList()));
+            this.modifiers = modifiers;
+        }
+
+        @Override
+        public GenericStatement visitGenericStatement(ClassifParser.GenericStatementContext ctx) {
+            boolean isMatch = ctx.returned() != null;
+            boolean negation = ctx.not() != null;
+            String variable = ctx.assignment() == null ? null : ctx.assignment().resolvedName().getText();
+
+            UsesMatch uses = null;
+
+            if (ctx.genericConstraints() != null) {
+                ReferencedVariablesAnd<UsesMatch> usesAndVars =
+                        GenericConstraintVisitor.INSTANCE.visit(ctx.genericConstraints());
+                referenced.addAll(usesAndVars.referencedVariables);
+                uses = usesAndVars.match;
+            }
+
+            return new GenericStatement(variable, referenced, annotations, modifiers, isMatch, negation, uses);
         }
     }
 
@@ -842,24 +861,26 @@ public final class ClassifDSL {
                             }).collect(toList())))
                     .collect(toList()));
 
-            return new FieldOrMethodStatementVisitor(annos, modifiers)
-                    .visitFieldOrMethodStatement(ctx.fieldOrMethodStatement());
+            return new FieldOrMethodOrTypeStatementVisitor(annos, modifiers)
+                    .visitFieldOrMethodOrTypeStatement(ctx.fieldOrMethodOrTypeStatement());
         }
     }
 
-    private static final class FieldOrMethodStatementVisitor extends ClassifBaseVisitor<StatementStatement> {
+    private static final class FieldOrMethodOrTypeStatementVisitor extends ClassifBaseVisitor<StatementStatement> {
         private final List<ReferencedVariablesAnd<AnnotationMatch>> annotations;
         private final ModifiersMatch modifiers;
 
-        private FieldOrMethodStatementVisitor(
+        private FieldOrMethodOrTypeStatementVisitor(
                 List<ReferencedVariablesAnd<AnnotationMatch>> annotations, ModifiersMatch modifiers) {
             this.annotations = annotations;
             this.modifiers = modifiers;
         }
 
         @Override
-        public StatementStatement visitFieldOrMethodStatement(ClassifParser.FieldOrMethodStatementContext ctx) {
-            if (ctx.typeParameters() != null) {
+        public StatementStatement visitFieldOrMethodOrTypeStatement(ClassifParser.FieldOrMethodOrTypeStatementContext ctx) {
+            if (ctx.typeDefinition() != null) {
+                return new TypeDefinitionVisitor(annotations, modifiers).visitTypeDefinition(ctx.typeDefinition());
+            } else if (ctx.typeParameters() != null) {
                 ReferencedVariablesAnd<TypeParametersMatch> typeParams =
                         ctx.typeParameters().accept(TypeParametersVisitor.INSTANCE);
 

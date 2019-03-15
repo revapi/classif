@@ -46,7 +46,7 @@ class MatchingProgressTest {
     @Test
     void testSingleNodeMatchesTrivially() {
         TypeElement type = env.elements().getTypeElement("SingleNodeMatch");
-        assertPassed(testProgressStart(env, type, "type ^SingleNodeMatch;"));
+        assertPassed(testProgressStart(env, type, "type ^SingleNodeMatch {}"));
     }
 
     @Test
@@ -54,7 +54,7 @@ class MatchingProgressTest {
         TypeElement A = env.elements().getTypeElement("Dependencies.A");
         TypeElement B = env.elements().getTypeElement("Dependencies.B");
 
-        String recipe = "type ^B extends %x; class %x=* directly extends java.lang.Object;";
+        String recipe = "type ^B extends %x {} class %x=* directly extends java.lang.Object {}";
         assertPassed(test(env, B, recipe, A));
         assertDeferred(testProgressStart(env, B, recipe));
         assertNotPassed(test(env, B, recipe));
@@ -65,7 +65,7 @@ class MatchingProgressTest {
         TypeElement A = env.elements().getTypeElement("Dependencies.A");
         TypeElement B = env.elements().getTypeElement("Dependencies.B");
 
-        String recipe = "type B extends %x; class ^%x=* directly extends java.lang.Object;";
+        String recipe = "type B extends %x{} class ^%x=* directly extends java.lang.Object {}";
 
         assertPassed(test(env, A, recipe, B));
         assertDeferred(testProgressStart(env, A, recipe));
@@ -78,7 +78,7 @@ class MatchingProgressTest {
         TypeElement B = env.elements().getTypeElement("Dependencies.B");
         TypeElement C = env.elements().getTypeElement("Dependencies.C");
 
-        String recipe = "type ^%y=B extends %x; class %x=* directly extends java.lang.Object; class * extends %y;";
+        String recipe = "type ^%y=B extends %x {} class %x=* directly extends java.lang.Object {} class * extends %y {}";
 
         assertDeferred(testProgressStart(env, B, recipe));
         assertNotPassed(test(env, B, recipe, A));
@@ -91,7 +91,7 @@ class MatchingProgressTest {
         TypeElement B = env.elements().getTypeElement("Dependencies.B");
         TypeElement C = env.elements().getTypeElement("Dependencies.C");
 
-        String recipe = "type ^%y=B extends %x; class %x=* directly extends java.lang.Object; class * extends %y;";
+        String recipe = "type ^%y=B extends %x {} class %x=* directly extends java.lang.Object {} class * extends %y {}";
 
         Map<Element, TestResult> rest = testRest(env, A, recipe, C, B);
 

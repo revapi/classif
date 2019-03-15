@@ -38,23 +38,23 @@ link:src/main/test/java/org/revapi/classif/readme/Exampletest.java[here].
 !@a.Anno ^;
 ```
 
-. Match any type in the package `pkg`:
+. Match any type in the package `pkg` (as in Java, type declaration needs to contain the `{}` pair):
 +
 ```
-type ^pkg.*;
+type ^pkg.* {}
 ```
 
 . Match any class (i.e. not an interface, enum or annotation type) that not in the package `pkg` (notice the use of
 negation and regex):
 +
 ```
-class ^!/p[kK]g/.*;
+class ^!/p[kK]g/.* {}
 ```
 
 . Match any interface in package `pkg` or any subpackage of it:
 +
 ```
-interface ^pkg.**;
+interface ^pkg.** {}
 ```
 
 . Match any type whose name ends in `Private` and which is part of any package:
@@ -66,19 +66,19 @@ type ^**./.*Private/ {}
 . Match anything that (indirectly) uses a class annotated as `@Unstable`:
 +
 ```
-^ uses %c; @Unstable class %c=*;
+^ uses %c; @Unstable class %c=* {}
 ```
 
 . Match any type that is annotated `@Unstable` and is used by something annotated `@Stable`:
 +
 ```
-match %e; @Unstable type %e=*; @Stable * uses %e;
+match %e; @Unstable type %e=* {} @Stable * uses %e;
 ```
 +
 or
 +
 ```
-@Unstable type ^ usedby %c; @Stable %c=*;
+@Unstable type ^ usedby %c {} @Stable %c=*;
 ```
 (the latter only works if supported by the underlying structure provider, while the former should always work)
 
@@ -141,7 +141,7 @@ In a simple query, you specify what you want to be the result of the query by us
 element. E.g. query
 
 ```
-class ^java.lang.Object;
+class ^java.lang.Object {}
 ```
 
 will return the `java.lang.Object` class.
@@ -152,7 +152,7 @@ of declaring what to match by the query.
 ```
 match %class | %method;
 
-class %class=java.lang.Object;
+class %class=java.lang.Object {}
 
 type * {
   %method=/_.*/(**);
@@ -175,13 +175,13 @@ etc.
 For example:
 
 ```
-public class *;
+public class * {}
 ```
 
 will match all public classes (but not interfaces, enums or annotation types), while
 
 ```
-class *;
+class * {}
 ```
 
 will match the classes regardless of their visibility - all private, package private, protected and public classes will
@@ -202,13 +202,13 @@ by your favorite Java compiler..
 Some examples:
 
 ```
-public final type **./.*Impl/;
+public final type **./.*Impl/ {}
 ```
 
 matches all final types in any package whose names end with "Impl".
 
 ```
-packageprivate enum *;
+packageprivate enum * {}
 ```
 
 matches all package private enums.
@@ -220,15 +220,15 @@ the returned element or the `match` statement mentioning the named elements. So 
 enums, you'd write:
 
 ```
-packageprivate enum ^*;
+packageprivate enum ^* {}
 ```
 
 --
 
-In addition to specifying single modifiers, you can also "or" multiple together likeso:
+In addition to specifying single modifiers, you can also "or" multiple together like so:
 
 ```
-public|protected final static class *;
+public|protected final static class * {}
 ```
 
 will match all public or protected static final classes.
@@ -236,13 +236,13 @@ will match all public or protected static final classes.
 Finally, you can also negate the modifiers:
 
 ```
-!public static !final class *;
+!public static !final class * {}
 ```
 
 matches all classes that are static, not final and not public.
 
 ```
-!public|static type *;
+!public|static type * {}
 ```
 
 matches all types that are either not public or static.
@@ -262,7 +262,7 @@ Basic example:
 
 ```
 @javax.persistence.Entity
-public class *;
+public class * {}
 ```
 
 will return all public classes annotated as JPA entities.
@@ -272,7 +272,7 @@ To find something that is not annotated by some annotation you can write:
 ```
 !@javax.persistence.Entity
 @com.acme.MyAnno
-type *;
+type * {}
 ```
 
 which will find all types that are not annotated by the `javax.persistence.Entity` annotation but are annotated by the
@@ -282,26 +282,26 @@ To match by annotation attributes, you can write something like this:
 
 ```
 @javax.persistence.Entity(name != "")
-class *;
+class * {}
 ```
 
 which will match all JPA entities with an explicitly assigned name (this stems from the fact that the `name` attribute
 of the `Entity` annotation happens to have an empty string as its default value).
 
 Notice that you can use more than just assignment when matching the attribute values. The allowed operators are:
-`=`, `!=`, `>`, `>=`, `<` or `+<=+`. Obviously the inequality operators only make sense on the numeric attribute values.
+`=`, `!=`, `>`, `>=`, `<` or `+<=+`. Obviously the less/greater operators only make sense on the numeric attribute values.
 
 When it comes to specifying the value of an attribute to match, there is again a couple of options. You can either
 specify the value as in the source code, e.g.
 
 ```
-@MyAnnotation(stringAttribute = "val", intAttribute > 3, typeAttribute != java.lang.Object.class, enumAttribute = MyEnum.VALUE, arrayAttribute = {1, 2}, annotationAttribute = @MyOtherAnnotation(attribute = 42)) class *;
+@MyAnnotation(stringAttribute = "val", intAttribute > 3, typeAttribute != java.lang.Object.class, enumAttribute = MyEnum.VALUE, arrayAttribute = {1, 2}, annotationAttribute = @MyOtherAnnotation(attribute = 42)) class * {}
 ```
 
 or you can try using regular expressions for matching strings:
 
 ```
-@javax.persistence.Entity(name != /.*Private/) class *;
+@javax.persistence.Entity(name != /.*Private/) class * {}
 ```
 
 which will match all JPA entity classes with an explicit name attribute which doesn't end with "Private".
@@ -311,7 +311,7 @@ additionally, you can specify that you don't actually care about the value using
 Finally, you can check whether an annotation attribute has a value different from its default value like so:
 
 ```
-@javax.persistence.Entity(name != default) class *;
+@javax.persistence.Entity(name != default) class * {}
 ```
 
 This will match all JPA entity classes with an explicit name. Note that this is essentially the same as our first
@@ -320,13 +320,13 @@ example above with the only difference being that you don't have to know the def
 The annotation attributes also support globbing. I.e. you can put a wildcard in place of a single or many attributes.
 
 ```
-@com.acme.Acme(*) type *;
+@com.acme.Acme(*) type * {}
 ```
 
 will match any type annotated with the `@com.acme.Acme` annotation with a single attribute specified.
 
 ```
-@com.acme.Acme(**) type *;
+@com.acme.Acme(**) type * {}
 ```
 
 will match any annotated with the `@com.acme.Acme` annotation with zero or more attributes of any name with any value.
@@ -335,7 +335,7 @@ Values can be replaced by a `*`, too, meaning, somewhat obviously, "any value". 
 like for example:
 
 ```
-@java.lang.annotation.Target(value = {java.lang.annotation.ElementType.TYPE, **}) @interface *;
+@java.lang.annotation.Target(value = {java.lang.annotation.ElementType.TYPE, **}) @interface * {}
 ```
 
 you can use globbing of the values as well, as you probably have guessed from the provided example. The example will
@@ -393,7 +393,7 @@ NOTE: The regular expression always matches only a single part of the hierarchic
 The whole name can further be negated:
 
 ```
-type !java.lang.**;
+type !java.lang.** {}
 ```
 
 would return all types that are not from the java.lang package or any of its sub-packages.
@@ -409,7 +409,7 @@ Let's go through some examples of why conflating the wildcards and type variable
 and also to explain how to use the matching by type parameters.
 
 ```
-type * extends java.util.Collection<java.io.Serializable>
+type * extends java.util.Collection<java.io.Serializable> {}
 ```
 
 This simple example will match any type with any name that extends `Collection<Serializable>`. The type may or may not
@@ -439,7 +439,7 @@ That's because we're matching for a concrete type parameter and we're not checki
 Another example:
 
 ```
-type *<? extends java.io.Serializable>
+type *<? extends java.io.Serializable> {}
 ```
 
 This will match any type with a single type parameter that extends `Serializable` (notice that we don't specify any
@@ -465,17 +465,17 @@ because the type variable bounds do not match (even though `String` implements `
 `Serializator` and `StringSerializator` (and any other type like them), you'd need to write:
 
 ```
-type ^*<? extends %s|%es>;
+type ^*<? extends %s|%es> {}
 
-type %s=java.io.Serializable;
-type %es=* extends java.io.Serializable;
+type %s=java.io.Serializable {}
+type %es=* extends java.io.Serializable {}
 ```
 
 Now if you for example wanted to match all types with a single type parameter no matter their type or anything, you can
 use Classif globbing:
 
 ```
-type ^* extends java.util.Collection<*>
+type ^* extends java.util.Collection<*> {}
 ```
 
 This will match any type that extends `Collection` and it doesn't matter if the type parameter of the collection is a
@@ -484,7 +484,7 @@ concrete type or a type variable.
 You can also use globbing for saying "I don't care about type parameters":
 
 ```
-type ^*<**, ? extends *[], **>;
+type ^*<**, ? extends *[], **> {}
 ```
 
 This says, "find me all types that for some silly reasons require their type parameters to be arrays (of any type)".
@@ -518,7 +518,7 @@ can also match types by their usage in other classes/methods/fields declarations
 For example, to find all types used in declarations of another type, you could write:
 
 ```
-type ^* directly usedby %field | %method;
+type ^* directly usedby %field | %method {}
 
 class MyClass {
   %field=*;
@@ -534,7 +534,7 @@ A more useful example of this could be:
 ```
 match %type | %method | %field;
 
-@Stable type %type=* uses %unstable;
+@Stable type %type=* uses %unstable {}
 
 @Stable type * {
   public %method=*(**) uses %unstable;
@@ -544,7 +544,7 @@ match %type | %method | %field;
   public %field=* uses %unstable;
 }
 
-@Unstable public|protected type *;
+@Unstable public|protected type * {}
 ```
 
 If we had `@Stable` and `@Unstable` annotations that would mark types in the codebase as stable or unstable parts of
@@ -563,10 +563,10 @@ only match top-level types, you need to tell Classif about it like so:
 ```
 #strictHierarchy;
 
-type *;
+type * {}
 ```
 
-The `#strictHierarchy` is a "pragma" that tells Classif to consider the hierarchy precisely. `type *;` will only ever
+The `#strictHierarchy` is a "pragma" that tells Classif to consider the hierarchy precisely. `type * {}` will only ever
 match top-level types, because it itself is a top-level declaration.
 
 This takes into account the structure of the types, of course. If you for example wanted to find all types that have
@@ -574,7 +574,7 @@ some inner type, you could write:
 
 ```
 type ^ {
-  type *;
+  type * {}
 }
 ```
 
@@ -598,7 +598,7 @@ would return all default methods of any interface (public or private).
 
 Let's try to decipher that. First we declare what type should the method be in (it should be an interface type with any
 name and any visibility (because we don't require any visibility)). Then we declare the method in that type - it should
-be a `default` method with any name (`+*+`) and any number of results (glob `+**+`). The `^` tells the query to return
+be a `default` method with any name (`+*+`) and any number of arguments (glob `+**+`). The `^` tells the query to return
 the method as the result of the query.
 
 If our query looked like this:
@@ -755,7 +755,7 @@ type ^* {
 }
 
 @com.acme.DoNotOverride
-type %t=*;
+type %t=* {}
 ```
 
 This will return all types that declare some methods that override methods declared in any type

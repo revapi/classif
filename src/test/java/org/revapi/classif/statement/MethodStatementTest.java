@@ -287,24 +287,24 @@ class MethodStatementTest {
                 throwingMethod, throwingMethod2);
 
         tests.test("type * { ^*() throws java.lang.Exception; }", PASSED, NOT_PASSED);
-        tests.test("type * { ^*() throws java.lang.Exception|%e, **; } class %e=* extends java.lang.Exception;", PASSED,
+        tests.test("type * { ^*() throws java.lang.Exception|%e, **; } class %e=* extends java.lang.Exception {}", PASSED,
                 PASSED);
         tests.test("type * {^*() throws java.lang.AssertionError, *;}", NOT_PASSED, PASSED);
     }
 
     @Test
     void testMethodConstraints() {
-
+        // TODO implement
     }
 
     @Test
     void testDefaultValue() {
-
+        // TODO implement
     }
 
     @Test
     void testOverrides() {
-
+        // TODO implement
     }
 
     class Tests {
