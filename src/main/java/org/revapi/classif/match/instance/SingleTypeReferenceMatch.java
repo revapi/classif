@@ -48,9 +48,9 @@ import org.revapi.classif.util.Globbed;
 import org.revapi.classif.util.Nullable;
 
 public final class SingleTypeReferenceMatch extends TypeInstanceMatch implements Globbed {
-    private final FqnMatch fullyQualifiedName;
+    private final @Nullable FqnMatch fullyQualifiedName;
     private final @Nullable TypeParametersMatch typeParameters;
-    private final String variable;
+    private final @Nullable String variable;
     private final boolean negation;
     private final int arrayDimension;
 
@@ -85,8 +85,8 @@ public final class SingleTypeReferenceMatch extends TypeInstanceMatch implements
         }
     };
 
-    public SingleTypeReferenceMatch(FqnMatch fullyQualifiedName, @Nullable TypeParametersMatch typeParameters,
-            String variable, boolean negation, int arrayDimension) {
+    public SingleTypeReferenceMatch(@Nullable FqnMatch fullyQualifiedName, @Nullable TypeParametersMatch typeParameters,
+            @Nullable String variable, boolean negation, int arrayDimension) {
         this.fullyQualifiedName = fullyQualifiedName;
         this.typeParameters = typeParameters;
         this.variable = variable;

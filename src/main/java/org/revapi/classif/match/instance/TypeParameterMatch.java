@@ -43,9 +43,9 @@ import org.revapi.classif.util.Nullable;
 
 public final class TypeParameterMatch extends TypeInstanceMatch implements Globbed {
     private final @Nullable TypeParameterWildcardMatch wildcard;
-    private final List<TypeReferenceMatch> bounds;
+    private final @Nullable List<TypeReferenceMatch> bounds;
 
-    public TypeParameterMatch(@Nullable TypeParameterWildcardMatch wildcard, List<TypeReferenceMatch> bounds) {
+    public TypeParameterMatch(@Nullable TypeParameterWildcardMatch wildcard, @Nullable List<TypeReferenceMatch> bounds) {
         this.wildcard = wildcard;
         this.bounds = bounds;
     }

@@ -48,7 +48,7 @@ public final class MethodStatement extends StatementStatement {
     public MethodStatement(@Nullable String definedVariable,
             List<String> referencedVariables, AnnotationsMatch annotations,
             ModifiersMatch modifiers, boolean isMatch, NameMatch name,
-            TypeReferenceMatch returnType, @Nullable TypeReferenceMatch declaringType,
+            @Nullable TypeReferenceMatch returnType, @Nullable TypeReferenceMatch declaringType,
             @Nullable TypeParametersMatch typeParameters,
             List<MethodParameterMatch> parameters,
             @Nullable MethodConstraintsMatch constraints, boolean negation) {
