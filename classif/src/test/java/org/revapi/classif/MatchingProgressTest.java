@@ -1,0 +1,133 @@
+/*
+ * Copyright 2018-2019 Lukas Krejci
+ * and other contributors as indicated by the @author tags.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.revapi.classif;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
+import static org.revapi.classif.Classif.extends_;
+import static org.revapi.classif.Classif.match;
+import static org.revapi.classif.Classif.type;
+import static org.revapi.classif.Tester.assertDeferred;
+import static org.revapi.classif.Tester.assertNotPassed;
+import static org.revapi.classif.Tester.assertPassed;
+import static org.revapi.classif.Tester.test;
+import static org.revapi.classif.Tester.testProgressStart;
+import static org.revapi.classif.Tester.testRest;
+import static org.revapi.classif.match.NameMatch.any;
+import static org.revapi.classif.match.NameMatch.exact;
+import static org.revapi.classif.match.declaration.TypeKind.ANY;
+import static org.revapi.classif.match.declaration.TypeKind.CLASS;
+
+import java.util.Map;
+
+import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.revapi.testjars.CompiledJar;
+import org.revapi.testjars.junit5.CompiledJarExtension;
+import org.revapi.testjars.junit5.JarSources;
+
+@TestInstance(PER_CLASS)
+@ExtendWith(CompiledJarExtension.class)
+class MatchingProgressTest {
+    @JarSources(root = "/sources/progress/", sources = {"SingleNodeMatch.java", "Dependencies.java"})
+    private CompiledJar.Environment env;
+
+    @Test
+    void testSingleNodeMatchesTrivially() {
+        TypeElement type = env.elements().getTypeElement("SingleNodeMatch");
+        assertPassed(testProgressStart(env, type,
+                match().$(type(ANY, exact("SingleNodeMatch")).matched()).build()));
+    }
+
+    @Test
+    void testDependenciesInfluenceMatchResult() {
+        TypeElement A = env.elements().getTypeElement("Dependencies.A");
+        TypeElement B = env.elements().getTypeElement("Dependencies.B");
+
+        // type ^Dependencies.B extends %x {} class %x=* directly extends java.lang.Object {}
+        StructuralMatcher recipe = match()
+                .$(type(ANY, exact("Dependencies"), exact("B")).matched().$(extends_(type().var("x"))))
+                .$(type(CLASS, any()).called("x")
+                        .$(extends_(type().fqn(exact("java"), exact("lang"), exact("Object"))).directly()))
+                .build();
+
+        assertPassed(test(env, B, recipe, A));
+        assertDeferred(testProgressStart(env, B, recipe));
+        assertNotPassed(test(env, B, recipe));
+    }
+
+    @Test
+    void testDependentsInfluenceMatchResult() {
+        TypeElement A = env.elements().getTypeElement("Dependencies.A");
+        TypeElement B = env.elements().getTypeElement("Dependencies.B");
+
+        // type Dependencies.B extends %x{} class ^%x=* directly extends java.lang.Object {}
+        StructuralMatcher recipe = match()
+                .$(type(ANY, exact("Dependencies"), exact("B")).$(extends_(type().var("x"))))
+                .$(type(CLASS, any()).matched().called("x")
+                        .$(extends_(type().fqn(exact("java"), exact("lang"), exact("Object"))).directly()))
+                .build();
+
+        assertPassed(test(env, A, recipe, B));
+        assertDeferred(testProgressStart(env, A, recipe));
+        assertNotPassed(test(env, A, recipe));
+    }
+
+    @Test
+    void testDependenciesAndDependentsMustAllMatch() {
+        TypeElement A = env.elements().getTypeElement("Dependencies.A");
+        TypeElement B = env.elements().getTypeElement("Dependencies.B");
+        TypeElement C = env.elements().getTypeElement("Dependencies.C");
+
+        // type ^%y=Dependencies.B extends %x {} class %x=* directly extends java.lang.Object {} class * extends %y {}
+        StructuralMatcher recipe = match()
+                .$(type(ANY, exact("Dependencies"), exact("B")).matched().called("y").$(extends_(type().var("x"))))
+                .$(type(CLASS, any()).called("x")
+                        .$(extends_(type().fqn(exact("java"), exact("lang"), exact("Object"))).directly()))
+                .$(type(CLASS, any()).$(extends_(type().var("y"))))
+                .build();
+
+        assertDeferred(testProgressStart(env, B, recipe));
+        assertNotPassed(test(env, B, recipe, A));
+        assertPassed(test(env, B, recipe, A, C));
+    }
+
+    @Test
+    void onlyReturningNodesReportedByMatchProgressFinish() {
+        TypeElement A = env.elements().getTypeElement("Dependencies.A");
+        TypeElement B = env.elements().getTypeElement("Dependencies.B");
+        TypeElement C = env.elements().getTypeElement("Dependencies.C");
+
+        // type ^%y=* extends %x {} class %x=* directly extends java.lang.Object {} class * extends %y {}
+        StructuralMatcher recipe = match()
+                .$(type(ANY, any()).matched().called("y").$(extends_(type().var("x"))))
+                .$(type(CLASS, any()).called("x")
+                        .$(extends_(type().fqn(exact("java"), exact("lang"), exact("Object"))).directly()))
+                .$(type(CLASS, any()).$(extends_(type().var("y"))))
+                .build();
+
+        Map<Element, TestResult> rest = testRest(env, A, recipe, C, B);
+
+        assertEquals(2, rest.size());
+        assertNotPassed(rest.get(A));
+        assertNotPassed(rest.get(C));
+    }
+}

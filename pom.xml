@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright 2018 Lukas Krejci
+    Copyright 2018-2019 Lukas Krejci
     and other contributors as indicated by the @author tags.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,187 +21,31 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    <packaging>pom</packaging>
 
     <parent>
         <groupId>org.revapi</groupId>
         <artifactId>revapi-build</artifactId>
-        <version>36</version>
+        <version>37</version>
     </parent>
 
     <groupId>org.revapi.classif</groupId>
-    <artifactId>classif</artifactId>
+    <artifactId>classif-parent</artifactId>
     <version>0.1.0-SNAPSHOT</version>
 
-    <name>Classif</name>
+    <name>Classif :: Parent</name>
     <description>Structural search on Java classes</description>
     <url>https://github.com/revapi/classif</url>
 
     <properties>
-        <automatic.module.name>org.revapi.classif</automatic.module.name>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.antlr</groupId>
-            <artifactId>antlr4-runtime</artifactId>
-            <version>4.7.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.1.0</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <version>5.1.0</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-params</artifactId>
-            <version>5.1.0</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.revapi.testjars</groupId>
-            <artifactId>testjars-junit5</artifactId>
-            <version>0.1.0</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <!-- This is a workaround until maven-compiler-plugin can ignore the - -release parameter if the JDK
-                     to be run doesn't support it. This old version of the compiler plugin doesn't even know
-                     maven.compiler.release.
-
-                     Unfortunately, we can't build on Java9 because surefire in combination with JUnit5 and/or the use
-                     javax.lang.model (from java.compiler module) in our tests causes some serious fits.
-                -->
-                <artifactId>maven-compiler-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <exclude>org/revapi/classif/ClassifBaseListener*</exclude>
-                        <exclude>org/revapi/classif/ClassifBaseVisitor*</exclude>
-                        <exclude>org/revapi/classif/ClassifLexer*</exclude>
-                        <exclude>org/revapi/classif/ClassifParser*</exclude>
-                        <exclude>org/revapi/classif/ClassifVisitor*</exclude>
-                        <exclude>org/revapi/classif/ClassifListener*</exclude>
-                        <exclude>org/revapi/classif/ClassifParser$*</exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <configuration>
-                    <!-- exclude the generated-sources from checkstyle -->
-                    <sourceDirectories>${project.build.sourceDirectory}</sourceDirectories>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>com.mycila</groupId>
-                <artifactId>license-maven-plugin</artifactId>
-                <configuration>
-                    <mapping>
-                        <g4>SLASHSTAR_STYLE</g4>
-                    </mapping>
-                </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.22.0</version>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.junit.platform</groupId>
-                        <artifactId>junit-platform-surefire-provider</artifactId>
-                        <version>1.2.0</version>
-                    </dependency>
-                    <dependency>
-                        <!-- to get around bug https://github.com/junit-team/junit5/issues/1367 -->
-                        <groupId>org.apache.maven.surefire</groupId>
-                        <artifactId>surefire-logger-api</artifactId>
-                        <version>2.21.0</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
-            <plugin>
-                <artifactId>maven-enforcer-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>common-checks</id>
-                        <goals>
-                            <goal>enforce</goal>
-                        </goals>
-                        <configuration>
-                            <rules>
-                                <requireJavaVersion>
-                                    <version>1.8</version>
-                                </requireJavaVersion>
-                            </rules>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.antlr</groupId>
-                <artifactId>antlr4-maven-plugin</artifactId>
-                <version>4.7.1</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>antlr4</goal>
-                        </goals>
-                        <configuration>
-                            <visitor>true</visitor>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <!-- make everything Antlr generates package-private.. There is no option to do that using
-                 antlr itself, hence this hack -->
-            <plugin>
-                <groupId>com.google.code.maven-replacer-plugin</groupId>
-                <artifactId>maven-replacer-plugin</artifactId>
-                <version>1.4.1</version>
-                <executions>
-                    <execution>
-                        <phase>process-sources</phase>
-                        <goals>
-                            <goal>replace</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <includes>
-                        <include>target/generated-sources/antlr4/**/*.java</include>
-                    </includes>
-                    <variableTokenValueMap>
-                        public class=class,public interface=interface
-                    </variableTokenValueMap>
-                </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-release-plugin</artifactId>
-                <configuration>
-                    <releaseProfiles>release,release-profile</releaseProfiles>
-                    <pushChanges>false</pushChanges>
-                    <preparationGoals>clean verify</preparationGoals>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+    <modules>
+        <module>classif</module>
+        <module>classif-dsl</module>
+    </modules>
 
     <inceptionYear>2018</inceptionYear>
 
@@ -246,4 +90,94 @@
             <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
     </distributionManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.4.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.4.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>5.4.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.revapi.testjars</groupId>
+            <artifactId>testjars-junit5</artifactId>
+            <version>0.1.0</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.3</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <configuration>
+                    <!-- exclude the generated-sources from checkstyle -->
+                    <sourceDirectories>${project.build.sourceDirectory}</sourceDirectories>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <configuration>
+                    <mapping>
+                        <g4>SLASHSTAR_STYLE</g4>
+                    </mapping>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.22.1</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>common-checks</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireJavaVersion>
+                                    <version>1.8</version>
+                                </requireJavaVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-release-plugin</artifactId>
+                <configuration>
+                    <releaseProfiles>release,release-profile</releaseProfiles>
+                    <pushChanges>false</pushChanges>
+                    <preparationGoals>clean verify</preparationGoals>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
