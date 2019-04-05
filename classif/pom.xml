@@ -33,10 +33,6 @@
 
     <name>Classif</name>
 
-    <properties>
-        <automatic.module.name>org.revapi.classif</automatic.module.name>
-    </properties>
-
     <build>
         <plugins>
             <plugin>
@@ -49,6 +45,14 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>9</source>
+                    <target>9</target>
+                </configuration>
             </plugin>
         </plugins>
     </build>

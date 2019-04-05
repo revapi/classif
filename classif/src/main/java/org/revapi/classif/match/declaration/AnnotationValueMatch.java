@@ -23,8 +23,8 @@ import static javax.lang.model.type.TypeKind.DECLARED;
 import static javax.lang.model.type.TypeKind.VOID;
 
 import static org.revapi.classif.TestResult.NOT_PASSED;
-import static org.revapi.classif.util.Operator.EQ;
-import static org.revapi.classif.util.Operator.NE;
+import static org.revapi.classif.match.Operator.EQ;
+import static org.revapi.classif.match.Operator.NE;
 
 import java.util.Iterator;
 import java.util.List;
@@ -59,7 +59,7 @@ import org.revapi.classif.match.instance.FqnMatch;
 import org.revapi.classif.match.instance.TypeReferenceMatch;
 import org.revapi.classif.util.Glob;
 import org.revapi.classif.util.Globbed;
-import org.revapi.classif.util.Operator;
+import org.revapi.classif.match.Operator;
 
 public abstract class AnnotationValueMatch implements Globbed {
     final Operator operator;

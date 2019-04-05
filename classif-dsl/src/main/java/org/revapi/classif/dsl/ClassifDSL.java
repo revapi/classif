@@ -20,12 +20,12 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
-import static org.revapi.classif.util.Operator.EQ;
-import static org.revapi.classif.util.Operator.GE;
-import static org.revapi.classif.util.Operator.GT;
-import static org.revapi.classif.util.Operator.LE;
-import static org.revapi.classif.util.Operator.LT;
-import static org.revapi.classif.util.Operator.NE;
+import static org.revapi.classif.match.Operator.EQ;
+import static org.revapi.classif.match.Operator.GE;
+import static org.revapi.classif.match.Operator.GT;
+import static org.revapi.classif.match.Operator.LE;
+import static org.revapi.classif.match.Operator.LT;
+import static org.revapi.classif.match.Operator.NE;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -79,7 +79,7 @@ import org.revapi.classif.statement.GenericStatement;
 import org.revapi.classif.statement.MethodStatement;
 import org.revapi.classif.statement.StatementStatement;
 import org.revapi.classif.statement.TypeDefinitionStatement;
-import org.revapi.classif.util.Operator;
+import org.revapi.classif.match.Operator;
 
 /**
  * Classif is a structural matcher for Java declarations. It supports variables and nested statements and is cool.

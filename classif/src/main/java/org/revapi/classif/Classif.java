@@ -20,12 +20,11 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
-import static org.revapi.classif.util.Operator.EQ;
+import static org.revapi.classif.match.Operator.EQ;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -66,7 +65,7 @@ import org.revapi.classif.statement.MethodStatement;
 import org.revapi.classif.statement.StatementStatement;
 import org.revapi.classif.statement.TypeDefinitionStatement;
 import org.revapi.classif.util.Nullable;
-import org.revapi.classif.util.Operator;
+import org.revapi.classif.match.Operator;
 
 @SuppressWarnings("unused")
 public final class Classif {
