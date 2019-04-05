@@ -16,6 +16,7 @@
  */
 package org.revapi.classif.statement;
 
+import static java.util.Collections.emptySet;
 import static java.util.regex.Pattern.compile;
 
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
@@ -27,6 +28,8 @@ import static org.revapi.classif.Classif.fqn;
 import static org.revapi.classif.Classif.implements_;
 import static org.revapi.classif.Classif.modifiers;
 import static org.revapi.classif.Classif.type;
+import static org.revapi.classif.Classif.usedBy;
+import static org.revapi.classif.Classif.uses;
 import static org.revapi.classif.Classif.wildcardExtends;
 import static org.revapi.classif.Tester.assertNotPassed;
 import static org.revapi.classif.Tester.assertPassed;
@@ -40,12 +43,18 @@ import static org.revapi.classif.match.declaration.TypeKind.ANY;
 import static org.revapi.classif.match.declaration.TypeKind.CLASS;
 import static org.revapi.classif.match.declaration.TypeKind.INTERFACE;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.revapi.classif.Classif;
+import org.revapi.classif.MirroringModelInspector;
+import org.revapi.classif.ModelInspector;
 import org.revapi.classif.StructuralMatcher;
 import org.revapi.classif.Tester;
 import org.revapi.testjars.CompiledJar;
@@ -418,80 +427,102 @@ class TypeDefinitionStatementTest {
         assertPassed(Tester.test(constraints, GD, directlyExtendsGCInteger));
         assertNotPassed(Tester.test(constraints, GD, directlyExtendsGCExtendsInteger));
     }
-//
-//    @Test
-//    void testUses() {
-//        TypeElement B = constraints.elements().getTypeElement("Extends.B");
-//        TypeElement GB = constraints.elements().getTypeElement("Extends.GB");
-//        TypeElement GC = constraints.elements().getTypeElement("Extends.GC");
-//        TypeElement GD = constraints.elements().getTypeElement("Extends.GD");
-//
-//        @SuppressWarnings("Duplicates")
-//        ModelInspector<Element> insp = new MirroringModelInspector(constraints.elements(), constraints.types()) {
-//            @Override
-//            public Set<Element> getUses(Element model) {
-//                // return some uses for the elements... sneakily introduce a cycle there to check that we're guarding
-//                // against that...
-//                if (model == B) {
-//                    return new HashSet<Element>(2) {{
-//                        add(GB);
-//                        add(GC);
-//                    }};
-//                } else if (model == GC) {
-//                    return new HashSet<Element>(1) {{
-//                        add(B);
-//                    }};
-//                } else if (model == GB) {
-//                    return new HashSet<Element>(1) {{
-//                        add(GD);
-//                    }};
-//                } else {
-//                    return emptySet();
-//                }
-//            }
-//        };
-//
-//        assertPassed(Tester.test(insp, GB, "type ^ uses Extends.GD{}"));
-//        assertPassed(Tester.test(insp, B, "type ^ uses Extends.GD{}"));
-//        assertNotPassed(Tester.test(insp, B, "type ^ directly uses Extends.GD{}"));
-//        assertPassed(Tester.test(insp, GB, "type ^ directly uses Extends.GD{}"));
-//    }
-//
-//    @Test
-//    void testUsedBy() {
-//        TypeElement B = constraints.elements().getTypeElement("Extends.B");
-//        TypeElement GB = constraints.elements().getTypeElement("Extends.GB");
-//        TypeElement GC = constraints.elements().getTypeElement("Extends.GC");
-//        TypeElement GD = constraints.elements().getTypeElement("Extends.GD");
-//
-//        @SuppressWarnings("Duplicates")
-//        ModelInspector<Element> insp = new MirroringModelInspector(constraints.elements(), constraints.types()) {
-//            @Override
-//            public Set<Element> getUseSites(Element model) {
-//                // return some uses for the elements... sneakily introduce a cycle there to check that we're guarding
-//                // against that...
-//                if (model == B) {
-//                    return new HashSet<Element>(2) {{
-//                        add(GB);
-//                        add(GC);
-//                    }};
-//                } else if (model == GC) {
-//                    return new HashSet<Element>(1) {{
-//                        add(B);
-//                    }};
-//                } else if (model == GB) {
-//                    return new HashSet<Element>(1) {{
-//                        add(GD);
-//                    }};
-//                } else {
-//                    return emptySet();
-//                }
-//            }
-//        };
-//
-//        assertPassed(Tester.test(insp, GB, "type ^ usedby %u{} type %u=Extends.GD{}", GD));
-//        assertPassed(Tester.test(insp, B, "type ^ usedby %u{} type %u=Extends.GD{}", GD));
-//        assertNotPassed(Tester.test(insp, B, "type ^ directly usedby %u{} type %u=Extends.GD{}", GD));
-//        assertPassed(Tester.test(insp, GB, "type ^ directly usedby %u{} type %u=Extends.GD{}", GD));
-//    }
+
+    @Test
+    void testUses() {
+        TypeElement B = constraints.elements().getTypeElement("Extends.B");
+        TypeElement GB = constraints.elements().getTypeElement("Extends.GB");
+        TypeElement GC = constraints.elements().getTypeElement("Extends.GC");
+        TypeElement GD = constraints.elements().getTypeElement("Extends.GD");
+
+        @SuppressWarnings("Duplicates")
+        ModelInspector<Element> insp = new MirroringModelInspector(constraints.elements(), constraints.types()) {
+            @Override
+            public Set<Element> getUses(Element model) {
+                // return some uses for the elements... sneakily introduce a cycle there to check that we're guarding
+                // against that...
+                if (model == B) {
+                    return new HashSet<Element>(2) {{
+                        add(GB);
+                        add(GC);
+                    }};
+                } else if (model == GC) {
+                    return new HashSet<Element>(1) {{
+                        add(B);
+                    }};
+                } else if (model == GB) {
+                    return new HashSet<Element>(1) {{
+                        add(GD);
+                    }};
+                } else {
+                    return emptySet();
+                }
+            }
+        };
+
+        // type ^ uses Extends.GD{}
+        StructuralMatcher usesGD = Classif.match()
+                .$(type(ANY, any()).matched().$(uses(type().fqn(exact("Extends"), exact("GD")))))
+                .build();
+
+        // type ^ directly uses Extends.GD{}
+        StructuralMatcher directlyUsesGD = Classif.match()
+                .$(type(ANY, any()).matched().$(uses(type().fqn(exact("Extends"), exact("GD"))).directly()))
+                .build();
+
+        assertPassed(Tester.test(insp, GB, usesGD));
+        assertPassed(Tester.test(insp, B, usesGD));
+        assertNotPassed(Tester.test(insp, B, directlyUsesGD));
+        assertPassed(Tester.test(insp, GB, directlyUsesGD));
+    }
+
+    @Test
+    void testUsedBy() {
+        TypeElement B = constraints.elements().getTypeElement("Extends.B");
+        TypeElement GB = constraints.elements().getTypeElement("Extends.GB");
+        TypeElement GC = constraints.elements().getTypeElement("Extends.GC");
+        TypeElement GD = constraints.elements().getTypeElement("Extends.GD");
+
+        @SuppressWarnings("Duplicates")
+        ModelInspector<Element> insp = new MirroringModelInspector(constraints.elements(), constraints.types()) {
+            @Override
+            public Set<Element> getUseSites(Element model) {
+                // return some uses for the elements... sneakily introduce a cycle there to check that we're guarding
+                // against that...
+                if (model == B) {
+                    return new HashSet<Element>(2) {{
+                        add(GB);
+                        add(GC);
+                    }};
+                } else if (model == GC) {
+                    return new HashSet<Element>(1) {{
+                        add(B);
+                    }};
+                } else if (model == GB) {
+                    return new HashSet<Element>(1) {{
+                        add(GD);
+                    }};
+                } else {
+                    return emptySet();
+                }
+            }
+        };
+
+        // type ^ usedby %u {} type %u=Extends.GD {}
+        StructuralMatcher usedBy = Classif.match()
+                .$(type(ANY, any()).matched().$(usedBy("u")))
+                .$(type(ANY, exact("Extends"), exact("GD")).called("u"))
+                .build();
+
+        // type ^ directly usedby %u {} type %u=Extends.GD {}
+        StructuralMatcher directlyUsedBy = Classif.match()
+                .$(type(ANY, any()).matched().$(usedBy("u").directly()))
+                .$(type(ANY, exact("Extends"), exact("GD")).called("u"))
+                .build();
+
+        assertPassed(Tester.test(insp, GB, usedBy, GD));
+        assertPassed(Tester.test(insp, B, usedBy, GD));
+        assertNotPassed(Tester.test(insp, B, directlyUsedBy, GD));
+        assertPassed(Tester.test(insp, GB, directlyUsedBy, GD));
+    }
 }

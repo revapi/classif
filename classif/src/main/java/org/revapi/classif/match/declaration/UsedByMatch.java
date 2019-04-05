@@ -77,7 +77,7 @@ public final class UsedByMatch extends DeclarationMatch {
 
     @Override
     public String toString() {
-        return (onlyDirect ? "directly " : "")
+        return "usedby " + (onlyDirect ? "directly " : "")
                 + referencedVariables.stream().map(v -> "%" + v).collect(Collectors.joining(" | "));
     }
 

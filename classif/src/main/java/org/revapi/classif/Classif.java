@@ -161,8 +161,12 @@ public final class Classif {
         return new UsesMatchBuilder(type);
     }
 
-    public static UsedByMatchBuilder usedBy() {
-        return new UsedByMatchBuilder();
+    public static UsedByMatchBuilder usedBy(String var, String... vars) {
+        List<String> vs = new ArrayList<>(vars.length + 1);
+        vs.add(var);
+        vs.addAll(asList(vars));
+
+        return new UsedByMatchBuilder(vs);
     }
 
     public static TypeKindBuilder kind(TypeKind kind) {
@@ -752,20 +756,13 @@ public final class Classif {
 
     public static final class UsedByMatchBuilder extends AbstractMatchBuilder<UsedByMatch> {
         private boolean onlyDirect;
-        private final List<String> referencedVariables = new ArrayList<>();
+
+        private UsedByMatchBuilder(List<String> variables) {
+            this.referencedVariables.addAll(variables);
+        }
 
         public UsedByMatchBuilder directly() {
             this.onlyDirect = true;
-            return this;
-        }
-
-        public UsedByMatchBuilder variables(String... variableNames) {
-            referencedVariables.addAll(asList(variableNames));
-            return this;
-        }
-
-        public UsedByMatchBuilder variable(String name) {
-            referencedVariables.add(name);
             return this;
         }
 
