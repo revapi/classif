@@ -121,15 +121,15 @@
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.0</version>
-                <configuration>
-                    <source>9</source>
-                    <target>9</target>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.3</version>
+                <configuration>
+                    <!-- Jacoco currently causes test instability. Let's just wait for the new version. -->
+                    <skip>true</skip>
+                </configuration>
             </plugin>
             <plugin>
                 <artifactId>maven-checkstyle-plugin</artifactId>
