@@ -50,6 +50,22 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.revapi</groupId>
+                <artifactId>revapi-maven-plugin</artifactId>
+                <configuration>
+                    <analysisConfiguration>
+                        <revapi.ignore>
+                            <item>
+                                <regex>true</regex>
+                                <code>java.class.externalClassExposedInAPI</code>
+                                <archive>org.apache.logging.log4j:.*</archive>
+                                <justification>It is impossible to not expose this in the API (in classpath)</justification>
+                            </item>
+                        </revapi.ignore>
+                    </analysisConfiguration>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>

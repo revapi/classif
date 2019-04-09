@@ -27,7 +27,11 @@ import java.util.Map;
 import javax.lang.model.element.Element;
 import javax.lang.model.util.ElementFilter;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.revapi.classif.TestResult;
@@ -39,6 +43,7 @@ import org.revapi.testjars.junit5.JarSources;
 @TestInstance(PER_CLASS)
 @ExtendWith(CompiledJarExtension.class)
 class ExamplesTest {
+    private static final Logger LOG = LogManager.getLogger(ExamplesTest.class);
 
     @JarSources(root = "/sources/examples/", sources = {
             "Anno.java",
@@ -59,6 +64,11 @@ class ExamplesTest {
             "Example10.java",
     })
     private CompiledJar.Environment env;
+
+    @BeforeEach
+    void reportStart(TestInfo testInfo) {
+        LOG.trace("============================== " + testInfo.getDisplayName());
+    }
 
     @Test
     void example1() {

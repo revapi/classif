@@ -39,4 +39,12 @@ public final class MatchContext<M> {
         newVars.put(variable, modelMatch);
         return new MatchContext<>(modelInspector, newVars);
     }
+
+    @Override
+    public String toString() {
+        return "MatchContext{" +
+                "modelInspector=" + modelInspector +
+                ", variables=" + variables +
+                '}';
+    }
 }

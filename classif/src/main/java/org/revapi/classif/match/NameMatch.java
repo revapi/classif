@@ -16,11 +16,17 @@
  */
 package org.revapi.classif.match;
 
+import static org.revapi.classif.util.LogUtil.traceParams;
+
 import java.util.regex.Pattern;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.revapi.classif.util.Globbed;
 
 public abstract class NameMatch implements Globbed {
+    private static final Logger LOG = LogManager.getLogger(NameMatch.class);
+
     private NameMatch() {
 
     }
@@ -75,7 +81,7 @@ public abstract class NameMatch implements Globbed {
 
         @Override
         public boolean matches(String name) {
-            return match.equals(name);
+            return LOG.traceExit(traceParams(LOG, "this", this, "name", name), match.equals(name));
         }
 
         @Override
@@ -98,7 +104,7 @@ public abstract class NameMatch implements Globbed {
 
         @Override
         public boolean matches(String name) {
-            return pattern.matcher(name).matches();
+            return LOG.traceExit(traceParams(LOG, "this", this, "name", name), pattern.matcher(name).matches());
         }
 
         @Override
@@ -115,7 +121,7 @@ public abstract class NameMatch implements Globbed {
 
         @Override
         public boolean matches(String name) {
-            return true;
+            return LOG.traceExit(traceParams(LOG, "this", this), true);
         }
 
         @Override
@@ -128,7 +134,7 @@ public abstract class NameMatch implements Globbed {
 
         @Override
         public boolean matches(String name) {
-            return true;
+            return LOG.traceExit(traceParams(LOG, "this", this), true);
         }
 
         @Override

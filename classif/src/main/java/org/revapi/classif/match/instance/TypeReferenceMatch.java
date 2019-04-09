@@ -45,7 +45,7 @@ public final class TypeReferenceMatch extends TypeInstanceMatch implements Globb
     }
 
     @Override
-    public <M> TestResult testInstance(TypeMirror instantiation, MatchContext<M> ctx) {
+    public <M> TestResult testAnyInstance(TypeMirror instantiation, MatchContext<M> ctx) {
         return testable(matches).testAny(m -> m.testInstance(instantiation, ctx));
     }
 

@@ -35,7 +35,7 @@ public final class ModifierClusterMatch extends DeclarationMatch {
     }
 
     @Override
-    public <M> TestResult testDeclaration(Element declaration, TypeMirror instance, MatchContext<M> ctx) {
+    public <M> TestResult testAnyDeclaration(Element declaration, TypeMirror instance, MatchContext<M> ctx) {
         return testable(modifiers).testAny(m -> m.testDeclaration(declaration, instance, ctx));
     }
 

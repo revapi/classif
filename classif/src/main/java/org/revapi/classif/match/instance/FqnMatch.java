@@ -63,7 +63,7 @@ public final class FqnMatch extends TypeInstanceMatch implements Globbed {
     }
 
     @Override
-    public <M> TestResult testInstance(TypeMirror instantiation, MatchContext<M> ctx) {
+    public <M> TestResult testAnyInstance(TypeMirror instantiation, MatchContext<M> ctx) {
         // special case - * or ** are considered equal for the fqns...
         if (glob == null) {
             return PASSED;

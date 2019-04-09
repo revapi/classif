@@ -18,22 +18,30 @@ package org.revapi.classif.match;
 
 import static java.util.Objects.requireNonNull;
 
+import static org.revapi.classif.util.LogUtil.traceParams;
+
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.SimpleElementVisitor8;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.EntryMessage;
 import org.revapi.classif.TestResult;
 import org.revapi.classif.util.TreeNode;
 
 public abstract class ModelMatch extends TreeNode<ModelMatch> {
+    private static final Logger LOG = LogManager.getLogger(ModelMatch.class);
 
     public final <M> TestResult test(M model, MatchContext<M> ctx) {
+        EntryMessage methodTrace = LOG.traceEntry(traceParams(LOG, "this", this, "model", model, "ctx", ctx));
+
         requireNonNull(model);
         requireNonNull(ctx);
 
-        return new SimpleElementVisitor8<TestResult, Void>() {
+        TestResult ret = new SimpleElementVisitor8<TestResult, Void>() {
             @Override
             protected TestResult defaultAction(Element e, Void aVoid) {
                 return TestResult.NOT_PASSED;
@@ -54,6 +62,8 @@ public abstract class ModelMatch extends TreeNode<ModelMatch> {
                 return testMethod(model, ctx);
             }
         }.visit(ctx.modelInspector.toElement(model));
+
+        return LOG.traceExit(methodTrace, ret);
     }
 
     public <M> TestResult testType(M type, MatchContext<M> ctx) {

@@ -39,7 +39,7 @@ public final class ModifiersMatch extends DeclarationMatch {
     }
 
     @Override
-    public <M> TestResult testDeclaration(Element declaration, TypeMirror instance, MatchContext<M> ctx) {
+    public <M> TestResult testAnyDeclaration(Element declaration, TypeMirror instance, MatchContext<M> ctx) {
         return testable(clusters).testAll(m -> m.testDeclaration(declaration, instance, ctx));
     }
 

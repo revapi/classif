@@ -25,6 +25,7 @@ import static javax.lang.model.type.TypeKind.VOID;
 import static org.revapi.classif.TestResult.NOT_PASSED;
 import static org.revapi.classif.match.Operator.EQ;
 import static org.revapi.classif.match.Operator.NE;
+import static org.revapi.classif.util.LogUtil.traceParams;
 
 import java.util.Iterator;
 import java.util.List;
@@ -52,6 +53,8 @@ import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.SimpleAnnotationValueVisitor8;
 import javax.lang.model.util.SimpleTypeVisitor8;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.NameMatch;
@@ -62,6 +65,8 @@ import org.revapi.classif.util.Globbed;
 import org.revapi.classif.match.Operator;
 
 public abstract class AnnotationValueMatch implements Globbed {
+    private static final Logger LOG = LogManager.getLogger(AnnotationValueMatch.class);
+
     final Operator operator;
 
     public static AnnotationValueMatch string(Operator operator, String string) {
@@ -121,7 +126,9 @@ public abstract class AnnotationValueMatch implements Globbed {
     }
 
     public <M> TestResult test(ExecutableElement attribute, AnnotationValue value, MatchContext<M> ctx) {
-        return test(value, ctx);
+        return LOG.traceExit(
+                LOG.traceEntry(traceParams(LOG, "this", this, "attribute", attribute, "value", value, "ctx", ctx)),
+                test(value, ctx));
     }
 
     public abstract <M> TestResult test(AnnotationValue value, MatchContext<M> ctx);
@@ -487,7 +494,9 @@ public abstract class AnnotationValueMatch implements Globbed {
 
         @Override
         public <M> TestResult test(ExecutableElement attribute, AnnotationValue value, MatchContext<M> ctx) {
-            return TestResult.fromBoolean(matchAgainstDefault(attribute, value));
+            return LOG.traceExit(
+                    LOG.traceEntry(traceParams(LOG, "this", this, "attribute", attribute, "value", value, "ctx", ctx)),
+                    TestResult.fromBoolean(matchAgainstDefault(attribute, value)));
         }
 
         @Override

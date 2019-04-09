@@ -16,6 +16,8 @@
  */
 package org.revapi.classif.match.declaration;
 
+import static org.revapi.classif.util.LogUtil.traceParams;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,12 +29,17 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.util.ElementFilter;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.EntryMessage;
 import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.instance.TypeReferenceMatch;
 import org.revapi.classif.util.Glob;
 
 public final class AnnotationMatch {
+    private static final Logger LOG = LogManager.getLogger(AnnotationMatch.class);
+
     private final boolean negation;
     private final TypeReferenceMatch type;
     private final Glob<AnnotationAttributeMatch> attributes;
@@ -46,6 +53,8 @@ public final class AnnotationMatch {
     }
 
     public <M> TestResult test(AnnotationMirror a , MatchContext<M> ctx) {
+        EntryMessage methodTrace = LOG.traceEntry(traceParams(LOG, "this", this, "annotation", a, "ctx", ctx));
+
         //test1: @A(a = 1, b = 2)
         //test2: @A(a = 1)
         //actual: @A(a = 1), and b is an attribute with default value 2
@@ -54,7 +63,7 @@ public final class AnnotationMatch {
                 attributes.testUnorderedWithOptionals((m, at) -> m.test(at, ctx), explicitAttributes(a).entrySet(),
                 defaultAttributes(a).entrySet()));
 
-        return negation ? ret.negate() : ret;
+        return LOG.traceExit(methodTrace, negation ? ret.negate() : ret);
     }
 
     public boolean isNegation() {

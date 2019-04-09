@@ -107,7 +107,7 @@ public final class SingleTypeReferenceMatch extends TypeInstanceMatch implements
     }
 
     @Override
-    public <M> TestResult testInstance(TypeMirror instance, MatchContext<M> ctx) {
+    public <M> TestResult testAnyInstance(TypeMirror instance, MatchContext<M> ctx) {
         return instance.accept(new SimpleTypeVisitor8<TestResult, Void>(NOT_PASSED) {
             @Override
             public TestResult visitPrimitive(PrimitiveType t, Void __) {

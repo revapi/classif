@@ -40,7 +40,7 @@ public final class UsesMatch extends DeclarationMatch {
     }
 
     @Override
-    public <M> TestResult testDeclaration(Element declaration, TypeMirror instantiation, MatchContext<M> ctx) {
+    public <M> TestResult testAnyDeclaration(Element declaration, TypeMirror instantiation, MatchContext<M> ctx) {
         TypeVisitor<Stream<DeclaredType>, ?> visitor = UseVisitor.findUses(ctx.modelInspector);
 
         Stream<DeclaredType> directUses = visitor.visit(instantiation);

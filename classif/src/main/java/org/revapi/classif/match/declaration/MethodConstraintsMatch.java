@@ -35,7 +35,7 @@ public final class MethodConstraintsMatch extends DeclarationMatch {
     }
 
     @Override
-    public <M> TestResult testDeclaration(Element declaration, TypeMirror instantiation, MatchContext<M> ctx) {
+    public <M> TestResult testAnyDeclaration(Element declaration, TypeMirror instantiation, MatchContext<M> ctx) {
         return testable(constraints).testAll(m -> m.testDeclaration(declaration, instantiation, ctx));
     }
 

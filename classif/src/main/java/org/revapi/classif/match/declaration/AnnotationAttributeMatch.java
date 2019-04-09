@@ -16,11 +16,15 @@
  */
 package org.revapi.classif.match.declaration;
 
+import static org.revapi.classif.util.LogUtil.traceParams;
+
 import java.util.Map;
 
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.NameMatch;
@@ -28,6 +32,8 @@ import org.revapi.classif.util.Globbed;
 import org.revapi.classif.util.Nullable;
 
 public final class AnnotationAttributeMatch implements Globbed {
+    private static final Logger LOG = LogManager.getLogger(AnnotationAttributeMatch.class);
+
     private final boolean isAny;
     private final boolean isAll;
     private final @Nullable NameMatch name;
@@ -43,17 +49,19 @@ public final class AnnotationAttributeMatch implements Globbed {
 
     @Override
     public boolean isMatchAny() {
-        return isAny || (name != null && valueMatch != null && name.isMatchAny() && valueMatch.isMatchAny());
+        return LOG.traceExit(
+                isAny || (name != null && valueMatch != null && name.isMatchAny() && valueMatch.isMatchAny()));
     }
 
     @Override
     public boolean isMatchAll() {
-        return isAll;
+        return LOG.traceExit(isAll);
     }
 
     public <M> TestResult test(Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> attribute,
             MatchContext<M> matchContext) {
-        return TestResult.fromBoolean(isMatchAny() || isMatchAll()
+        return LOG.traceExit(LOG.traceEntry(traceParams(LOG, "this", this, "attribute", attribute, "ctx", matchContext)),
+                TestResult.fromBoolean(isMatchAny() || isMatchAll()
                 || (name == null || name.matches(attribute.getKey().getSimpleName().toString())))
                 .and(() -> {
                     if (valueMatch == null) {
@@ -61,7 +69,7 @@ public final class AnnotationAttributeMatch implements Globbed {
                     } else {
                         return valueMatch.test(attribute.getKey(), attribute.getValue(), matchContext);
                     }
-                });
+                }));
     }
 
     @Override

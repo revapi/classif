@@ -16,6 +16,8 @@
  */
 package org.revapi.classif.match.instance;
 
+import static org.revapi.classif.util.LogUtil.traceParams;
+
 import javax.lang.model.element.Element;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
@@ -32,11 +34,14 @@ import javax.lang.model.type.UnionType;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.SimpleTypeVisitor8;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.revapi.classif.TestResult;
 import org.revapi.classif.match.Match;
 import org.revapi.classif.match.MatchContext;
 
 public abstract class TypeInstanceMatch extends Match {
+    private static final Logger LOG = LogManager.getLogger(TypeInstanceMatch.class);
 
     private final TypeVisitor<TestResult, MatchContext<?>> dispatcher = new SimpleTypeVisitor8<TestResult, MatchContext<?>>() {
         @Override
@@ -106,7 +111,13 @@ public abstract class TypeInstanceMatch extends Match {
     }
 
     @Override
-    public <M> TestResult testInstance(TypeMirror instance, MatchContext<M> ctx) {
+    public final <M> TestResult testInstance(TypeMirror instance, MatchContext<M> ctx) {
+        return LOG.traceExit(
+                LOG.traceEntry(traceParams(LOG, "this", this, "instance", instance, "ctx", ctx)),
+                testAnyInstance(instance, ctx));
+    }
+
+    protected <M> TestResult testAnyInstance(TypeMirror instance, MatchContext<M> ctx) {
         return dispatcher.visit(instance, ctx);
     }
 

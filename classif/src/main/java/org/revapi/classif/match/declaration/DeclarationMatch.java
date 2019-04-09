@@ -16,6 +16,8 @@
  */
 package org.revapi.classif.match.declaration;
 
+import static org.revapi.classif.util.LogUtil.traceParams;
+
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
@@ -23,13 +25,28 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.SimpleElementVisitor8;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.revapi.classif.TestResult;
 import org.revapi.classif.match.Match;
 import org.revapi.classif.match.MatchContext;
 
 public abstract class DeclarationMatch extends Match {
+    private static final Logger LOG = LogManager.getLogger(DeclarationMatch.class);
 
-    public <M> TestResult testDeclaration(Element declaration, TypeMirror instantiation, MatchContext<M> ctx) {
+    public final <M> TestResult testDeclaration(Element declaration, TypeMirror instantiation, MatchContext<M> ctx) {
+        return LOG.traceExit(
+                LOG.traceEntry(traceParams(LOG, "this", this, "declaration", declaration,
+                        "instantiation", instantiation, "ctx", ctx)),
+                testAnyDeclaration(declaration, instantiation, ctx));
+    }
+
+    @Override
+    public final <M> TestResult testInstance(TypeMirror instance, MatchContext<M> ctx) {
+        return TestResult.NOT_PASSED;
+    }
+
+    protected <M> TestResult testAnyDeclaration(Element declaration, TypeMirror instantiation, MatchContext<M> ctx) {
         return new SimpleElementVisitor8<TestResult, Void>(TestResult.NOT_PASSED) {
             @Override
             public TestResult visitVariable(VariableElement e, Void __) {
@@ -46,11 +63,6 @@ public abstract class DeclarationMatch extends Match {
                 return testMethod(e, instantiation, ctx);
             }
         }.visit(declaration);
-    }
-
-    @Override
-    public final <M> TestResult testInstance(TypeMirror instance, MatchContext<M> ctx) {
-        return TestResult.NOT_PASSED;
     }
 
     protected <M> TestResult testType(TypeElement declaration, TypeMirror instantiation, MatchContext<M> ctx) {

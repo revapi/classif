@@ -63,7 +63,7 @@ public final class ImplementsMatch extends DeclarationMatch {
         List<?> list = types == null ? glob.getMatches() : types;
         return
                 (onlyDirect ? "directly " : "")
-                        + (types != null ? "exactly " : "")
+                        + (types == null ? "exactly " : "")
                         + "implements " + list.stream().map(Object::toString).collect(Collectors.joining(", "));
     }
 

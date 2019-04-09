@@ -24,6 +24,10 @@ import static java.util.stream.Collectors.toMap;
 import static org.revapi.classif.TestResult.DEFERRED;
 import static org.revapi.classif.TestResult.NOT_PASSED;
 import static org.revapi.classif.TestResult.PASSED;
+import static org.revapi.classif.util.LogUtil.traceParams;
+import static org.revapi.classif.util.SizedCollections.newHashMapWithExactSize;
+import static org.revapi.classif.util.SizedCollections.newIdentityHashMapWithExactSize;
+import static org.revapi.classif.util.SizedCollections.toListWithSize;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -41,6 +45,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.EntryMessage;
 import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.ModelMatch;
 import org.revapi.classif.util.execution.DependencyGraph;
@@ -56,10 +63,18 @@ import org.revapi.classif.util.execution.Node;
  * @param <M> the type of the representation of the java model elements used by the caller
  */
 public final class MatchingProgress<M> {
+    private static final Logger LOG = LogManager.getLogger(MatchingProgress.class);
+
     private static final ModelMatch MATCH_ANY = new ModelMatch() {
         @Override
         protected <MM> TestResult defaultElementTest(MM model, MatchContext<MM> ctx) {
+            LOG.trace("Unconditional pass from MATCH_ANY on model {}", model);
             return PASSED;
+        }
+
+        @Override
+        public String toString() {
+            return "<match anything>";
         }
     };
 
@@ -71,14 +86,18 @@ public final class MatchingProgress<M> {
 
     MatchingProgress(StructuralMatcher.Configuration configuration, DependencyGraph matchGraph,
             ModelInspector<M> inspector) {
+
+        EntryMessage methodTrace = LOG.traceEntry(traceParams(LOG, "configuration", configuration, "matchGraph",
+                matchGraph));
+
         this.configuration = configuration;
 
         IdentityHashMap<Node<MatchExecutionContext>, Node<Step<M>>> cache =
-                new IdentityHashMap<>(matchGraph.getAllNodes().size());
+                newIdentityHashMapWithExactSize(matchGraph.getAllNodes().size());
 
         allSteps = matchGraph.getAllNodes().stream()
                 .map(n -> convert(n, inspector, cache))
-                .collect(toList());
+                .collect(toListWithSize(matchGraph.getAllNodes().size()));
 
         // not too efficient way of figuring out whether some children return or use variables.
         // This is needed in #start().
@@ -106,6 +125,8 @@ public final class MatchingProgress<M> {
         }
 
         rootMatches = allSteps.stream().filter(n -> n.getParent() == null).collect(toList());
+
+        LOG.traceExit(methodTrace);
     }
 
     private static <M> Node<Step<M>> convert(Node<MatchExecutionContext> n, ModelInspector<M> inspector,
@@ -117,8 +138,15 @@ public final class MatchingProgress<M> {
             return ret;
         }
 
-        Map<String, ModelMatch> situationalMatches = new HashMap<>(n.getObject().referencedVariables.size());
-        Map<String, ModelMatch> trivialMatches = new HashMap<>(situationalMatches.size());
+        int nofReferencedVariables = n.getObject().referencedVariables.size();
+
+        Map<String, ModelMatch> situationalMatches = nofReferencedVariables == 0
+                ? emptyMap()
+                : newHashMapWithExactSize(nofReferencedVariables);
+
+        Map<String, ModelMatch> trivialMatches = nofReferencedVariables == 0
+                ? emptyMap()
+                : newHashMapWithExactSize(nofReferencedVariables);
 
         for (String v : n.getObject().referencedVariables) {
             ModelMatch variableMatch = null;
@@ -175,8 +203,12 @@ public final class MatchingProgress<M> {
      * with the tree walk.
      */
     public WalkInstruction start(M model) {
+        EntryMessage methodTrace = LOG.traceEntry(traceParams(LOG, "model", model));
+
         // fast track if we have just a single test to make
         if (allSteps.size() == 1) {
+            LOG.trace("Fast-track matching for a single step.");
+
             Step<M> s = allSteps.iterator().next().getObject();
             TestResult result = s.executionContext.match.test(model, s.blueprintMatchContext);
             if (result.toBoolean(false)) {
@@ -184,7 +216,7 @@ public final class MatchingProgress<M> {
                 s.independentlyMatchingModels.put(model, null);
             }
 
-            return WalkInstruction.of(!configuration.isStrictHierarchy(), result);
+            return LOG.traceExit(WalkInstruction.of(!configuration.isStrictHierarchy(), result));
         }
 
         // make sure parent has access to the children
@@ -193,10 +225,9 @@ public final class MatchingProgress<M> {
 
         // ==== Processing the step dependencies ====
 
-        // for each dependency provider of the current potentials (i.e. its in() nodes), replace the variable it
-        // provides with each of the independent matches it had so far and check what current potentials match with
-        // the variable replaced as such. Do this recursively.
         potentialMatchesWithDependencies(model);
+
+        LOG.trace("Enter scanning for results after matching...");
 
         TestResult res = forEachPotential(n -> {
             Step<M> step = n.getObject();
@@ -205,6 +236,8 @@ public final class MatchingProgress<M> {
                 if (tr == PASSED && !n.getChildren().isEmpty()) {
                     // we're starting the descend into the model, so it really cannot pass without the children passing,
                     // too. We won't know that until finish(model) though.
+                    LOG.trace("Step {} found matching the model {} but also has children. Claiming the result is" +
+                            " DEFERRED instead.", step, model);
                     tr = DEFERRED;
                 }
                 return tr;
@@ -214,16 +247,20 @@ public final class MatchingProgress<M> {
         }, TestResult::or).orElseThrow(() -> new IllegalArgumentException("This should never happen." +
                 " forEachPotential() succeeded to run with empty set of potentials."));
 
+        LOG.trace("Exit scanning for results after matching...: {}", res);
+
         // ==== Inform the parent about the outcome of this testing ====
 
         // Note that we MUST NOT use the result that we're returning to the user here. The user is interested in the
-        // result of the returning matches whereas here, we want to update the parent on the result of matching of
-        // the current model regardless of whether it matches some returning matches or not.
+        // result of the returning statements whereas here, we want to update the parent on the result of matching of
+        // the current model regardless of whether it matches some returning statements or not.
 
         TestResult rawResult = forEachPotential(n ->
                 n.getObject().resolutionCache.getOrDefault(model, NOT_PASSED), TestResult::or)
                 .orElseThrow(() -> new IllegalArgumentException("This should never happen." +
                         " forEachPotential() succeeded to run with empty set of potentials."));
+
+        LOG.trace("The raw result is {}", rawResult);
 
         if (parentProgress != null) {
             parentProgress.childrenEncountered = true;
@@ -240,12 +277,16 @@ public final class MatchingProgress<M> {
         progressStack.push(progressContext);
 
         if (res == DEFERRED) {
+            LOG.trace("Recording a deferred result on model {}", model);
             deferredModels.add(model);
         }
 
         boolean descend = !configuration.isStrictHierarchy() || !progressContext.potentialChildMatches.isEmpty();
 
-        return WalkInstruction.of(descend, res);
+        LOG.trace("Descend will be {} because strictHierarchy is {} and potentialChildMatches size is {}", descend,
+                configuration.isStrictHierarchy(), progressContext.potentialChildMatches.size());
+
+        return LOG.traceExit(methodTrace, WalkInstruction.of(descend, res));
     }
 
     /**
@@ -260,11 +301,13 @@ public final class MatchingProgress<M> {
      * @return the result of the test after all children have been visited
      */
     public TestResult finish(M model) {
+        EntryMessage methodTrace = LOG.traceEntry(traceParams(LOG, "model", model));
+
         if (allSteps.size() == 1) {
             Step<M> s = allSteps.iterator().next().getObject();
             boolean matched = s.independentlyMatchingModels.containsKey(model);
             s.independentlyMatchingModels.remove(model);
-            return TestResult.fromBoolean(matched);
+            return LOG.traceExit(methodTrace, TestResult.fromBoolean(matched));
         }
 
         ProgressContext<M> progressContext = progressStack.peek();
@@ -279,9 +322,15 @@ public final class MatchingProgress<M> {
         TestResult ret = progressContext.resolution;
 
         if (ret == DEFERRED) {
+            LOG.trace("Trying to resolve deferred result");
+
             ret = progressContext.potentialChildMatches.isEmpty()
                     ? PASSED
                     : TestResult.fromBoolean(progressContext.childrenEncountered);
+
+            LOG.trace("The preliminary result based on children presence is {} because there are {} potential child" +
+                    " matches and the children were encountered: {}", ret, progressContext.potentialChildMatches.size(),
+                    progressContext.childrenEncountered);
 
             ret = ret.and(progressContext.childrenResolution)
                     // and at least one of the current potentials is a return and it passed.
@@ -289,11 +338,17 @@ public final class MatchingProgress<M> {
                             forEachPotential(n -> {
                                 Step<M> step = n.getObject();
                                 if (step.executionContext.isReturn) {
-                                    return step.resolutionCache.getOrDefault(model, DEFERRED);
+                                    TestResult stepResolution = step.resolutionCache.getOrDefault(model, DEFERRED);
+                                    LOG.trace("Step {} is a return and resolved the model {} as {}", step, model,
+                                            stepResolution);
+
+                                    return stepResolution;
                                 } else {
                                     return DEFERRED;
                                 }
                             }, TestResult::or).orElse(DEFERRED));
+
+            LOG.trace("The final result after deferred match resolution is {}", ret);
 
             if (ret != DEFERRED) {
                 deferredModels.remove(model);
@@ -312,7 +367,7 @@ public final class MatchingProgress<M> {
                             " forEachPotential() succeeded to run with empty set of potentials.")));
         }
 
-        return ret;
+        return LOG.traceExit(methodTrace, ret);
     }
 
     /**
@@ -324,10 +379,14 @@ public final class MatchingProgress<M> {
      * @return the test results for the elements that have previously been {@link TestResult#DEFERRED}.
      */
     public Map<M, TestResult> finish() {
+        EntryMessage methodTrace = LOG.traceEntry();
+
         if (!progressStack.isEmpty()) {
             throw new IllegalStateException("The matching progress is not yet complete. Please finish the progress" +
                     " on all models for which it has been started first (in a depth-first-search order).");
         }
+
+        LOG.trace("There are these deferred models: {}", deferredModels);
 
         Map<M, TestResult> ret = allSteps.stream()
                 .filter(n -> n.getObject().executionContext.isReturn)
@@ -337,7 +396,7 @@ public final class MatchingProgress<M> {
 
         deferredModels.forEach(m -> ret.putIfAbsent(m, NOT_PASSED));
 
-        return ret;
+        return LOG.traceExit(methodTrace, ret);
     }
 
     /**
@@ -378,6 +437,8 @@ public final class MatchingProgress<M> {
     }
 
     private List<Node<Step<M>>> determineNextPotentialMatchesFromHierarchy(M model) {
+        EntryMessage methodTrace = LOG.traceEntry(traceParams(LOG, "model", model));
+
         List<Node<Step<M>>> newPotentials = new ArrayList<>();
 
         forEachPotential(n -> {
@@ -387,56 +448,90 @@ public final class MatchingProgress<M> {
             }
         });
 
-        return newPotentials;
+        return LOG.traceExit(methodTrace, newPotentials);
     }
 
+    /**
+     * For each dependency provider of the current potentials (i.e. its in() nodes), replace the variable it
+     * provides with each of the independent matches it had so far and check what current potentials match with
+     * the variable replaced as such. Do this recursively.
+     */
     private TestResult potentialMatchesWithDependencies(M model) {
-        return forEachPotential(n -> {
+        return LOG.traceExit(LOG.traceEntry(traceParams(LOG, "model", model)), forEachPotential(n -> {
             Step<M> step = n.getObject();
 
             TestResult result = step.executionContext.match.test(model, step.independentMatchContext);
+
+            LOG.trace("Independent match of step {} on model {} is {}", step, model, result);
+
             if (result.toBoolean(false)) {
                 step.independentlyMatchingModels.put(model, null);
             } else {
+                LOG.trace("Step {} doesn't independently match. Recording resolution for model {} as {}", step,
+                        model, result);
                 step.resolutionCache.put(model, result);
                 return result;
             }
 
             Map<Node<Step<M>>, List<M>> successRoute = new HashMap<>();
 
-            TestResult res = matchesWithDependencies(n, model, emptyMap(), successRoute)
-                    .and(() -> matchesWithDependents(n, model, successRoute));
+            TestResult resWithDependencies = matchesWithDependencies(n, model, emptyMap(), successRoute);
 
-            step.resolutionCache.compute(model, (__, existing) -> existing == null ? res : existing.or(res));
+            LOG.trace("Match with dependencies result for node {} on model {} is {} with recorded success route {}.",
+                    n, model, resWithDependencies, successRoute);
+
+            TestResult res = resWithDependencies.and(() -> {
+                    TestResult resWithDependents = matchesWithDependents(n, model, successRoute);
+                    LOG.trace("Match with dependents result for node {} on model {} is {} with recorded" +
+                            " success route {}.", n, model, resWithDependents, successRoute);
+                    return resWithDependents;
+            });
+
+            step.resolutionCache.compute(model, (__, existing) -> {
+                TestResult computed = existing == null ? res : existing.or(res);
+                LOG.trace("Recomputed resolution of step {} on model {} from {} to {} based on match result {}", step,
+                        model, existing, computed, res);
+                return computed;
+            });
 
             if (res.toBoolean(false)) {
+                LOG.trace("Step {} matches fully on model {}. All steps on the success route {} will be set match the" +
+                        " model.", step, model, successRoute);
                 successRoute.forEach((sn, ms) -> ms.forEach(m -> sn.getObject().resolutionCache.put(m, PASSED)));
             }
 
             return res;
-        }, TestResult::or).orElse(PASSED);
+        }, TestResult::or).orElse(PASSED));
     }
 
     private TestResult matchesWithDependencies(Node<Step<M>> node, M model, Map<Node<Step<M>>, M> boundVariables,
             Map<Node<Step<M>>, List<M>> successRoute) {
+
+        EntryMessage methodTrace = LOG.traceEntry(traceParams(LOG, "node", node, "model", model,
+                "boundVariables", boundVariables));
+
         Step<M> nodeStep = node.getObject();
 
         if (!nodeStep.independentlyMatchingModels.containsKey(model)) {
             nodeStep.resolutionCache.put(model, DEFERRED);
             nodeStep.dependenciesResolutionCache.put(model, DEFERRED);
-            return DEFERRED;
+            LOG.trace("Step {} hasn't yet checked the model {}.", nodeStep, model);
+            return LOG.traceExit(methodTrace, DEFERRED);
         }
 
         TestResult cumulativeResult = nodeStep.dependenciesResolutionCache.get(model);
         if (cumulativeResult == PASSED) {
             successRoute.computeIfAbsent(node, __ -> new ArrayList<>(8)).add(model);
-            return cumulativeResult;
+            LOG.trace("Dependencies already resolved as passing at step {} for model {}", nodeStep, model);
+            return LOG.traceExit(methodTrace, cumulativeResult);
         } else {
             cumulativeResult = DEFERRED;
         }
 
         // we may only proceed if we have something to match the variables referenced by the current step with
         // we need to try all the possible matches for all the variables
+
+        LOG.trace("Gathering all possible models for matching dependencies");
 
         //get all the combinations of possible matches from the dependency providers
         List<List<NodeAndModel<M>>> allModels = new ArrayList<>();
@@ -445,59 +540,91 @@ public final class MatchingProgress<M> {
             List<NodeAndModel<M>> models = new ArrayList<>();
             M boundVariable = boundVariables.get(depProvider);
             if (boundVariable != null) {
+                LOG.trace("Representing step {} using a passed in bound variable {}", depStep, boundVariable);
                 models.add(new NodeAndModel<>(depProvider, boundVariable));
             } else {
+                LOG.trace("Representing step {} using its independently matching models", depStep);
                 for (M depModel : depStep.independentlyMatchingModels.keySet()) {
                     models.add(new NodeAndModel<>(depProvider, depModel));
                 }
             }
+
+            LOG.trace("Step {} represented by the following models {}", depStep, models);
             allModels.add(models);
         }
 
+        LOG.trace("Gathered models: {}", allModels);
+
+        LOG.trace("About to go through all combinations of the models to try and find a matching one.");
+
         List<List<NodeAndModel<M>>> depCombinations = getCombinations(allModels);
         for (List<NodeAndModel<M>> combination : depCombinations) {
+            LOG.trace("Checking dependency combination {}", combination);
+            LOG.trace("Current cumulative test result {}", cumulativeResult);
             //check that the current node passes
             MatchContext<M> ctx = nodeStep.blueprintMatchContext;
             for (NodeAndModel<M> nm : combination) {
                 ctx = ctx.replace(nm.step.getObject().executionContext.definedVariable, new IsEqual(nm.model));
             }
 
+            LOG.trace("Replaced the variable matchers in the context {} with equality checks for the models.", ctx);
+
             TestResult res = nodeStep.executionContext.match.test(model, ctx);
+
+            LOG.trace("Step {} tested model {} using the replaced context as {}", nodeStep, model, res);
+
+            LOG.trace("About to match dependencies of the dependencies in the current combination.");
 
             //check that the dependency providers pass, too
             res = res.and(() ->
                     combination.stream().map(nm -> matchesWithDependencies(nm.step, nm.model, emptyMap(), successRoute))
                             .reduce(TestResult::and).orElse(PASSED));
+
+            LOG.trace("The test result after dependencies matched: {}", res);
+
             cumulativeResult = cumulativeResult.or(res);
+
+            LOG.trace("New cumulative test result {}", cumulativeResult);
         }
 
-        cumulativeResult = node.in().isEmpty() ? PASSED : cumulativeResult;
+        if (node.in().isEmpty()) {
+            LOG.trace("Node {} has no dependencies. Declaring it passed.", node);
+            cumulativeResult = PASSED;
+        }
 
         nodeStep.dependenciesResolutionCache.put(model, cumulativeResult);
 
         if (cumulativeResult.toBoolean(false)) {
+            LOG.trace("Cumulative result is passing, recording the model {} in the successRoute for node {}", model,
+                    node);
             successRoute.computeIfAbsent(node, __ -> new ArrayList<>(8)).add(model);
         }
 
-        return cumulativeResult;
+        return LOG.traceExit(methodTrace, cumulativeResult);
     }
 
     private TestResult matchesWithDependents(Node<Step<M>> node, M model, Map<Node<Step<M>>, List<M>> successRoute) {
+        EntryMessage methodTrace = LOG.traceEntry(traceParams(LOG, "node", node, "model", model));
+
         Step<M> nodeStep = node.getObject();
 
         if (!nodeStep.independentlyMatchingModels.containsKey(model)) {
             nodeStep.resolutionCache.put(model, DEFERRED);
             nodeStep.dependentsResolutionCache.put(model, DEFERRED);
-            return DEFERRED;
+            LOG.trace("Step {} hasn't yet checked the model {}.", nodeStep, model);
+            return LOG.traceExit(methodTrace, DEFERRED);
         }
 
         TestResult cumulativeResult = nodeStep.dependentsResolutionCache.get(model);
         if (cumulativeResult == PASSED) {
             successRoute.computeIfAbsent(node, __ -> new ArrayList<>(8)).add(model);
-            return cumulativeResult;
+            LOG.trace("Dependents already resolved as passing at step {} for model {}", nodeStep, model);
+            return LOG.traceExit(methodTrace, cumulativeResult);
         } else {
             cumulativeResult = DEFERRED;
         }
+
+        LOG.trace("Binding model {} to node {} for dependents resolution.", model, node);
 
         Map<Node<Step<M>>, M> bounds = Collections.singletonMap(node, model);
 
@@ -505,6 +632,8 @@ public final class MatchingProgress<M> {
             Step<M> depStep = depNode.getObject();
 
             for (M depModel : depStep.independentlyMatchingModels.keySet()) {
+                LOG.trace("Cumulative result is now {}. Checking if dependent node {} matches with model {}.",
+                        cumulativeResult, depNode, depModel);
                 // note that we need to process the dependencies and dependents eagerly even if we know the result
                 // already. That is so that all the dependents are updated correctly with the result from this node.
                 cumulativeResult = cumulativeResult.or(
@@ -512,18 +641,25 @@ public final class MatchingProgress<M> {
                         //check of this dependent node. So let's just pass in a throw-away map
                         matchesWithDependencies(depNode, depModel, bounds, new HashMap<>())
                                 .and(matchesWithDependents(depNode, depModel, successRoute)));
+                LOG.trace("Done checking if dependent node {} matches with model {}. New cumulative result is {}.",
+                        depNode, depModel, cumulativeResult);
             }
         }
 
-        cumulativeResult = node.out().isEmpty() ? PASSED : cumulativeResult;
+        if (node.out().isEmpty()) {
+            LOG.trace("No dependent nodes of node {}. Setting dependent result to passed.", node);
+            cumulativeResult = PASSED;
+        }
 
         nodeStep.dependentsResolutionCache.put(model, cumulativeResult);
 
         if (cumulativeResult.toBoolean(false)) {
+            LOG.trace("Cumulative result is passing, recording the model {} in the successRoute for node {}", model,
+                    node);
             successRoute.computeIfAbsent(node, __ -> new ArrayList<>(8)).add(model);
         }
 
-        return cumulativeResult;
+        return LOG.traceExit(methodTrace, cumulativeResult);
     }
 
     private void forEachPotential(Consumer<Node<Step<M>>> process) {
@@ -537,7 +673,10 @@ public final class MatchingProgress<M> {
         return (progressStack.isEmpty()
                 ? rootMatches.stream()
                 : Stream.concat(rootMatches.stream(), requireNonNull(progressStack.peek()).potentialChildMatches.stream())
-        ).map(process).reduce(combiner);
+        ).map(n -> {
+            LOG.trace("Processing currently applicable node {}", n);
+            return process.apply(n);
+        }).reduce(combiner);
     }
 
     //shamelessly copied from https://stackoverflow.com/a/35652538/1969945
@@ -628,6 +767,14 @@ public final class MatchingProgress<M> {
             this.step = step;
             this.model = model;
         }
+
+        @Override
+        public String toString() {
+            return "NodeAndModel{" +
+                    "step=" + step +
+                    ", model=" + model +
+                    '}';
+        }
     }
 
     private static final class IsEqual extends ModelMatch {
@@ -641,6 +788,13 @@ public final class MatchingProgress<M> {
         protected <M> TestResult defaultElementTest(M model, MatchContext<M> ctx) {
             //XXX this probably isn't that simple with "real" elements from javac and such...
             return TestResult.fromBoolean(model.equals(this.model));
+        }
+
+        @Override
+        public String toString() {
+            return "IsEqual{" +
+                    "model=" + model +
+                    '}';
         }
     }
 }

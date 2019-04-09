@@ -61,4 +61,12 @@ public final class WalkInstruction {
     public TestResult getTestResult() {
         return testResult;
     }
+
+    @Override
+    public String toString() {
+        return "WalkInstruction{" +
+                "descend=" + descend +
+                ", testResult=" + testResult +
+                '}';
+    }
 }
