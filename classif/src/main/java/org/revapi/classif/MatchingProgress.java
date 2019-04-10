@@ -49,7 +49,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.EntryMessage;
 import org.revapi.classif.match.MatchContext;
-import org.revapi.classif.match.ModelMatch;
+import org.revapi.classif.statement.StatementMatch;
 import org.revapi.classif.util.execution.DependencyGraph;
 import org.revapi.classif.util.execution.MatchExecutionContext;
 import org.revapi.classif.util.execution.Node;
@@ -65,7 +65,7 @@ import org.revapi.classif.util.execution.Node;
 public final class MatchingProgress<M> {
     private static final Logger LOG = LogManager.getLogger(MatchingProgress.class);
 
-    private static final ModelMatch MATCH_ANY = new ModelMatch() {
+    private static final StatementMatch MATCH_ANY = new StatementMatch() {
         @Override
         protected <MM> TestResult defaultElementTest(MM model, MatchContext<MM> ctx) {
             LOG.trace("Unconditional pass from MATCH_ANY on model {}", model);
@@ -84,7 +84,7 @@ public final class MatchingProgress<M> {
     private final Set<M> deferredModels = new HashSet<>();
     private final StructuralMatcher.Configuration configuration;
 
-    MatchingProgress(StructuralMatcher.Configuration configuration, DependencyGraph matchGraph,
+    public MatchingProgress(StructuralMatcher.Configuration configuration, DependencyGraph matchGraph,
             ModelInspector<M> inspector) {
 
         EntryMessage methodTrace = LOG.traceEntry(traceParams(LOG, "configuration", configuration, "matchGraph",
@@ -140,26 +140,21 @@ public final class MatchingProgress<M> {
 
         int nofReferencedVariables = n.getObject().referencedVariables.size();
 
-        Map<String, ModelMatch> situationalMatches = nofReferencedVariables == 0
+        Map<String, StatementMatch> situationalMatches = nofReferencedVariables == 0
                 ? emptyMap()
                 : newHashMapWithExactSize(nofReferencedVariables);
 
-        Map<String, ModelMatch> trivialMatches = nofReferencedVariables == 0
+        Map<String, StatementMatch> trivialMatches = nofReferencedVariables == 0
                 ? emptyMap()
                 : newHashMapWithExactSize(nofReferencedVariables);
 
         for (String v : n.getObject().referencedVariables) {
-            ModelMatch variableMatch = null;
-            for (Node<MatchExecutionContext> o : n.in()) {
-                if (v.equals(o.getObject().definedVariable)) {
-                    variableMatch = o.getObject().match;
-                }
-            }
-
-            if (variableMatch == null) {
-                throw new IllegalStateException("Invalid dependency graph. Could not find a node defining variable "
-                        + v);
-            }
+            StatementMatch variableMatch = n.in().stream()
+                    .filter(o -> v.equals(o.getObject().definedVariable))
+                    .map(o -> o.getObject().match)
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("Invalid dependency graph. Could not find a node defining variable "
+                        + v));
 
             trivialMatches.put(v, MATCH_ANY);
             situationalMatches.put(v, variableMatch);
@@ -777,7 +772,7 @@ public final class MatchingProgress<M> {
         }
     }
 
-    private static final class IsEqual extends ModelMatch {
+    private static final class IsEqual extends StatementMatch {
         private final Object model;
 
         private IsEqual(Object model) {

@@ -16,32 +16,31 @@
  */
 package org.revapi.classif.statement;
 
-import static org.revapi.classif.TestResult.TestableStream.testable;
-
 import java.util.List;
 
-import javax.lang.model.element.Element;
-import javax.lang.model.type.TypeMirror;
-
 import org.revapi.classif.TestResult;
-import org.revapi.classif.match.Match;
 import org.revapi.classif.match.MatchContext;
-import org.revapi.classif.match.ModelMatch;
+import org.revapi.classif.match.declaration.AnnotationsMatch;
+import org.revapi.classif.match.declaration.ModifiersMatch;
 import org.revapi.classif.util.Nullable;
 import org.revapi.classif.util.TreeNode;
 
 public abstract class AbstractStatement extends TreeNode<AbstractStatement> {
+    protected final AnnotationsMatch annotations;
+    protected final ModifiersMatch modifiers;
+    protected final boolean negation;
     private final String definedVariable;
     private final List<String> referencedVariables;
-    private final List<Match> innerMatchers;
     private final boolean isMatch;
 
     protected AbstractStatement(@Nullable String definedVariable, List<String> referencedVariables,
-            List<Match> innerMatchers, boolean isMatch) {
+            boolean isMatch, AnnotationsMatch annotations, ModifiersMatch modifiers, boolean negation) {
         this.definedVariable = definedVariable;
         this.referencedVariables = referencedVariables;
-        this.innerMatchers = innerMatchers;
         this.isMatch = isMatch;
+        this.annotations = annotations;
+        this.modifiers = modifiers;
+        this.negation = negation;
     }
 
     public String getDefinedVariable() {
@@ -56,30 +55,12 @@ public abstract class AbstractStatement extends TreeNode<AbstractStatement> {
         return isMatch;
     }
 
-    public final ModelMatch createMatcher() {
-        return new ModelMatch() {
-            ModelMatch exact = createExactMatcher();
+    public abstract StatementMatch createMatch();
 
-            @Override
-            protected <M> TestResult defaultElementTest(M model, MatchContext<M> ctx) {
-                Element el = ctx.modelInspector.toElement(model);
-                TypeMirror t = ctx.modelInspector.toMirror(model);
-
-                return testable(innerMatchers).testAll(m -> m.test(el, t, ctx)).and(() -> exact.test(model, ctx));
-            }
-
-            @Override
-            public String toString() {
-                String prefix = toStringPrefix();
-
-                return prefix + " " + exact.toString();
-            }
-        };
+    protected String toStringPrefix() {
+        return annotations.toString() + (annotations.isEmpty() ? "" : " ")
+                + modifiers.toString() + (modifiers.isEmpty() ? "" : " ");
     }
-
-    protected abstract ModelMatch createExactMatcher();
-
-    protected abstract String toStringPrefix();
 
     protected void insertVariable(StringBuilder bld) {
         if (definedVariable != null) {
@@ -92,6 +73,6 @@ public abstract class AbstractStatement extends TreeNode<AbstractStatement> {
 
     @Override
     public String toString() {
-        return createMatcher().toString();
+        return createMatch().toString();
     }
 }

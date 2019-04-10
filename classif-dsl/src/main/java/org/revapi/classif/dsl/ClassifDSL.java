@@ -77,7 +77,6 @@ import org.revapi.classif.statement.AbstractStatement;
 import org.revapi.classif.statement.FieldStatement;
 import org.revapi.classif.statement.GenericStatement;
 import org.revapi.classif.statement.MethodStatement;
-import org.revapi.classif.statement.StatementStatement;
 import org.revapi.classif.statement.TypeDefinitionStatement;
 import org.revapi.classif.match.Operator;
 
@@ -271,11 +270,11 @@ public final class ClassifDSL {
         }
     }
 
-    private static final class StatementVisitor extends ClassifBaseVisitor<StatementStatement> {
+    private static final class StatementVisitor extends ClassifBaseVisitor<AbstractStatement> {
         static final StatementVisitor INSTANCE = new StatementVisitor();
 
         @Override
-        public StatementStatement visitStatement(ClassifParser.StatementContext ctx) {
+        public AbstractStatement visitStatement(ClassifParser.StatementContext ctx) {
             List<ReferencedVariablesAnd<AnnotationMatch>> annos = ctx.annotations().annotation().stream()
                     .map(a -> a.accept(AnnotationVisitor.INSTANCE)).collect(toList());
 
@@ -846,11 +845,11 @@ public final class ClassifDSL {
         }
     }
 
-    private static final class ElementStatementVisitor extends ClassifBaseVisitor<StatementStatement> {
+    private static final class ElementStatementVisitor extends ClassifBaseVisitor<AbstractStatement> {
         static final ElementStatementVisitor INSTANCE = new ElementStatementVisitor();
 
         @Override
-        public StatementStatement visitElementStatement(ClassifParser.ElementStatementContext ctx) {
+        public AbstractStatement visitElementStatement(ClassifParser.ElementStatementContext ctx) {
             List<ReferencedVariablesAnd<AnnotationMatch>> annos = ctx.annotations().annotation().stream()
                     .map(a -> a.accept(AnnotationVisitor.INSTANCE)).collect(toList());
 
@@ -868,7 +867,7 @@ public final class ClassifDSL {
         }
     }
 
-    private static final class FieldOrMethodOrTypeStatementVisitor extends ClassifBaseVisitor<StatementStatement> {
+    private static final class FieldOrMethodOrTypeStatementVisitor extends ClassifBaseVisitor<AbstractStatement> {
         private final List<ReferencedVariablesAnd<AnnotationMatch>> annotations;
         private final ModifiersMatch modifiers;
 
@@ -879,7 +878,7 @@ public final class ClassifDSL {
         }
 
         @Override
-        public StatementStatement visitFieldOrMethodOrTypeStatement(ClassifParser.FieldOrMethodOrTypeStatementContext ctx) {
+        public AbstractStatement visitFieldOrMethodOrTypeStatement(ClassifParser.FieldOrMethodOrTypeStatementContext ctx) {
             if (ctx.typeDefinition() != null) {
                 return new TypeDefinitionVisitor(annotations, modifiers).visitTypeDefinition(ctx.typeDefinition());
             } else if (ctx.typeParameters() != null) {
@@ -934,7 +933,7 @@ public final class ClassifDSL {
         }
     }
 
-    private static final class FieldOrMethodWithoutTypeParametersVisitor extends ClassifBaseVisitor<StatementStatement> {
+    private static final class FieldOrMethodWithoutTypeParametersVisitor extends ClassifBaseVisitor<AbstractStatement> {
         private final List<ReferencedVariablesAnd<AnnotationMatch>> annotations;
         private final ModifiersMatch modifiers;
 
@@ -946,7 +945,7 @@ public final class ClassifDSL {
         }
 
         @Override
-        public StatementStatement visitFieldOrMethodWithoutTypeParameters(
+        public AbstractStatement visitFieldOrMethodWithoutTypeParameters(
                 ClassifParser.FieldOrMethodWithoutTypeParametersContext ctx) {
             ReferencedVariablesAnd<TypeReferenceMatch> type = null;
             if (ctx.typeReference() != null) {
@@ -958,7 +957,7 @@ public final class ClassifDSL {
         }
     }
 
-    private static final class FieldNameOrMethodWithoutReturnType extends ClassifBaseVisitor<StatementStatement> {
+    private static final class FieldNameOrMethodWithoutReturnType extends ClassifBaseVisitor<AbstractStatement> {
         private final List<ReferencedVariablesAnd<AnnotationMatch>> annotations;
         private final ModifiersMatch modifiers;
         private final ReferencedVariablesAnd<TypeReferenceMatch> type;
@@ -973,7 +972,7 @@ public final class ClassifDSL {
         }
 
         @Override
-        public StatementStatement visitFieldNameOrMethodWithoutReturnType(
+        public AbstractStatement visitFieldNameOrMethodWithoutReturnType(
                 ClassifParser.FieldNameOrMethodWithoutReturnTypeContext ctx) {
             ReferencedVariablesAnd<TypeReferenceMatch> declaringType = null;
             if (ctx.typeReference() != null) {

@@ -33,7 +33,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.revapi.classif.MirroringModelInspector;
 import org.revapi.classif.ModelInspector;
 import org.revapi.classif.match.MatchContext;
-import org.revapi.classif.match.ModelMatch;
+import org.revapi.classif.statement.StatementMatch;
 import org.revapi.testjars.CompiledJar;
 import org.revapi.testjars.junit5.CompiledJarExtension;
 import org.revapi.testjars.junit5.JarSources;
@@ -60,7 +60,7 @@ class TypeKindMatchTest {
         DeclarationMatch types = new TypeKindMatch(false, TypeKind.fromString("type"));
 
         ModelInspector<Element> inspector = new MirroringModelInspector(environment.elements(), environment.types());
-        Map<String, ModelMatch> vars = Collections.emptyMap();
+        Map<String, StatementMatch> vars = Collections.emptyMap();
 
         MatchContext<Element> ctx = new MatchContext<>(inspector, vars);
         

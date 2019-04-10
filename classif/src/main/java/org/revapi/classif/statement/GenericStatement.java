@@ -23,25 +23,24 @@ import javax.lang.model.type.TypeMirror;
 
 import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
-import org.revapi.classif.match.ModelMatch;
 import org.revapi.classif.match.declaration.AnnotationsMatch;
 import org.revapi.classif.match.declaration.ModifiersMatch;
 import org.revapi.classif.match.declaration.UsesMatch;
 import org.revapi.classif.util.Nullable;
 
-public final class GenericStatement extends StatementStatement {
+public final class GenericStatement extends AbstractStatement {
     private final @Nullable UsesMatch usesMatch;
 
     public GenericStatement(@Nullable String definedVariable, List<String> referencedVariables,
             AnnotationsMatch annotations, ModifiersMatch modifiers,
             boolean isMatch, boolean negation, @Nullable UsesMatch usesMatch) {
-        super(definedVariable, referencedVariables, annotations, modifiers, isMatch, negation);
+        super(definedVariable, referencedVariables, isMatch, annotations, modifiers, negation);
         this.usesMatch = usesMatch;
     }
 
     @Override
-    protected ModelMatch createExactMatcher() {
-        return new ModelMatch() {
+    public StatementMatch createMatch() {
+        return new StatementMatch() {
             @Override
             protected <M> TestResult defaultElementTest(M model, MatchContext<M> ctx) {
                 Element el = ctx.modelInspector.toElement(model);
@@ -57,7 +56,7 @@ public final class GenericStatement extends StatementStatement {
 
             @Override
             public String toString() {
-                String ret = isMatch() ? "^" : "*";
+                String ret = toStringPrefix() + (isMatch() ? "^" : "*");
 
                 if (usesMatch != null) {
                     ret += usesMatch.toString();

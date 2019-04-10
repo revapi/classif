@@ -31,7 +31,7 @@ import javax.lang.model.type.TypeVisitor;
 
 import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
-import org.revapi.classif.match.ModelMatch;
+import org.revapi.classif.statement.StatementMatch;
 
 public final class UsedByMatch extends DeclarationMatch {
 
@@ -51,7 +51,7 @@ public final class UsedByMatch extends DeclarationMatch {
 
         if (onlyDirect) {
             return testable(directUseSites).testAny(us -> testable(referencedVariables).testAny(v -> {
-                ModelMatch m = ctx.variables.get(v);
+                StatementMatch m = ctx.variables.get(v);
                 return m == null ? NOT_PASSED : m.test(ctx.modelInspector.fromElement(us), ctx);
             }));
         } else {
@@ -66,7 +66,7 @@ public final class UsedByMatch extends DeclarationMatch {
             return DEFERRED;
         } else {
             return testable(sites).testAny(us -> testable(referencedVariables).testAny(v -> {
-                ModelMatch m = ctx.variables.get(v);
+                StatementMatch m = ctx.variables.get(v);
                 return m == null
                         ? NOT_PASSED
                         : m.test(ctx.modelInspector.fromElement(us), ctx)

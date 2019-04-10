@@ -27,12 +27,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.revapi.classif.match.ModelMatch;
+import org.revapi.classif.MatchingProgress;
 import org.revapi.classif.statement.AbstractStatement;
+import org.revapi.classif.statement.StatementMatch;
 
 /**
  * This is a support class for {@link org.revapi.classif.StructuralMatcher} and
- * {@link org.revapi.classif.MatchingProgress} that converts the variables and statements of a structural match into
+ * {@link MatchingProgress} that converts the variables and statements of a structural match into
  * a graph of dependent nodes.
  */
 public final class DependencyGraph {
@@ -110,7 +111,7 @@ public final class DependencyGraph {
             Map<String, List<Node<MatchExecutionContext>>> referencers) {
 
         for (AbstractStatement st : statements) {
-            ModelMatch stMatcher = st.createMatcher();
+            StatementMatch stMatcher = st.createMatch();
 
             MatchExecutionContext match = new MatchExecutionContext(st.getDefinedVariable(),
                     st.getReferencedVariables(), st.isMatch() || namedMatches.contains(st.getDefinedVariable()),

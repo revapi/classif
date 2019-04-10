@@ -19,10 +19,11 @@ package org.revapi.classif.util.execution;
 import java.util.Collections;
 import java.util.List;
 
-import org.revapi.classif.match.ModelMatch;
+import org.revapi.classif.statement.StatementMatch;
+import org.revapi.classif.MatchingProgress;
 
 /**
- * Holds the state necessary for the execution of a match in the {@link org.revapi.classif.MatchingProgress}.
+ * Holds the state necessary for the execution of a match in the {@link MatchingProgress}.
  *
  * <p>The nodes in the {@link DependencyGraph} hold these contexts. As such a single execution context represents one
  * statement in the structural match.
@@ -46,11 +47,11 @@ public final class MatchExecutionContext {
     /**
      * The match object actually performing the matching operation on the model data
      */
-    public final ModelMatch match;
+    public final StatementMatch match;
 
     // package private so that this is not completely free for reuse.
     MatchExecutionContext(String definedVariable, List<String> referencedVariables, boolean isReturn,
-            ModelMatch match) {
+            StatementMatch match) {
         this.definedVariable = definedVariable;
         this.referencedVariables = Collections.unmodifiableList(referencedVariables);
         this.isReturn = isReturn;

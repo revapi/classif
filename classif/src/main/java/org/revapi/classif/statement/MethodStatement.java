@@ -24,7 +24,6 @@ import javax.lang.model.type.TypeMirror;
 
 import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
-import org.revapi.classif.match.ModelMatch;
 import org.revapi.classif.match.NameMatch;
 import org.revapi.classif.match.declaration.AnnotationsMatch;
 import org.revapi.classif.match.declaration.MethodConstraintsMatch;
@@ -35,7 +34,7 @@ import org.revapi.classif.match.instance.TypeReferenceMatch;
 import org.revapi.classif.util.Glob;
 import org.revapi.classif.util.Nullable;
 
-public final class MethodStatement extends StatementStatement {
+public final class MethodStatement extends AbstractStatement {
     private final NameMatch name;
     private final @Nullable TypeReferenceMatch returnType;
     private final @Nullable TypeReferenceMatch declaringType;
@@ -50,7 +49,7 @@ public final class MethodStatement extends StatementStatement {
             @Nullable TypeParametersMatch typeParameters,
             List<MethodParameterMatch> parameters,
             @Nullable MethodConstraintsMatch constraints, boolean negation) {
-        super(definedVariable, referencedVariables, annotations, modifiers, isMatch, negation);
+        super(definedVariable, referencedVariables, isMatch, annotations, modifiers, negation);
         this.name = name;
         this.returnType = returnType;
         this.declaringType = declaringType;
@@ -60,8 +59,8 @@ public final class MethodStatement extends StatementStatement {
     }
 
     @Override
-    protected ModelMatch createExactMatcher() {
-        return new ModelMatch() {
+    public StatementMatch createMatch() {
+        return new StatementMatch() {
             @Override
             public <M> TestResult testMethod(M method, MatchContext<M> ctx) {
                 ExecutableElement element = (ExecutableElement) ctx.modelInspector.toElement(method);
@@ -101,7 +100,7 @@ public final class MethodStatement extends StatementStatement {
 
             @Override
             public String toString() {
-                StringBuilder bld = new StringBuilder();
+                StringBuilder bld = new StringBuilder(toStringPrefix());
 
                 if (typeParameters != null) {
                     bld.append("<");

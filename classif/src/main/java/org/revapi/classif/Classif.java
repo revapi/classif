@@ -62,7 +62,6 @@ import org.revapi.classif.statement.AbstractStatement;
 import org.revapi.classif.statement.FieldStatement;
 import org.revapi.classif.statement.GenericStatement;
 import org.revapi.classif.statement.MethodStatement;
-import org.revapi.classif.statement.StatementStatement;
 import org.revapi.classif.statement.TypeDefinitionStatement;
 import org.revapi.classif.util.Nullable;
 import org.revapi.classif.match.Operator;
@@ -258,6 +257,9 @@ public final class Classif {
     }
 
     private abstract static class AbstractStatementBuilder<This extends AbstractStatementBuilder<This, S>, S extends AbstractStatement> extends AbstractMatchBuilder<S> {
+        protected final List<AnnotationMatchBuilder> annotations = new ArrayList<>();
+        protected ModifiersMatchBuilder modifiers = new ModifiersMatchBuilder();
+        protected boolean negation;
         @Nullable String definedVariable;
         boolean isMatch;
 
@@ -273,16 +275,6 @@ public final class Classif {
         public This matched() {
             this.isMatch = true;
             return castThis();
-        }
-    }
-
-    private abstract static class StatementStatementBuilder<This extends StatementStatementBuilder<This, S>, S extends StatementStatement> extends AbstractStatementBuilder<This, S> {
-        protected final List<AnnotationMatchBuilder> annotations = new ArrayList<>();
-        protected ModifiersMatchBuilder modifiers = new ModifiersMatchBuilder();
-        protected boolean negation;
-
-        private StatementStatementBuilder() {
-
         }
 
         public This $(ModifiersMatchBuilder modifiers) {
@@ -301,7 +293,7 @@ public final class Classif {
         }
     }
 
-    public static final class GenericStatementBuilder extends StatementStatementBuilder<GenericStatementBuilder, GenericStatement> {
+    public static final class GenericStatementBuilder extends AbstractStatementBuilder<GenericStatementBuilder, GenericStatement> {
         private @Nullable UsesMatchBuilder uses;
 
         private GenericStatementBuilder() {
@@ -319,7 +311,7 @@ public final class Classif {
         }
     }
 
-    public static final class FieldStatementBuilder extends StatementStatementBuilder<FieldStatementBuilder, FieldStatement> {
+    public static final class FieldStatementBuilder extends AbstractStatementBuilder<FieldStatementBuilder, FieldStatement> {
         private final NameMatch name;
         private @Nullable TypeReferenceMatchBuilder type;
         private @Nullable TypeReferenceMatchBuilder declaringType;
@@ -351,7 +343,7 @@ public final class Classif {
         }
     }
 
-    public static final class MethodStatementBuilder extends StatementStatementBuilder<MethodStatementBuilder, MethodStatement> {
+    public static final class MethodStatementBuilder extends AbstractStatementBuilder<MethodStatementBuilder, MethodStatement> {
         private final NameMatch name;
         private @Nullable TypeReferenceMatchBuilder returnType;
         private @Nullable TypeReferenceMatchBuilder declaringType;
@@ -425,7 +417,7 @@ public final class Classif {
         }
     }
 
-    public static final class TypeDefinitionStatementBuilder extends StatementStatementBuilder<TypeDefinitionStatementBuilder, TypeDefinitionStatement> {
+    public static final class TypeDefinitionStatementBuilder extends AbstractStatementBuilder<TypeDefinitionStatementBuilder, TypeDefinitionStatement> {
         private final TypeKindBuilder typeKind;
         private final FqnMatchBuilder fqn;
         private final List<TypeParameterMatchBuilder> typeParameters = new ArrayList<>();

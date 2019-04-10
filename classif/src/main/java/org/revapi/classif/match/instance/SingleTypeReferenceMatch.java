@@ -43,7 +43,7 @@ import javax.lang.model.util.SimpleTypeVisitor8;
 
 import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
-import org.revapi.classif.match.ModelMatch;
+import org.revapi.classif.statement.StatementMatch;
 import org.revapi.classif.util.Globbed;
 import org.revapi.classif.util.Nullable;
 
@@ -204,7 +204,7 @@ public final class SingleTypeReferenceMatch extends TypeInstanceMatch implements
                 ret = typeParameters.testInstance(instance, ctx);
             }
         } else {
-            ModelMatch match = ctx.variables.getOrDefault(variable, null);
+            StatementMatch match = ctx.variables.getOrDefault(variable, null);
             ret = match != null
                     ? testable(TO_TYPE.visit(instance)).testAny(e -> match.test(ctx.modelInspector.fromElement(e), ctx))
                     : NOT_PASSED;

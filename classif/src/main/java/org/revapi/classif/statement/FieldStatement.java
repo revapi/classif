@@ -23,7 +23,6 @@ import javax.lang.model.type.TypeMirror;
 
 import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
-import org.revapi.classif.match.ModelMatch;
 import org.revapi.classif.match.NameMatch;
 import org.revapi.classif.match.declaration.AnnotationsMatch;
 import org.revapi.classif.match.declaration.ModifiersMatch;
@@ -31,7 +30,7 @@ import org.revapi.classif.match.declaration.UsesMatch;
 import org.revapi.classif.match.instance.TypeReferenceMatch;
 import org.revapi.classif.util.Nullable;
 
-public final class FieldStatement extends StatementStatement {
+public final class FieldStatement extends AbstractStatement {
     private final NameMatch name;
     private final @Nullable TypeReferenceMatch fieldType;
     private final @Nullable TypeReferenceMatch declaringType;
@@ -42,7 +41,7 @@ public final class FieldStatement extends StatementStatement {
             ModifiersMatch modifiers, boolean isMatch, boolean negation, NameMatch name,
             @Nullable TypeReferenceMatch fieldType,
             @Nullable TypeReferenceMatch declaringType, @Nullable UsesMatch fieldConstraints) {
-        super(definedVariable, referencedVariables, annotations, modifiers, isMatch, negation);
+        super(definedVariable, referencedVariables, isMatch, annotations, modifiers, negation);
         this.name = name;
         this.fieldType = fieldType;
         this.declaringType = declaringType;
@@ -50,8 +49,8 @@ public final class FieldStatement extends StatementStatement {
     }
 
     @Override
-    protected ModelMatch createExactMatcher() {
-        return new ModelMatch() {
+    public StatementMatch createMatch() {
+        return new StatementMatch() {
             @Override
             public <M> TestResult testVariable(M var, MatchContext<M> ctx) {
                 Element element = ctx.modelInspector.toElement(var);
@@ -76,7 +75,7 @@ public final class FieldStatement extends StatementStatement {
 
             @Override
             public String toString() {
-                StringBuilder bld = new StringBuilder();
+                StringBuilder bld = new StringBuilder(toStringPrefix());
                 if (fieldType != null) {
                     bld.append(fieldType.toString());
                 }

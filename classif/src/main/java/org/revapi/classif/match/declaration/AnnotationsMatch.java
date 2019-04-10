@@ -35,6 +35,10 @@ public final class AnnotationsMatch extends DeclarationMatch {
         this.annotations = annotations;
     }
 
+    public boolean isEmpty() {
+        return annotations.isEmpty();
+    }
+
     @Override
     protected <M> TestResult defaultTest(Element e, TypeMirror inst, MatchContext<M> matchContext) {
         return testable(annotations).testAll(m -> {

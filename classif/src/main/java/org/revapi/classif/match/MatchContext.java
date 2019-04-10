@@ -23,20 +23,21 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.revapi.classif.ModelInspector;
+import org.revapi.classif.statement.StatementMatch;
 
 public final class MatchContext<M> {
 
     public final ModelInspector<M> modelInspector;
-    public final Map<String, ModelMatch> variables;
+    public final Map<String, StatementMatch> variables;
 
-    public MatchContext(ModelInspector<M> modelInspector, Map<String, ModelMatch> variables) {
+    public MatchContext(ModelInspector<M> modelInspector, Map<String, StatementMatch> variables) {
         this.modelInspector = requireNonNull(modelInspector);
         this.variables = unmodifiableMap(requireNonNull(variables));
     }
 
-    public MatchContext<M> replace(String variable, ModelMatch modelMatch) {
-        Map<String, ModelMatch> newVars = new HashMap<>(variables);
-        newVars.put(variable, modelMatch);
+    public MatchContext<M> replace(String variable, StatementMatch statementMatch) {
+        Map<String, StatementMatch> newVars = new HashMap<>(variables);
+        newVars.put(variable, statementMatch);
         return new MatchContext<>(modelInspector, newVars);
     }
 

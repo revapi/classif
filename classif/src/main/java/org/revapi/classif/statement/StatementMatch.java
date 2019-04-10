@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.revapi.classif.match;
+package org.revapi.classif.statement;
 
 import static java.util.Objects.requireNonNull;
 
@@ -30,10 +30,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.EntryMessage;
 import org.revapi.classif.TestResult;
-import org.revapi.classif.util.TreeNode;
+import org.revapi.classif.match.MatchContext;
 
-public abstract class ModelMatch extends TreeNode<ModelMatch> {
-    private static final Logger LOG = LogManager.getLogger(ModelMatch.class);
+public abstract class StatementMatch {
+    private static final Logger LOG = LogManager.getLogger(StatementMatch.class);
 
     public final <M> TestResult test(M model, MatchContext<M> ctx) {
         EntryMessage methodTrace = LOG.traceEntry(traceParams(LOG, "this", this, "model", model, "ctx", ctx));

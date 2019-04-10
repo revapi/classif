@@ -20,7 +20,6 @@ import java.util.List;
 
 import org.revapi.classif.TestResult;
 import org.revapi.classif.match.MatchContext;
-import org.revapi.classif.match.ModelMatch;
 import org.revapi.classif.match.declaration.AnnotationsMatch;
 import org.revapi.classif.match.declaration.ModifiersMatch;
 import org.revapi.classif.match.declaration.TypeConstraintsMatch;
@@ -29,7 +28,7 @@ import org.revapi.classif.match.instance.FqnMatch;
 import org.revapi.classif.match.instance.TypeParametersMatch;
 import org.revapi.classif.util.Nullable;
 
-public final class TypeDefinitionStatement extends StatementStatement {
+public final class TypeDefinitionStatement extends AbstractStatement {
     private final TypeKindMatch typeKind;
     private final FqnMatch fqn;
     private final @Nullable TypeParametersMatch typeParameters;
@@ -44,7 +43,7 @@ public final class TypeDefinitionStatement extends StatementStatement {
             @Nullable TypeConstraintsMatch constraints,
             boolean negation,
             boolean isMatch) {
-        super(definedVariable, referencedVariables, annotations, modifiers, isMatch, negation);
+        super(definedVariable, referencedVariables, isMatch, annotations, modifiers, negation);
         this.typeKind = typeKind;
         this.fqn = fqn;
         this.typeParameters = typeParameters;
@@ -52,8 +51,8 @@ public final class TypeDefinitionStatement extends StatementStatement {
     }
 
     @Override
-    protected ModelMatch createExactMatcher() {
-        return new ModelMatch() {
+    public StatementMatch createMatch() {
+        return new StatementMatch() {
             @Override
             public <M> TestResult testType(M type, MatchContext<M> ctx) {
 
@@ -75,9 +74,9 @@ public final class TypeDefinitionStatement extends StatementStatement {
 
             @Override
             public String toString() {
-                StringBuilder bld = new StringBuilder(typeKind.toString());
+                StringBuilder bld = new StringBuilder(toStringPrefix());
 
-                bld.append(" ");
+                bld.append(typeKind.toString()).append(" ");
 
                 if (isMatch()) {
                     bld.append("^");
