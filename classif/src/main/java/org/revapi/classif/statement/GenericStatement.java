@@ -22,10 +22,11 @@ import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
 
 import org.revapi.classif.TestResult;
-import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.declaration.AnnotationsMatch;
 import org.revapi.classif.match.declaration.ModifiersMatch;
 import org.revapi.classif.match.declaration.UsesMatch;
+import org.revapi.classif.progress.StatementMatch;
+import org.revapi.classif.progress.context.MatchContext;
 import org.revapi.classif.util.Nullable;
 
 public final class GenericStatement extends AbstractStatement {
@@ -39,12 +40,12 @@ public final class GenericStatement extends AbstractStatement {
     }
 
     @Override
-    public StatementMatch createMatch() {
-        return new StatementMatch() {
+    public <M> StatementMatch<M> createMatch() {
+        return new StatementMatch<M>() {
             @Override
-            protected <M> TestResult defaultElementTest(M model, MatchContext<M> ctx) {
-                Element el = ctx.modelInspector.toElement(model);
-                TypeMirror inst = ctx.modelInspector.toMirror(model);
+            protected TestResult defaultElementTest(M model, MatchContext<M> ctx) {
+                Element el = ctx.getModelInspector().toElement(model);
+                TypeMirror inst = ctx.getModelInspector().toMirror(model);
 
                 TestResult ret = modifiers.test(el, inst, ctx).and(annotations.test(el, inst, ctx));
                 if (usesMatch != null) {

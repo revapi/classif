@@ -92,13 +92,12 @@ or
 annotated as `@Beta`:
 +
 ```
-^ uses [%beta | %extendsBeta | %implementsBeta];
-
-@Beta type %beta=* {}
-
-type %extendsBeta=* extends %beta {}
-
-type %implementsBeta=* implements %beta {}
+^ uses %beta | %extendsBeta | %implementsBeta;
+@Example11.Beta type %beta=* {}
+@Example11.Beta type %betaForExtends=* {}
+@Example11.Beta type %betaForImplements=* {}
+type %extendsBeta=* extends %betaForExtends {}
+type %implementsBeta=* implements %betaForImplements {}
 ```
 
 . Match a method called `m` with any number of parameters that is declared in a class that extends a class declared in the

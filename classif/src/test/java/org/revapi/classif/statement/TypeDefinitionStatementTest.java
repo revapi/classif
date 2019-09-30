@@ -31,8 +31,8 @@ import static org.revapi.classif.Classif.type;
 import static org.revapi.classif.Classif.usedBy;
 import static org.revapi.classif.Classif.uses;
 import static org.revapi.classif.Classif.wildcardExtends;
-import static org.revapi.classif.Tester.assertNotPassed;
-import static org.revapi.classif.Tester.assertPassed;
+import static org.revapi.classif.support.Tester.assertNotPassed;
+import static org.revapi.classif.support.Tester.assertPassed;
 import static org.revapi.classif.match.NameMatch.all;
 import static org.revapi.classif.match.NameMatch.any;
 import static org.revapi.classif.match.NameMatch.exact;
@@ -56,7 +56,7 @@ import org.revapi.classif.Classif;
 import org.revapi.classif.MirroringModelInspector;
 import org.revapi.classif.ModelInspector;
 import org.revapi.classif.StructuralMatcher;
-import org.revapi.classif.Tester;
+import org.revapi.classif.support.Tester;
 import org.revapi.testjars.CompiledJar;
 import org.revapi.testjars.junit5.CompiledJarExtension;
 import org.revapi.testjars.junit5.JarSources;
@@ -308,22 +308,22 @@ class TypeDefinitionStatementTest {
         // type *.Impl implements %i{} interface ^%i=*{}
         StructuralMatcher implConstraintOnMatched = Classif.match()
                 .$(type(ANY, fqn(any(), exact("Impl")))
-                        .$(implements_().$(type().var("i"))))
-                .$(type(INTERFACE, any()).called("i").matched())
+                        .$(implements_().$(type().ref("i"))))
+                .$(type(INTERFACE, any()).as("i").matched())
                 .build();
 
         // type ^*.Impl implements %i{} interface %i=*{}
         StructuralMatcher implByVariable = Classif.match()
                 .$(type(ANY, fqn(any(), exact("Impl"))).matched()
-                        .$(implements_().$(type().var("i"))))
-                .$(type(INTERFACE, any()).called("i"))
+                        .$(implements_().$(type().ref("i"))))
+                .$(type(INTERFACE, any()).as("i"))
                 .build();
 
         // match %i; type *./.*Impl.+$/ implements %i{} interface %i=*{}
         StructuralMatcher implConstraintOnMatched2 = Classif.match("i")
                 .$(type(ANY, fqn(any(), pattern(compile(".*Impl.+$"))))
-                        .$(implements_().$(type().var("i"))))
-                .$(type(INTERFACE, any()).called("i"))
+                        .$(implements_().$(type().ref("i"))))
+                .$(type(INTERFACE, any()).as("i"))
                 .build();
 
         assertPassed(Tester.test(constraints, Iface, implConstraintOnMatched, Impl));
@@ -511,13 +511,13 @@ class TypeDefinitionStatementTest {
         // type ^ usedby %u {} type %u=Extends.GD {}
         StructuralMatcher usedBy = Classif.match()
                 .$(type(ANY, any()).matched().$(usedBy("u")))
-                .$(type(ANY, exact("Extends"), exact("GD")).called("u"))
+                .$(type(ANY, exact("Extends"), exact("GD")).as("u"))
                 .build();
 
         // type ^ directly usedby %u {} type %u=Extends.GD {}
         StructuralMatcher directlyUsedBy = Classif.match()
                 .$(type(ANY, any()).matched().$(usedBy("u").directly()))
-                .$(type(ANY, exact("Extends"), exact("GD")).called("u"))
+                .$(type(ANY, exact("Extends"), exact("GD")).as("u"))
                 .build();
 
         assertPassed(Tester.test(insp, GB, usedBy, GD));

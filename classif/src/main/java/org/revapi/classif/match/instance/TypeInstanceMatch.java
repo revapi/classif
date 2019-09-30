@@ -38,7 +38,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.revapi.classif.TestResult;
 import org.revapi.classif.match.Match;
-import org.revapi.classif.match.MatchContext;
+import org.revapi.classif.progress.context.MatchContext;
 
 public abstract class TypeInstanceMatch extends Match {
     private static final Logger LOG = LogManager.getLogger(TypeInstanceMatch.class);

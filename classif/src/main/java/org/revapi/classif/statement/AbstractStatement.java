@@ -18,10 +18,10 @@ package org.revapi.classif.statement;
 
 import java.util.List;
 
-import org.revapi.classif.TestResult;
-import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.declaration.AnnotationsMatch;
 import org.revapi.classif.match.declaration.ModifiersMatch;
+import org.revapi.classif.progress.StatementMatch;
+import org.revapi.classif.progress.context.StatementContext;
 import org.revapi.classif.util.Nullable;
 import org.revapi.classif.util.TreeNode;
 
@@ -55,7 +55,13 @@ public abstract class AbstractStatement extends TreeNode<AbstractStatement> {
         return isMatch;
     }
 
-    public abstract StatementMatch createMatch();
+    public abstract <M> StatementMatch<M> createMatch();
+
+    public final <M> StatementMatch<M> createMatch(StatementContext<M> ctx) {
+        StatementMatch<M> m = createMatch();
+        m.setContext(ctx);
+        return m;
+    }
 
     protected String toStringPrefix() {
         return annotations.toString() + (annotations.isEmpty() ? "" : " ")

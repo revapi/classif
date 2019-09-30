@@ -24,8 +24,8 @@ import static org.revapi.classif.Classif.type;
 import static org.revapi.classif.Classif.uses;
 import static org.revapi.classif.TestResult.NOT_PASSED;
 import static org.revapi.classif.TestResult.PASSED;
-import static org.revapi.classif.Tester.assertNotPassed;
-import static org.revapi.classif.Tester.assertPassed;
+import static org.revapi.classif.support.Tester.assertNotPassed;
+import static org.revapi.classif.support.Tester.assertPassed;
 import static org.revapi.classif.match.NameMatch.exact;
 
 import java.util.Set;

@@ -18,6 +18,7 @@ package org.revapi.classif;
 
 import java.util.List;
 
+import org.revapi.classif.progress.MatchingProgress;
 import org.revapi.classif.statement.AbstractStatement;
 import org.revapi.classif.util.execution.DependencyGraph;
 
@@ -44,7 +45,7 @@ public final class StructuralMatcher {
      * @return a matching progress
      */
     public <M> MatchingProgress<M> with(ModelInspector<M> inspector) {
-        return new MatchingProgress<>(configuration, matchTree, inspector);
+        return MatchingProgress.of(matchTree, inspector, configuration);
     }
 
     @Override

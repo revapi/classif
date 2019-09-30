@@ -14,11 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.revapi.classif;
+package org.revapi.classif.progress;
 
 import static org.revapi.classif.TestResult.DEFERRED;
 import static org.revapi.classif.TestResult.NOT_PASSED;
 import static org.revapi.classif.TestResult.PASSED;
+
+import org.revapi.classif.TestResult;
 
 /**
  * The {@link MatchingProgress} assumes the caller supplies it with a tree of java model elements in a depth first

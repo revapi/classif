@@ -25,7 +25,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.WildcardType;
 
 import org.revapi.classif.TestResult;
-import org.revapi.classif.match.MatchContext;
+import org.revapi.classif.progress.context.MatchContext;
 
 public final class TypeParameterWildcardMatch extends TypeInstanceMatch {
     private final boolean isExtends;
@@ -40,7 +40,7 @@ public final class TypeParameterWildcardMatch extends TypeInstanceMatch {
     protected <M> TestResult testWildcard(WildcardType t, MatchContext<M> matchContext) {
         TypeMirror bound = isExtends ? t.getExtendsBound() : t.getSuperBound();
         if (bound == null) {
-            bound = matchContext.modelInspector.getJavaLangObjectElement().asType();
+            bound = matchContext.getModelInspector().getJavaLangObjectElement().asType();
         }
 
         final TypeMirror b = bound;

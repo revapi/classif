@@ -26,7 +26,7 @@ import javax.lang.model.type.TypeVisitor;
 import javax.lang.model.util.SimpleTypeVisitor8;
 
 import org.revapi.classif.TestResult;
-import org.revapi.classif.match.MatchContext;
+import org.revapi.classif.progress.context.MatchContext;
 import org.revapi.classif.match.instance.TypeReferenceMatch;
 
 public final class ExtendsMatch extends DeclarationMatch {

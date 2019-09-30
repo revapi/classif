@@ -18,8 +18,8 @@ package org.revapi.classif.util;
 
 import static org.revapi.classif.TestResult.NOT_PASSED;
 import static org.revapi.classif.TestResult.PASSED;
-import static org.revapi.classif.Tester.assertNotPassed;
-import static org.revapi.classif.Tester.assertPassed;
+import static org.revapi.classif.support.Tester.assertNotPassed;
+import static org.revapi.classif.support.Tester.assertPassed;
 import static org.revapi.classif.util.GlobTest.Matcher.ALL;
 import static org.revapi.classif.util.GlobTest.Matcher.ANY;
 import static org.revapi.classif.util.GlobTest.Matcher.TEST;

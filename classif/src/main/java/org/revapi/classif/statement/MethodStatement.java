@@ -23,8 +23,9 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
 
 import org.revapi.classif.TestResult;
-import org.revapi.classif.match.MatchContext;
+import org.revapi.classif.progress.context.MatchContext;
 import org.revapi.classif.match.NameMatch;
+import org.revapi.classif.progress.StatementMatch;
 import org.revapi.classif.match.declaration.AnnotationsMatch;
 import org.revapi.classif.match.declaration.MethodConstraintsMatch;
 import org.revapi.classif.match.declaration.MethodParameterMatch;
@@ -59,12 +60,13 @@ public final class MethodStatement extends AbstractStatement {
     }
 
     @Override
-    public StatementMatch createMatch() {
-        return new StatementMatch() {
+    public <M> StatementMatch<M> createMatch() {
+
+        return new StatementMatch<M>() {
             @Override
-            public <M> TestResult testMethod(M method, MatchContext<M> ctx) {
-                ExecutableElement element = (ExecutableElement) ctx.modelInspector.toElement(method);
-                TypeMirror type = ctx.modelInspector.toMirror(method);
+            public TestResult testMethod(M method, MatchContext<M> ctx) {
+                ExecutableElement element = (ExecutableElement) ctx.getModelInspector().toElement(method);
+                TypeMirror type = ctx.getModelInspector().toMirror(method);
 
                 TestResult res = TestResult.fromBoolean(name.matches(element.getSimpleName().toString()));
 

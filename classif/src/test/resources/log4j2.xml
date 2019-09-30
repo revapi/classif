@@ -20,9 +20,7 @@
 <Configuration status="error">
   <Appenders>
     <Console name="Console" target="SYSTEM_OUT">
-      <!-- Flow tracing is most useful with a pattern that shows location.
-           Below pattern outputs class, line number and method name. -->
-      <PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level %logger{36} %M - %msg%xEx%n"/>
+      <PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level %traceDepth%c{1}.%M() %msg%xEx%n"/>
     </Console>
   </Appenders>
   <Loggers>

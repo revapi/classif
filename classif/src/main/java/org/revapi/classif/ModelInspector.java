@@ -27,14 +27,16 @@ import javax.lang.model.type.TypeMirror;
 import org.revapi.classif.util.Nullable;
 
 /**
- * Provides {@link ClassifDSL} with the means to navigate the element hierarchy. In addition to providing
- * the conversion from and to the {@link Element} instances (to enable analysis of the elements) the implementors also
- * need to provide additional information not readily available in the {@code javax.lang.model} APIs.
+ * Provides {@link org.revapi.classif.progress.MatchingProgress} with the means to convert the model elements to
+ * {@code javax.lang.model} elements.
+ * In addition to providing the conversion from and to the {@link Element} instances (to enable analysis of
+ * the elements) the implementors also need to provide additional information not readily available in the
+ * {@code javax.lang.model} APIs.
  */
 public interface ModelInspector<M> {
     /**
      * This is needed for example when matching wildcards but Classif itself doesn't have a way of obtaining elements
-     * that are not supplied to it directly. Therefore it needs to kindly ask the inspector for providing it.
+     * that are not supplied to it directly. Therefore it needs to kindly ask the inspector to provide it.
      *
      * @return the type element of {@code java.lang.Object}
      */
@@ -66,12 +68,12 @@ public interface ModelInspector<M> {
      * looking for what a method uses, the return type, the type of type parameters, arguments and the type of the
      * thrown exception are automatically considered and should not be part of the returned set.
      *
-     * <p>So in another words this method is useful only for some non-standard uses somehow known to the inspector
-     * that cannot otherwise be deduced from the declaration of the element itself.
+     * <p>So in another words this method is useful only for some uses somehow known to the inspector that cannot
+     * otherwise be deduced from the declaration of the element itself.
      *
      * <p>Note that this method is allowed to return null in the case when the inspector doesn't have enough information
      * to provide the information at the time it is called. In this case the result of the matching that requires this
-     * check will be deferred to the {@link MatchingProgress#finish()} method.
+     * check will be deferred to the {@link org.revapi.classif.progress.MatchingProgress#finish()} method.
      *
      * @param model the model of the element
      * @return the set of model representations of the types directly used by the provided element
@@ -87,7 +89,7 @@ public interface ModelInspector<M> {
      *
      * <p>Note that this method is allowed to return null in the case when the inspector doesn't have enough information
      * to provide the information at the time it is called. In this case the result of the matching that requires this
-     * check will be deferred to the {@link MatchingProgress#finish()} method.
+     * check will be deferred to the {@link org.revapi.classif.progress.MatchingProgress#finish()} method.
      *
      * @param model the model of the element
      * @return the set of model representations of the elements that directly use the provided type element. Null if

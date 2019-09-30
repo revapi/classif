@@ -31,7 +31,7 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
 import org.revapi.classif.TestResult;
-import org.revapi.classif.match.MatchContext;
+import org.revapi.classif.progress.context.MatchContext;
 import org.revapi.classif.match.NameMatch;
 import org.revapi.classif.util.Glob;
 import org.revapi.classif.util.Globbed;

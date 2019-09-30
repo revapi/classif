@@ -14,7 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@Anno(a = "x")
-public final class Example1 {
+public class Example11 {
 
+  public @interface Beta {}
+
+  public class Stable {
+  }
+
+  @Beta
+  public class ExperimentalBase {}
+
+  public class ExperimentalInheritingClass extends ExperimentalBase {}
+
+  @Beta
+  public class ExperimentalClass {
+    public ExperimentalInheritingClass experimentalMethod() {
+      return null;
+    }
+  }
 }

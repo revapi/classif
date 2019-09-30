@@ -26,7 +26,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
 
 import org.revapi.classif.TestResult;
-import org.revapi.classif.match.MatchContext;
+import org.revapi.classif.progress.context.MatchContext;
 
 public final class AnnotationsMatch extends DeclarationMatch {
     private final List<AnnotationMatch> annotations;

@@ -16,11 +16,10 @@
  */
 package org.revapi.classif.match.declaration;
 
-import static org.revapi.classif.Tester.assertNotPassed;
-import static org.revapi.classif.Tester.assertPassed;
+import static java.util.Collections.emptySet;
 
-import java.util.Collections;
-import java.util.Map;
+import static org.revapi.classif.support.Tester.assertNotPassed;
+import static org.revapi.classif.support.Tester.assertPassed;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -32,8 +31,7 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.revapi.classif.MirroringModelInspector;
 import org.revapi.classif.ModelInspector;
-import org.revapi.classif.match.MatchContext;
-import org.revapi.classif.statement.StatementMatch;
+import org.revapi.classif.progress.context.MatchContext;
 import org.revapi.testjars.CompiledJar;
 import org.revapi.testjars.junit5.CompiledJarExtension;
 import org.revapi.testjars.junit5.JarSources;
@@ -60,9 +58,8 @@ class TypeKindMatchTest {
         DeclarationMatch types = new TypeKindMatch(false, TypeKind.fromString("type"));
 
         ModelInspector<Element> inspector = new MirroringModelInspector(environment.elements(), environment.types());
-        Map<String, StatementMatch> vars = Collections.emptyMap();
 
-        MatchContext<Element> ctx = new MatchContext<>(inspector, vars);
+        MatchContext<Element> ctx = new MatchContext<>(inspector, emptySet());
         
         assertPassed(classes.test(TestClass, null, ctx));
         assertNotPassed(interfaces.test(TestClass, null, ctx));

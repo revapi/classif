@@ -42,8 +42,8 @@ import javax.lang.model.util.SimpleElementVisitor8;
 import javax.lang.model.util.SimpleTypeVisitor8;
 
 import org.revapi.classif.TestResult;
-import org.revapi.classif.match.MatchContext;
-import org.revapi.classif.statement.StatementMatch;
+import org.revapi.classif.progress.StatementMatch;
+import org.revapi.classif.progress.context.MatchContext;
 import org.revapi.classif.util.Globbed;
 import org.revapi.classif.util.Nullable;
 
@@ -106,6 +106,10 @@ public final class SingleTypeReferenceMatch extends TypeInstanceMatch implements
                 && typeParameters == null;
     }
 
+    public @Nullable String getVariable() {
+        return variable;
+    }
+
     @Override
     public <M> TestResult testAnyInstance(TypeMirror instance, MatchContext<M> ctx) {
         return instance.accept(new SimpleTypeVisitor8<TestResult, Void>(NOT_PASSED) {
@@ -155,7 +159,7 @@ public final class SingleTypeReferenceMatch extends TypeInstanceMatch implements
                 } else if (t.getSuperBound() != null) {
                     return visit(t.getSuperBound());
                 } else {
-                    TypeElement javaLangObject = ctx.modelInspector.getJavaLangObjectElement();
+                    TypeElement javaLangObject = ctx.getModelInspector().getJavaLangObjectElement();
                     return doTest(javaLangObject.asType(), ctx);
                 }
             }
@@ -204,9 +208,9 @@ public final class SingleTypeReferenceMatch extends TypeInstanceMatch implements
                 ret = typeParameters.testInstance(instance, ctx);
             }
         } else {
-            StatementMatch match = ctx.variables.getOrDefault(variable, null);
+            StatementMatch<M> match = ctx.getVariableMatcher(variable);
             ret = match != null
-                    ? testable(TO_TYPE.visit(instance)).testAny(e -> match.test(ctx.modelInspector.fromElement(e), ctx))
+                    ? testable(TO_TYPE.visit(instance)).testAny(e -> match.test(ctx.getModelInspector().fromElement(e), ctx))
                     : NOT_PASSED;
         }
 

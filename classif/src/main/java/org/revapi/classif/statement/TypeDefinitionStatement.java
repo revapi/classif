@@ -19,7 +19,8 @@ package org.revapi.classif.statement;
 import java.util.List;
 
 import org.revapi.classif.TestResult;
-import org.revapi.classif.match.MatchContext;
+import org.revapi.classif.progress.context.MatchContext;
+import org.revapi.classif.progress.StatementMatch;
 import org.revapi.classif.match.declaration.AnnotationsMatch;
 import org.revapi.classif.match.declaration.ModifiersMatch;
 import org.revapi.classif.match.declaration.TypeConstraintsMatch;
@@ -51,10 +52,10 @@ public final class TypeDefinitionStatement extends AbstractStatement {
     }
 
     @Override
-    public StatementMatch createMatch() {
-        return new StatementMatch() {
+    public <M> StatementMatch<M> createMatch() {
+        return new StatementMatch<M>() {
             @Override
-            public <M> TestResult testType(M type, MatchContext<M> ctx) {
+            public TestResult testType(M type, MatchContext<M> ctx) {
 
                 TestResult ret = annotations.test(type, ctx)
                         .and(() -> modifiers.test(type, ctx))

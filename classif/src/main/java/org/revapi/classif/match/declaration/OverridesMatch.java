@@ -28,7 +28,7 @@ import javax.lang.model.util.ElementFilter;
 
 import org.revapi.classif.ModelInspector;
 import org.revapi.classif.TestResult;
-import org.revapi.classif.match.MatchContext;
+import org.revapi.classif.progress.context.MatchContext;
 import org.revapi.classif.match.instance.TypeReferenceMatch;
 import org.revapi.classif.util.Nullable;
 
@@ -50,7 +50,7 @@ public final class OverridesMatch extends DeclarationMatch {
 
         // loop through the super types and if any of them matches
         // the declaringType, check if that type contains a method that is overridden by the provided method.
-        ModelInspector<M> insp = ctx.modelInspector;
+        ModelInspector<M> insp = ctx.getModelInspector();
         for (TypeMirror type : allSuperTypes(methodDeclaringType.asType(), insp)) {
             if (declaringType != null) {
                 TestResult typeTest = declaringType.testInstance(type, ctx);

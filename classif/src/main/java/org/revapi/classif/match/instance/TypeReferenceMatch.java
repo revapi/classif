@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 import javax.lang.model.type.TypeMirror;
 
 import org.revapi.classif.TestResult;
-import org.revapi.classif.match.MatchContext;
+import org.revapi.classif.progress.context.MatchContext;
 import org.revapi.classif.util.Globbed;
 
 public final class TypeReferenceMatch extends TypeInstanceMatch implements Globbed {

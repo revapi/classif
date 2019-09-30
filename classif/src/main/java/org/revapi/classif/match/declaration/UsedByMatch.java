@@ -30,8 +30,8 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVisitor;
 
 import org.revapi.classif.TestResult;
-import org.revapi.classif.match.MatchContext;
-import org.revapi.classif.statement.StatementMatch;
+import org.revapi.classif.progress.StatementMatch;
+import org.revapi.classif.progress.context.MatchContext;
 
 public final class UsedByMatch extends DeclarationMatch {
 
@@ -45,17 +45,17 @@ public final class UsedByMatch extends DeclarationMatch {
 
     @Override
     protected <M> TestResult testType(TypeElement declaration, TypeMirror instantiation, MatchContext<M> ctx) {
-        TypeVisitor<Stream<Element>, ?> visitor = UseVisitor.findUseSites(ctx.modelInspector);
+        TypeVisitor<Stream<Element>, ?> visitor = UseVisitor.findUseSites(ctx.getModelInspector());
 
         Stream<Element> directUseSites = visitor.visit(instantiation);
 
         if (onlyDirect) {
             return testable(directUseSites).testAny(us -> testable(referencedVariables).testAny(v -> {
-                StatementMatch m = ctx.variables.get(v);
-                return m == null ? NOT_PASSED : m.test(ctx.modelInspector.fromElement(us), ctx);
+                StatementMatch<M> m = ctx.getVariableMatcher(v);
+                return m == null ? NOT_PASSED : m.test(ctx.getModelInspector().fromElement(us), ctx);
             }));
         } else {
-            return testRecursively(directUseSites, ctx, UseVisitor.findUseSites(ctx.modelInspector));
+            return testRecursively(directUseSites, ctx, UseVisitor.findUseSites(ctx.getModelInspector()));
         }
     }
 
@@ -66,10 +66,10 @@ public final class UsedByMatch extends DeclarationMatch {
             return DEFERRED;
         } else {
             return testable(sites).testAny(us -> testable(referencedVariables).testAny(v -> {
-                StatementMatch m = ctx.variables.get(v);
+                StatementMatch<M> m = ctx.getVariableMatcher(v);
                 return m == null
                         ? NOT_PASSED
-                        : m.test(ctx.modelInspector.fromElement(us), ctx)
+                        : m.test(ctx.getModelInspector().fromElement(us), ctx)
                         .or(() -> testRecursively(visitor.visit(us.asType()), ctx, visitor));
             }));
         }

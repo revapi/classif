@@ -27,4 +27,14 @@ public class Dependencies {
     public static class C extends B {
 
     }
+
+    public static class D {
+        public A method1() {
+            return null;
+        }
+
+        public B method2() {
+            return null;
+        }
+    }
 }

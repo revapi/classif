@@ -17,9 +17,9 @@
 package org.revapi.classif.readme;
 
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
-import static org.revapi.classif.Tester.assertNotPassed;
-import static org.revapi.classif.Tester.assertPassed;
-import static org.revapi.classif.Tester.test;
+import static org.revapi.classif.support.Tester.assertNotPassed;
+import static org.revapi.classif.support.Tester.assertPassed;
+import static org.revapi.classif.support.Tester.test;
 import static org.revapi.classif.dsl.ClassifDSL.compile;
 
 import java.util.Map;
@@ -34,8 +34,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.revapi.classif.StructuralMatcher;
 import org.revapi.classif.TestResult;
-import org.revapi.classif.Tester.Hierarchy;
+import org.revapi.classif.support.Tester.Hierarchy;
 import org.revapi.testjars.CompiledJar;
 import org.revapi.testjars.junit5.CompiledJarExtension;
 import org.revapi.testjars.junit5.JarSources;
@@ -62,6 +63,7 @@ class ExamplesTest {
             "Example8.java",
             "Example9.java",
             "Example10.java",
+            "Example11.java",
     })
     private CompiledJar.Environment env;
 
@@ -226,5 +228,36 @@ class ExamplesTest {
         assertNotPassed(res.get(user));
         assertPassed(res.get(method1));
         assertNotPassed(res.get(method2));
+    }
+
+    @Test
+    void example11() {
+        Element ExperimentalBase = env.elements().getTypeElement("Example11.ExperimentalBase");
+        Element ExperimentalInheritingClass = env.elements().getTypeElement("Example11.ExperimentalInheritingClass");
+        Element ExperimentalClass = env.elements().getTypeElement("Example11.ExperimentalClass");
+        Element experimentalMethod = ElementFilter.methodsIn(ExperimentalClass.getEnclosedElements()).get(0);
+
+        Hierarchy code = Hierarchy.builder()
+                .add(ExperimentalBase)
+                .add(ExperimentalInheritingClass)
+                .start(ExperimentalClass)
+                .add(experimentalMethod)
+                .end()
+                .build();
+
+        StructuralMatcher matcher = compile(
+                "^ uses %beta | %extendsBeta | %implementsBeta;\n" +
+                "@Example11.Beta type %beta=* {}\n" +
+                "@Example11.Beta type %betaForExtends=* {}\n" +
+                "@Example11.Beta type %betaForImplements=* {}\n" +
+                "type %extendsBeta=* extends %betaForExtends {}\n" +
+                "type %implementsBeta=* implements %betaForImplements {}");
+
+        Map<Element, TestResult> res = test(env, matcher, code);
+
+        assertPassed(res.get(experimentalMethod));
+        assertPassed(res.get(ExperimentalInheritingClass));
+        assertNotPassed(res.get(ExperimentalClass));
+        assertNotPassed(res.get(ExperimentalBase));
     }
 }

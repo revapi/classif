@@ -16,7 +16,7 @@
  */
 package org.revapi.classif.match.instance;
 
-import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
 
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 
@@ -32,7 +32,7 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.revapi.classif.MirroringModelInspector;
 import org.revapi.classif.TestResult;
-import org.revapi.classif.match.MatchContext;
+import org.revapi.classif.progress.context.MatchContext;
 import org.revapi.testjars.CompiledJar;
 import org.revapi.testjars.junit5.CompiledJarExtension;
 import org.revapi.testjars.junit5.JarSources;
@@ -73,7 +73,7 @@ class TypeParametersMatchTest {
 
     private TestResult doTest(TypeMirror t, TypeParametersMatch match) {
         MatchContext<Element> ctx = new MatchContext<>(new MirroringModelInspector(environment.elements(),
-                environment.types()), emptyMap());
+                environment.types()), emptySet());
         return match.testInstance(t, ctx);
     }
 }

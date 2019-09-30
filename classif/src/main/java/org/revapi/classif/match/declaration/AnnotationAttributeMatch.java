@@ -26,7 +26,7 @@ import javax.lang.model.element.ExecutableElement;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.revapi.classif.TestResult;
-import org.revapi.classif.match.MatchContext;
+import org.revapi.classif.progress.context.MatchContext;
 import org.revapi.classif.match.NameMatch;
 import org.revapi.classif.util.Globbed;
 import org.revapi.classif.util.Nullable;

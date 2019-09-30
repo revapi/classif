@@ -43,28 +43,28 @@ public class DependencyGraphTest {
 
         assertEquals(3, g.getAllNodes().size());
 
-        Node<MatchExecutionContext> topMatch = g.getAllNodes().stream()
-                .filter(n -> n.getObject().definedVariable == null).findFirst().orElseThrow(AssertionError::new);
+        Node<StatementWrapper> topMatch = g.getAllNodes().stream()
+                .filter(n -> n.getObject().getStatement().getDefinedVariable() == null).findFirst().orElseThrow(AssertionError::new);
 
-        Node<MatchExecutionContext> aMatch = g.getAllNodes().stream()
-                .filter(n -> "a".equals(n.getObject().definedVariable)).findFirst().orElseThrow(AssertionError::new);
+        Node<StatementWrapper> aMatch = g.getAllNodes().stream()
+                .filter(n -> "a".equals(n.getObject().getStatement().getDefinedVariable())).findFirst().orElseThrow(AssertionError::new);
 
-        Node<MatchExecutionContext> bMatch = g.getAllNodes().stream()
-                .filter(n -> "b".equals(n.getObject().definedVariable)).findFirst().orElseThrow(AssertionError::new);
+        Node<StatementWrapper> bMatch = g.getAllNodes().stream()
+                .filter(n -> "b".equals(n.getObject().getStatement().getDefinedVariable())).findFirst().orElseThrow(AssertionError::new);
 
-        assertEquals(asList("a", "b"), topMatch.getObject().referencedVariables);
+        assertEquals(asList("a", "b"), topMatch.getObject().getStatement().getReferencedVariables());
         assertTrue(topMatch.out().isEmpty());
         assertEquals(2, topMatch.in().size());
         assertNull(topMatch.getParent());
         assertTrue(topMatch.getChildren().isEmpty());
 
-        assertTrue(aMatch.getObject().referencedVariables.isEmpty());
+        assertTrue(aMatch.getObject().getStatement().getReferencedVariables().isEmpty());
         assertEquals(1, aMatch.out().size());
         assertTrue(aMatch.in().isEmpty());
         assertNull(aMatch.getParent());
         assertEquals(1, aMatch.getChildren().size());
 
-        assertTrue(bMatch.getObject().referencedVariables.isEmpty());
+        assertTrue(bMatch.getObject().getStatement().getReferencedVariables().isEmpty());
         assertEquals(1, bMatch.out().size());
         assertTrue(bMatch.in().isEmpty());
         assertEquals(aMatch, bMatch.getParent());

@@ -27,17 +27,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.revapi.classif.MatchingProgress;
 import org.revapi.classif.statement.AbstractStatement;
-import org.revapi.classif.statement.StatementMatch;
 
 /**
  * This is a support class for {@link org.revapi.classif.StructuralMatcher} and
- * {@link MatchingProgress} that converts the variables and statements of a structural match into
- * a graph of dependent nodes.
+ * {@link org.revapi.classif.progress.MatchingProgress} that converts the variables and statements of a structural match
+ * into a graph of dependent nodes.
  */
 public final class DependencyGraph {
-    private final Collection<Node<MatchExecutionContext>> allNodes;
+    private final Collection<Node<StatementWrapper>> allNodes;
 
     /**
      * Creates a directed acyclic graph of dependent matchers from the provided statements
@@ -55,24 +53,24 @@ public final class DependencyGraph {
     /**
      * @return the nodes of the graph to support the matching progress
      */
-    public Collection<Node<MatchExecutionContext>> getAllNodes() {
+    public Collection<Node<StatementWrapper>> getAllNodes() {
         return allNodes;
     }
 
     @Override
     public String toString() {
-        return allNodes.stream().map(Object::toString).collect(Collectors.joining("\n\n"));
+        return allNodes.stream().filter(n -> n.getParent() == null).map(Object::toString).collect(Collectors.joining("\n\n"));
     }
 
-    private static Collection<Node<MatchExecutionContext>> initMatches(List<String> namedMatches,
-            Collection<AbstractStatement> statements, Map<String, Node<MatchExecutionContext>> definers,
-            Map<String, List<Node<MatchExecutionContext>>> referencers) {
+    private static Collection<Node<StatementWrapper>> initMatches(List<String> namedMatches,
+            Collection<AbstractStatement> statements, Map<String, Node<StatementWrapper>> definers,
+            Map<String, List<Node<StatementWrapper>>> referencers) {
 
-        List<Node<MatchExecutionContext>> rootNodes = new ArrayList<>(4);
+        List<Node<StatementWrapper>> rootNodes = new ArrayList<>(4);
 
         collectVariables(namedMatches, null, statements, rootNodes, definers, referencers);
 
-        Collection<Node<MatchExecutionContext>> ret = createGraph(rootNodes, definers, referencers);
+        Collection<Node<StatementWrapper>> ret = createGraph(rootNodes, definers, referencers);
 
         if (isCyclic(ret)) {
             throw new IllegalArgumentException("The statements' variables create a cyclic graph. This is not supported.");
@@ -105,19 +103,16 @@ public final class DependencyGraph {
         return ret;
     }
 
-    private static void collectVariables(List<String> namedMatches, Node<MatchExecutionContext> parent,
-            Collection<AbstractStatement> statements, List<Node<MatchExecutionContext>> rootNodes,
-            Map<String, Node<MatchExecutionContext>> definers,
-            Map<String, List<Node<MatchExecutionContext>>> referencers) {
+    private static void collectVariables(List<String> namedMatches, Node<StatementWrapper> parent,
+            Collection<AbstractStatement> statements, List<Node<StatementWrapper>> rootNodes,
+            Map<String, Node<StatementWrapper>> definers,
+            Map<String, List<Node<StatementWrapper>>> referencers) {
 
         for (AbstractStatement st : statements) {
-            StatementMatch stMatcher = st.createMatch();
+            StatementWrapper match = new StatementWrapper(st,
+                    st.isMatch() || namedMatches.contains(st.getDefinedVariable()));
 
-            MatchExecutionContext match = new MatchExecutionContext(st.getDefinedVariable(),
-                    st.getReferencedVariables(), st.isMatch() || namedMatches.contains(st.getDefinedVariable()),
-                    stMatcher);
-
-            Node<MatchExecutionContext> node = new Node<>(match);
+            Node<StatementWrapper> node = new Node<>(match);
 
             node.setParent(parent);
             if (parent == null) {
@@ -135,9 +130,9 @@ public final class DependencyGraph {
         }
     }
 
-    private static Collection<Node<MatchExecutionContext>> createGraph(List<Node<MatchExecutionContext>> rootNodes,
-            Map<String, Node<MatchExecutionContext>> definers,
-            Map<String, List<Node<MatchExecutionContext>>> referencers) {
+    private static Collection<Node<StatementWrapper>> createGraph(List<Node<StatementWrapper>> rootNodes,
+            Map<String, Node<StatementWrapper>> definers,
+            Map<String, List<Node<StatementWrapper>>> referencers) {
 
         // establish the dependencies caused by the variable references
         definers.forEach((name, node) -> {
@@ -148,7 +143,7 @@ public final class DependencyGraph {
         });
 
         // and now just collect the whole graph into the resulting collection
-        Set<Node<MatchExecutionContext>> ret = new HashSet<>();
+        Set<Node<StatementWrapper>> ret = new HashSet<>();
         addAllRecursively(rootNodes, ret);
 
         return ret;

@@ -37,7 +37,7 @@ import javax.lang.model.type.TypeVisitor;
 import javax.lang.model.type.WildcardType;
 
 import org.revapi.classif.TestResult;
-import org.revapi.classif.match.MatchContext;
+import org.revapi.classif.progress.context.MatchContext;
 import org.revapi.classif.util.Globbed;
 import org.revapi.classif.util.Nullable;
 
@@ -112,7 +112,7 @@ public final class TypeParameterMatch extends TypeInstanceMatch implements Globb
         } else if (bounds != null && t.getSuperBound() == null && t.getExtendsBound() == null) {
             // the wildcard represents java.lang.Object. We allow for matching java.lang.Object even if it is specified
             // as a bound and not as a wildcard.
-            TypeMirror bound = matchContext.modelInspector.getJavaLangObjectElement().asType();
+            TypeMirror bound = matchContext.getModelInspector().getJavaLangObjectElement().asType();
             return testable(bounds).testAll(m -> m.testInstance(bound, matchContext));
         } else {
             return NOT_PASSED;
@@ -131,7 +131,7 @@ public final class TypeParameterMatch extends TypeInstanceMatch implements Globb
             return false;
         } else {
             DeclaredType dt = (DeclaredType) t;
-            return ctx.modelInspector.getJavaLangObjectElement().equals(dt.asElement());
+            return ctx.getModelInspector().getJavaLangObjectElement().equals(dt.asElement());
         }
     }
 

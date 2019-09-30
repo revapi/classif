@@ -1110,6 +1110,8 @@ public final class ClassifDSL {
                 });
 
                 annos = new AnnotationsMatch(ams);
+            } else {
+                annos = new AnnotationsMatch(emptyList());
             }
 
             if (returnType != null) {

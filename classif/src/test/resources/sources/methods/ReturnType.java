@@ -14,10 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+public class ReturnType {
 
-@Retention(RetentionPolicy.RUNTIME)
-public @interface Anno {
-    String a() default "";
+    public class Base {}
+
+    public class Ret extends Base {}
+
+    public Ret method1() {
+        return null;
+    }
+
+    public Base method2() {
+        return null;
+    }
 }

@@ -22,6 +22,7 @@ import javax.lang.model.type.TypeMirror;
 import org.revapi.classif.TestResult;
 import org.revapi.classif.match.declaration.DeclarationMatch;
 import org.revapi.classif.match.instance.TypeInstanceMatch;
+import org.revapi.classif.progress.context.MatchContext;
 
 public abstract class Match {
 
@@ -30,7 +31,7 @@ public abstract class Match {
     }
 
     public final <M> TestResult test(M model, MatchContext<M> ctx) {
-        return test(ctx.modelInspector.toElement(model), ctx.modelInspector.toMirror(model), ctx);
+        return test(ctx.getModelInspector().toElement(model), ctx.getModelInspector().toMirror(model), ctx);
     }
 
     public final <M> TestResult test(Element declaration, TypeMirror instance, MatchContext<M> ctx) {

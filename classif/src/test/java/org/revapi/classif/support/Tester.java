@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.revapi.classif;
+package org.revapi.classif.support;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.revapi.classif.TestResult.DEFERRED;
@@ -28,6 +28,11 @@ import java.util.Set;
 
 import javax.lang.model.element.Element;
 
+import org.revapi.classif.progress.MatchingProgress;
+import org.revapi.classif.MirroringModelInspector;
+import org.revapi.classif.ModelInspector;
+import org.revapi.classif.StructuralMatcher;
+import org.revapi.classif.TestResult;
 import org.revapi.classif.util.TreeNode;
 import org.revapi.testjars.CompiledJar;
 
@@ -37,7 +42,7 @@ public class Tester {
     }
 
     public static TestResult test(ModelInspector<Element> insp, Element el, StructuralMatcher recipe, Element... nextElements) {
-        MatchingProgress<Element> progress = startProgress(insp, recipe);
+        MatchingProgress<Element> progress = createMatchingProgress(insp, recipe);
 
         progress.start(el);
         TestResult res = progress.finish(el);
@@ -55,7 +60,7 @@ public class Tester {
     }
 
     public static Map<Element, TestResult> test(ModelInspector<Element> insp, StructuralMatcher recipe, Hierarchy elementHierarchy) {
-        MatchingProgress<Element> progress = startProgress(insp, recipe);
+        MatchingProgress<Element> progress = createMatchingProgress(insp, recipe);
         Map<Element, TestResult> ret = new HashMap<>();
 
         for (Hierarchy el : elementHierarchy.getChildren()) {
@@ -82,7 +87,7 @@ public class Tester {
     }
 
     public static Map<Element, TestResult> testRest(ModelInspector<Element> insp, Element el, StructuralMatcher recipe, Element... nextElements) {
-        MatchingProgress<Element> progress = startProgress(insp, recipe);
+        MatchingProgress<Element> progress = createMatchingProgress(insp, recipe);
 
         progress.start(el);
         progress.finish(el);
@@ -100,7 +105,7 @@ public class Tester {
     }
 
     public static TestResult testProgressStart(ModelInspector<Element> insp, Element el, StructuralMatcher recipe) {
-        MatchingProgress<Element> progress = startProgress(insp, recipe);
+        MatchingProgress<Element> progress = createMatchingProgress(insp, recipe);
 
         return progress.start(el).getTestResult();
     }
@@ -117,7 +122,7 @@ public class Tester {
         assertSame(DEFERRED, res);
     }
 
-    private static MatchingProgress<Element> startProgress(ModelInspector<Element> insp, StructuralMatcher matcher) {
+    private static MatchingProgress<Element> createMatchingProgress(ModelInspector<Element> insp, StructuralMatcher matcher) {
         return matcher.with(insp);
     }
 
@@ -134,6 +139,11 @@ public class Tester {
 
         public static RootBuilder builder() {
             return new RootBuilder();
+        }
+
+        @Override
+        public String toString() {
+            return element.toString();
         }
 
         public static final class RootBuilder {

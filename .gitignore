@@ -11,3 +11,7 @@ target/
 .classpath
 .project
 .settings/
+
+#VS Code
+.factorypath
+.history/

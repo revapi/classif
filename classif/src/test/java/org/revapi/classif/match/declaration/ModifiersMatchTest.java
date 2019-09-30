@@ -16,13 +16,13 @@
  */
 package org.revapi.classif.match.declaration;
 
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.revapi.classif.TestResult.NOT_PASSED;
 import static org.revapi.classif.TestResult.PASSED;
 
-import java.util.Collections;
 import java.util.stream.Stream;
 
 import javax.lang.model.element.TypeElement;
@@ -33,7 +33,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.revapi.classif.MirroringModelInspector;
 import org.revapi.classif.TestResult;
-import org.revapi.classif.match.MatchContext;
+import org.revapi.classif.progress.context.MatchContext;
 import org.revapi.testjars.CompiledJar;
 import org.revapi.testjars.junit5.CompiledJarExtension;
 import org.revapi.testjars.junit5.JarSources;
@@ -62,7 +62,7 @@ class ModifiersMatchTest {
         TypeElement testClass = classes.elements().getTypeElement("modifiers.TestClass");
 
         TestResult matches = statement.test(testClass, testClass.asType(),
-                new MatchContext<>(new MirroringModelInspector(classes.elements(), classes.types()), Collections.emptyMap()));
+                new MatchContext<>(new MirroringModelInspector(classes.elements(), classes.types()), emptySet()));
 
         assertEquals(expectedMatch, matches);
     }

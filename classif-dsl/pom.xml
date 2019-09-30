@@ -33,7 +33,7 @@
     <name>Classif :: DSL</name>
 
     <properties>
-        <automatic.module.name>org.revapi.classif</automatic.module.name>
+        <automatic.module.name>org.revapi.classif.dsl</automatic.module.name>
     </properties>
 
     <dependencies>

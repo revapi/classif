@@ -31,7 +31,7 @@ import org.revapi.classif.util.TreeNode;
  * This DAG is observable using the {@link #in()} and {@link #out()} methods.
  *
  * @param <T> the type of the data stored in the node. This class is also internally used in MatchingProgress and
- *           therefore is not bound to hold just the {@link MatchExecutionContext} which {@link DependencyGraph} uses.
+ *           therefore is not bound to hold just the {@link StatementWrapper} which {@link DependencyGraph} uses.
  */
 public final class Node<T> extends TreeNode<Node<T>> implements Cloneable {
     private final T object;

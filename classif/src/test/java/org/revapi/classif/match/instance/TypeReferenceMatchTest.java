@@ -16,7 +16,7 @@
  */
 package org.revapi.classif.match.instance;
 
-import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -43,8 +43,8 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.revapi.classif.MirroringModelInspector;
 import org.revapi.classif.TestResult;
-import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.NameMatch;
+import org.revapi.classif.progress.context.MatchContext;
 import org.revapi.testjars.CompiledJar;
 import org.revapi.testjars.junit5.CompiledJarExtension;
 import org.revapi.testjars.junit5.JarSources;
@@ -93,7 +93,7 @@ class TypeReferenceMatchTest {
 
     @BeforeAll
     void setup() {
-        ctx = new MatchContext<>(new MirroringModelInspector(environment.elements(), environment.types()), emptyMap());
+        ctx = new MatchContext<>(new MirroringModelInspector(environment.elements(), environment.types()), emptySet());
         TestClass = environment.elements().getTypeElement("TestClass");
         Generic = environment.elements().getTypeElement("TestClass.Generic");
         Wildcard = environment.elements().getTypeElement("TestClass.Wildcard");

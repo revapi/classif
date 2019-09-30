@@ -49,6 +49,7 @@ import static org.revapi.classif.match.declaration.TypeKind.ANY;
 import static org.revapi.classif.match.declaration.TypeKind.CLASS;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 
 import javax.lang.model.element.Element;
@@ -64,8 +65,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.revapi.classif.Classif;
 import org.revapi.classif.StructuralMatcher;
 import org.revapi.classif.TestResult;
-import org.revapi.classif.Tester;
-import org.revapi.classif.Tester.Hierarchy;
+import org.revapi.classif.support.Tester;
+import org.revapi.classif.support.Tester.Hierarchy;
 import org.revapi.testjars.CompiledJar;
 import org.revapi.testjars.junit5.CompiledJarExtension;
 import org.revapi.testjars.junit5.JarSources;
@@ -74,12 +75,15 @@ import org.revapi.testjars.junit5.JarSources;
 @ExtendWith(CompiledJarExtension.class)
 class MethodStatementTest {
     @JarSources(root = "/sources/methods/", sources = {"Base.java", "Inherited.java", "Annotated.java",
-            "TypeParameters.java"})
+            "TypeParameters.java", "ReturnType.java"})
     private CompiledJar.Environment env;
 
     private TypeElement Base;
     private TypeElement Inherited;
     private TypeElement TypeParameters;
+    private TypeElement ReturnType;
+    private TypeElement ReturnTypeBase;
+    private TypeElement ReturnTypeRet;
     private ExecutableElement baseMethodInBase;
     private ExecutableElement baseMethodInInherited;
     private ExecutableElement methodParameter;
@@ -99,6 +103,8 @@ class MethodStatementTest {
     private ExecutableElement superWildcardMethod;
     private ExecutableElement classTypeParamsBasedWildcard;
     private ExecutableElement ownTypeParamBasedWildcard;
+    private ExecutableElement returnTypeMethod1;
+    private ExecutableElement returnTypeMethod2;
 
     @BeforeEach
     void loadElements() {
@@ -106,11 +112,15 @@ class MethodStatementTest {
         Base = els.getTypeElement("Base");
         Inherited = els.getTypeElement("Inherited");
         TypeParameters = els.getTypeElement("TypeParameters");
-        
+        ReturnType = els.getTypeElement("ReturnType");
+        ReturnTypeBase = els.getTypeElement("ReturnType.Base");
+        ReturnTypeRet = els.getTypeElement("ReturnType.Ret");
+
         List<? extends ExecutableElement> methodsInBase = methodsIn(Base.getEnclosedElements());
         List<? extends ExecutableElement> methodsInInherited = methodsIn(Inherited.getEnclosedElements());
         List<? extends ExecutableElement> methodsInTypeParameters = methodsIn(TypeParameters.getEnclosedElements());
-        
+        List<? extends ExecutableElement> methodsInReturnType = methodsIn(ReturnType.getEnclosedElements());
+
         BiFunction<List<? extends ExecutableElement>, String, ExecutableElement> findByName = (list, name) ->
                 list.stream().filter(m -> m.getSimpleName().contentEquals(name)).findFirst().get();
 
@@ -133,6 +143,8 @@ class MethodStatementTest {
         superWildcardMethod = findByName.apply(methodsInTypeParameters, "superWildcardMethod");
         classTypeParamsBasedWildcard = findByName.apply(methodsInTypeParameters, "classTypeParamsBasedWildcard");
         ownTypeParamBasedWildcard = findByName.apply(methodsInTypeParameters, "ownTypeParamBasedWildcard");
+        returnTypeMethod1 = findByName.apply(methodsInReturnType, "method1");
+        returnTypeMethod2 = findByName.apply(methodsInReturnType, "method2");
     }
 
     @Test
@@ -493,23 +505,22 @@ class MethodStatementTest {
                 .build(),
                 throwingMethod, throwingMethod2);
 
-        // type * { ^*() throws java.lang.Exception; }
+        // type * { ^*(**) throws *; }
         StructuralMatcher singleException = Classif.match()
                 .$(type(ANY, any())
-                        .$(method(any()).matched()
-                                .throws_(type().fqn(exact("java"), exact("lang"), exact("Exception")))))
+                        .$(method(any()).matched().$(anyParameters()).throws_(anyType())))
                 .build();
 
-        tests.test(singleException, PASSED, NOT_PASSED);
+        //tests.test(singleException, PASSED, NOT_PASSED);
 
         // type * { ^*() throws java.lang.Exception|%e, **; } class %e=* extends java.lang.Exception {}
         StructuralMatcher moreExceptions = Classif.match()
                 .$(type(ANY, any())
                         .$(method(any()).matched()
                                 .throws_(type().fqn(exact("java"), exact("lang"), exact("Exception"))
-                                        .or().var("e"))
+                                        .or().ref("e"))
                                 .throws_(anyTypes())))
-                .$(type(CLASS, any()).called("e")
+                .$(type(CLASS, any()).as("e")
                         .$(extends_(type().fqn(exact("java"), exact("lang"), exact("Exception")))))
                 .build();
 
@@ -524,6 +535,30 @@ class MethodStatementTest {
                 .build();
 
         tests.test(twoExceptions, NOT_PASSED, PASSED);
+    }
+
+    @Test
+    void testReturnType() {
+        Tests tests = new Tests(Hierarchy.builder()
+                .start(ReturnType)
+                .add(ReturnTypeBase)
+                .add(ReturnTypeRet)
+                .add(returnTypeMethod1)
+                .add(returnTypeMethod2)
+                .end()
+                .build(),
+                returnTypeMethod1, returnTypeMethod2);
+
+        // type * { %r ^method1(); class %r=* extends ReturnType.Base {} }
+        StructuralMatcher match = Classif.match()
+                .$(type(ANY, any())
+                        .$(method(exact("method1")).matched()
+                                .returns(type().ref("r")))
+                        .$(type(CLASS, any()).as("r")
+                                .$(extends_(type().fqn(exact("ReturnType"), exact("Base"))))))
+                .build();
+
+        tests.test(match, PASSED, NOT_PASSED);
     }
 
     @Test
@@ -555,8 +590,10 @@ class MethodStatementTest {
                 fail("Expecting to test " + testedElements.length + " elements.");
             }
 
+            Map<Element, TestResult> results = Tester.test(env, recipe, hierarchy);
+
             for (int i = 0; i < testedElements.length; ++i) {
-                Assertions.assertEquals(expectedResults[i], Tester.test(env, recipe, hierarchy).get(testedElements[i]),
+                Assertions.assertEquals(expectedResults[i], results.get(testedElements[i]),
                         "Failed to match on index " + i + " (" + testedElements[i] + ").");
             }
         }

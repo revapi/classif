@@ -56,7 +56,7 @@ import javax.lang.model.util.SimpleTypeVisitor8;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.revapi.classif.TestResult;
-import org.revapi.classif.match.MatchContext;
+import org.revapi.classif.progress.context.MatchContext;
 import org.revapi.classif.match.NameMatch;
 import org.revapi.classif.match.instance.FqnMatch;
 import org.revapi.classif.match.instance.TypeReferenceMatch;

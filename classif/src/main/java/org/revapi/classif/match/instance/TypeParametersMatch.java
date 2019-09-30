@@ -28,7 +28,7 @@ import javax.lang.model.type.IntersectionType;
 import javax.lang.model.type.TypeVariable;
 
 import org.revapi.classif.TestResult;
-import org.revapi.classif.match.MatchContext;
+import org.revapi.classif.progress.context.MatchContext;
 import org.revapi.classif.util.Glob;
 
 public final class TypeParametersMatch extends TypeInstanceMatch {

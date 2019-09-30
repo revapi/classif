@@ -22,12 +22,13 @@ import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
 
 import org.revapi.classif.TestResult;
-import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.NameMatch;
 import org.revapi.classif.match.declaration.AnnotationsMatch;
 import org.revapi.classif.match.declaration.ModifiersMatch;
 import org.revapi.classif.match.declaration.UsesMatch;
 import org.revapi.classif.match.instance.TypeReferenceMatch;
+import org.revapi.classif.progress.StatementMatch;
+import org.revapi.classif.progress.context.MatchContext;
 import org.revapi.classif.util.Nullable;
 
 public final class FieldStatement extends AbstractStatement {
@@ -49,12 +50,12 @@ public final class FieldStatement extends AbstractStatement {
     }
 
     @Override
-    public StatementMatch createMatch() {
-        return new StatementMatch() {
+    public <M> StatementMatch<M> createMatch() {
+        return new StatementMatch<M>() {
             @Override
-            public <M> TestResult testVariable(M var, MatchContext<M> ctx) {
-                Element element = ctx.modelInspector.toElement(var);
-                TypeMirror type = ctx.modelInspector.toMirror(var);
+            public TestResult testVariable(M var, MatchContext<M> ctx) {
+                Element element = ctx.getModelInspector().toElement(var);
+                TypeMirror type = ctx.getModelInspector().toMirror(var);
 
                 TestResult res = TestResult.fromBoolean(name.matches(element.getSimpleName().toString()));
 

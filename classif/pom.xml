@@ -37,6 +37,14 @@
         <automatic.module.name>org.revapi.classif</automatic.module.name>
     </properties>
 
+    <dependencies>
+        <dependency>
+            <groupId>pw.krejci</groupId>
+            <artifactId>tracedepth-log4j2-plugin</artifactId>
+            <version>0.1.0</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
     <build>
         <plugins>
             <plugin>

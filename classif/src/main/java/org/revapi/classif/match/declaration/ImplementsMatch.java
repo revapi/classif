@@ -31,7 +31,7 @@ import javax.lang.model.type.TypeMirror;
 
 import org.revapi.classif.ModelInspector;
 import org.revapi.classif.TestResult;
-import org.revapi.classif.match.MatchContext;
+import org.revapi.classif.progress.context.MatchContext;
 import org.revapi.classif.match.instance.TypeReferenceMatch;
 import org.revapi.classif.util.Glob;
 import org.revapi.classif.util.Nullable;
@@ -51,10 +51,10 @@ public final class ImplementsMatch extends DeclarationMatch {
     protected <M> TestResult testType(TypeElement declaration, TypeMirror instantiation, MatchContext<M> ctx) {
         if (glob == null) {
             assert types != null;
-            List<DeclaredType> impld = getImplemented(instantiation, ctx.modelInspector);
+            List<DeclaredType> impld = getImplemented(instantiation, ctx.getModelInspector());
             return testable(types).testAll(m -> testable(impld).testAny(i -> m.testInstance(i, ctx)));
         } else {
-            return glob.testUnordered((m, t) -> m.testInstance(t, ctx), getImplemented(instantiation, ctx.modelInspector));
+            return glob.testUnordered((m, t) -> m.testInstance(t, ctx), getImplemented(instantiation, ctx.getModelInspector()));
         }
     }
 

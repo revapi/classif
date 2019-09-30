@@ -26,8 +26,8 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVisitor;
 
 import org.revapi.classif.TestResult;
-import org.revapi.classif.match.MatchContext;
 import org.revapi.classif.match.instance.TypeReferenceMatch;
+import org.revapi.classif.progress.context.MatchContext;
 
 public final class UsesMatch extends DeclarationMatch {
 
@@ -41,7 +41,7 @@ public final class UsesMatch extends DeclarationMatch {
 
     @Override
     public <M> TestResult testAnyDeclaration(Element declaration, TypeMirror instantiation, MatchContext<M> ctx) {
-        TypeVisitor<Stream<DeclaredType>, ?> visitor = UseVisitor.findUses(ctx.modelInspector);
+        TypeVisitor<Stream<DeclaredType>, ?> visitor = UseVisitor.findUses(ctx.getModelInspector());
 
         Stream<DeclaredType> directUses = visitor.visit(instantiation);
 
@@ -52,7 +52,7 @@ public final class UsesMatch extends DeclarationMatch {
         if (onlyDirect) {
             return testable(directUses).testAny(u -> type.testInstance(u, ctx));
         } else {
-            return testRecursively(directUses, ctx, UseVisitor.findUses(ctx.modelInspector));
+            return testRecursively(directUses, ctx, UseVisitor.findUses(ctx.getModelInspector()));
         }
     }
 

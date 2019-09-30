@@ -25,9 +25,9 @@ import static org.revapi.classif.Classif.match;
 import static org.revapi.classif.Classif.modifiers;
 import static org.revapi.classif.Classif.type;
 import static org.revapi.classif.Classif.value;
-import static org.revapi.classif.Tester.assertNotPassed;
-import static org.revapi.classif.Tester.assertPassed;
-import static org.revapi.classif.Tester.test;
+import static org.revapi.classif.support.Tester.assertNotPassed;
+import static org.revapi.classif.support.Tester.assertPassed;
+import static org.revapi.classif.support.Tester.test;
 import static org.revapi.classif.match.NameMatch.all;
 import static org.revapi.classif.match.NameMatch.any;
 import static org.revapi.classif.match.NameMatch.exact;
@@ -55,7 +55,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.revapi.classif.Classif;
 import org.revapi.classif.StructuralMatcher;
 import org.revapi.classif.TestResult;
-import org.revapi.classif.Tester;
+import org.revapi.classif.support.Tester;
 import org.revapi.classif.match.declaration.Modifier;
 import org.revapi.classif.match.Operator;
 import org.revapi.testjars.CompiledJar;
@@ -608,8 +608,8 @@ class GenericStatementTest {
 
         // @%a ^; type %a=Annotated{}
         StructuralMatcher multipleMatchSteps = match()
-                .$(declaration().matched().$(annotation(type().var("a"))))
-                .$(type(ANY, exact("Annotated")).called("a"))
+                .$(declaration().matched().$(annotation(type().ref("a"))))
+                .$(type(ANY, exact("Annotated")).as("a"))
                 .build();
 
         // testing the optimized progress path in case of a single match step
@@ -634,8 +634,8 @@ class GenericStatementTest {
         // #strictHierarchy; @%a ^; type %a=Annotated{}
         StructuralMatcher multipleMatchSteps = match()
                 .strictHierarchy()
-                .$(declaration().matched().$(annotation(type().var("a"))))
-                .$(type(ANY, exact("Annotated")).called("a"))
+                .$(declaration().matched().$(annotation(type().ref("a"))))
+                .$(type(ANY, exact("Annotated")).as("a"))
                 .build();
 
         // testing the optimized progress path in case of a single match step

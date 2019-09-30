@@ -81,7 +81,7 @@ public abstract class NameMatch implements Globbed {
 
         @Override
         public boolean matches(String name) {
-            return LOG.traceExit(traceParams(LOG, "this", this, "name", name), match.equals(name));
+            return LOG.traceExit(LOG.traceEntry(traceParams(LOG, "this", this, "name", name)), match.equals(name));
         }
 
         @Override

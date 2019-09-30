@@ -17,6 +17,7 @@
 package org.revapi.classif.match.instance;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.revapi.classif.TestResult.NOT_PASSED;
@@ -26,7 +27,6 @@ import static org.revapi.classif.match.NameMatch.any;
 import static org.revapi.classif.match.NameMatch.exact;
 import static org.revapi.classif.match.NameMatch.pattern;
 
-import java.util.Collections;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -38,7 +38,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.revapi.classif.MirroringModelInspector;
 import org.revapi.classif.TestResult;
-import org.revapi.classif.match.MatchContext;
+import org.revapi.classif.progress.context.MatchContext;
 import org.revapi.testjars.CompiledJar;
 import org.revapi.testjars.junit5.CompiledJarExtension;
 import org.revapi.testjars.junit5.JarSources;
@@ -72,7 +72,7 @@ class FqnMatchTest {
 
         TestResult matches = matcher.test(testClass, testClass.asType(),
                 new MatchContext<>(new MirroringModelInspector(fqnClasses.elements(), fqnClasses.types()),
-                        Collections.emptyMap()));
+                        emptySet()));
 
         assertEquals(expectedMatch, matches);
     }

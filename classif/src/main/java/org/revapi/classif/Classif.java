@@ -66,6 +66,9 @@ import org.revapi.classif.statement.TypeDefinitionStatement;
 import org.revapi.classif.util.Nullable;
 import org.revapi.classif.match.Operator;
 
+/**
+ * This is a builder for creating Classif queries. Start with {@link #match()} or its variants with more arguments.
+ */
 @SuppressWarnings("unused")
 public final class Classif {
 
@@ -73,10 +76,19 @@ public final class Classif {
         throw new AssertionError("No!");
     }
 
+    /**
+     * @return a new query builder
+     */
     public static Builder match() {
         return new Builder(emptyList());
     }
 
+    /**
+     * @return a query builder that will return elements matching statements that are referred to by the provided
+     * variable names.
+     *
+     * @see AbstractStatementBuilder#as(String)
+     */
     public static Builder match(String var, String... vars) {
         List<String> rets = new ArrayList<>(vars.length + 1);
         rets.add(var);
@@ -85,80 +97,180 @@ public final class Classif {
         return new Builder(rets);
     }
 
+    /**
+     * A convenience overload of {@link #match(String, String...)}
+     */
     public static Builder match(Collection<String> vars) {
         return new Builder(vars);
     }
 
+    /**
+     * Starts building a query for any kind of statement.
+     */
     public static GenericStatementBuilder declaration() {
         return new GenericStatementBuilder();
     }
 
+    /**
+     * Starts building a query for a field with the matching name.
+     *
+     * @param name requirements on the name
+     * @see NameMatch#all()
+     * @see NameMatch#any()
+     * @see NameMatch#exact(String)
+     * @see NameMatch#pattern(Pattern)
+     */
     public static FieldStatementBuilder field(NameMatch name) {
         return new FieldStatementBuilder(name);
     }
 
+    /**
+     * Starts building a query for a method with the matching name.
+     *
+     * @param name requirements on the name
+     * @see NameMatch#all()
+     * @see NameMatch#any()
+     * @see NameMatch#exact(String)
+     * @see NameMatch#pattern(Pattern)
+     */
     public static MethodStatementBuilder method(NameMatch name) {
         return new MethodStatementBuilder(name);
     }
 
+    /**
+     * A convenience method to start building a query for a type with the specified kind and fully qualified name.
+     *
+     * @param kind the kind of the type
+     * @param fqnFirstPart the match for the top-level part of the hierarchical fully qualified name of the type
+     * @param fqnRest the matches for the "lower-level" parts of the hierarchical fully qualified name of the type
+     * @see #type(TypeKindBuilder, FqnMatchBuilder)
+     */
     public static TypeDefinitionStatementBuilder type(TypeKind kind, NameMatch fqnFirstPart, NameMatch... fqnRest) {
         return type(new TypeKindBuilder(kind), fqn(fqnFirstPart, fqnRest));
     }
 
+    /**
+     * A convenience method to start building a query for a type with the specified kind and fully qualified name.
+     *
+     * @param kind the kind of the type
+     * @param fqn the match for the hierarchical fully qualified name of the type
+     * @see #type(TypeKindBuilder, FqnMatchBuilder)
+     */
     public static TypeDefinitionStatementBuilder type(TypeKind kind, FqnMatchBuilder fqn) {
         return new TypeDefinitionStatementBuilder(new TypeKindBuilder(kind), fqn);
     }
 
+
+    /**
+     * A convenience method to start building a query for a type with the specified kind and fully qualified name.
+     *
+     * @param kind the kind of the type
+     * @param fqnFirstPart the match for the top-level part of the hierarchical fully qualified name of the type
+     * @param fqnRest the matches for the "lower-level" parts of the hierarchical fully qualified name of the type
+     * @see #type(TypeKindBuilder, FqnMatchBuilder)
+     */
     public static TypeDefinitionStatementBuilder type(TypeKindBuilder kind, NameMatch fqnFirstPart, NameMatch... fqnRest) {
         return new TypeDefinitionStatementBuilder(kind, fqn(fqnFirstPart, fqnRest));
     }
 
+    /**
+     * Starts a query for a type of a specified kind and fully qualified name.
+     *
+     * @see #kind(TypeKind)
+     * @see #fqn(NameMatch, NameMatch...)
+     */
     public static TypeDefinitionStatementBuilder type(TypeKindBuilder kind, FqnMatchBuilder fqn) {
         return new TypeDefinitionStatementBuilder(kind, fqn);
     }
 
+    /**
+     * Builds a match for a hierarchical fully qualified name.
+     * @param name the match for the top-level part of the hierarchical fully qualified name of the type
+     * @param names the matches for the "lower-level" parts of the hierarchical fully qualified name of the type
+     */
     public static FqnMatchBuilder fqn(NameMatch name, NameMatch... names) {
         ArrayList<NameMatch> parts = new ArrayList<>(names.length + 1);
         parts.add(name);
-        for (NameMatch n : names) {
-            parts.add(n);
-        }
+        parts.addAll(asList(names));
 
         return new FqnMatchBuilder(parts);
     }
 
+    /**
+     * Starts a query for a type parameter wildcard.
+     */
     public static TypeParameterMatchBuilder wildcard() {
         return new TypeParameterWildcardBuilder(true);
     }
 
+    /**
+     * Starts a query for a type parameter wildcard extending the provided type.
+     *
+     * @param type the type the wildcard should extend
+     * @see #type()
+     * @see #type(TypeKindBuilder, FqnMatchBuilder)
+     * @see #anyType()
+     * @see #anyTypes()
+     */
     public static TypeParameterWildcardBuilder wildcardExtends(TypeReferenceMatchBuilder type) {
         return new TypeParameterWildcardBuilder(true).and(type);
     }
 
+    /**
+     * Starts a query for a type parameter wildcard that is a supertype of the provided type.
+     *
+     * @param type the type the wildcard should be super type of
+     * @see #type()
+     * @see #type(TypeKindBuilder, FqnMatchBuilder)
+     * @see #anyType()
+     * @see #anyTypes()
+     */
     public static TypeParameterWildcardBuilder wildcardSuper(TypeReferenceMatchBuilder type) {
         return new TypeParameterWildcardBuilder(false).and(type);
     }
 
+    /**
+     * Starts building a bound of a type parameter.
+     *
+     * @param type the bound type
+     */
     public static TypeParameterBoundBuilder bound(TypeReferenceMatchBuilder type) {
         return new TypeParameterBoundBuilder().and(type);
     }
 
+    /**
+     * Starts building a query for some type.
+     */
     public static TypeReferenceMatchBuilder type() {
         return new TypeReferenceMatchBuilder();
     }
 
+    /**
+     * Starts building a query for any type.
+     */
     public static TypeReferenceMatchBuilder anyType() {
         return type().fqn(NameMatch.any());
     }
 
+    /**
+     * Starts building a query for a (possibly empty) list of arbitrary types.
+     */
     public static TypeReferenceMatchBuilder anyTypes() {
         return type().fqn(NameMatch.all());
     }
 
+    /**
+     * Starts building a constraint on uses of a statement.
+     * @param type the type the statement should be using.
+     */
     public static UsesMatchBuilder uses(TypeReferenceMatchBuilder type) {
         return new UsesMatchBuilder(type);
     }
 
+    /**
+     * Starts building a constraint on a type that limits to only types used by statements referred to by the provided
+     * variables.
+     */
     public static UsedByMatchBuilder usedBy(String var, String... vars) {
         List<String> vs = new ArrayList<>(vars.length + 1);
         vs.add(var);
@@ -167,22 +279,31 @@ public final class Classif {
         return new UsedByMatchBuilder(vs);
     }
 
+    /**
+     * Starts building a type kind match.
+     */
     public static TypeKindBuilder kind(TypeKind kind) {
         return new TypeKindBuilder(kind);
     }
 
-    public static ThrowsMatchBuilder throws_() {
-        return new ThrowsMatchBuilder();
-    }
-
+    /**
+     * Starts building a constraint to only consider methods that override a method from a super type.
+     */
     public static OverridesMatchBuilder overrides() {
         return new OverridesMatchBuilder();
     }
 
+    /**
+     * Starts building a constraint on modifiers of a statement.
+     */
     public static ModifiersMatchBuilder modifiers() {
         return new ModifiersMatchBuilder();
     }
 
+    /**
+     * A convenience method to specify more modifiers in a row.
+     * @see #modifiers()
+     */
     public static ModifiersMatchBuilder modifiers(Modifier first, Modifier...rest) {
         ModifiersMatchBuilder ret = new ModifiersMatchBuilder().$(first);
         for (Modifier m : rest) {
@@ -192,68 +313,115 @@ public final class Classif {
         return ret;
     }
 
+    /**
+     * A method to select statements with at least one of the modifiers.
+s     */
     public static ModifierClusterMatchBuilder atLeastOne() {
         return new ModifierClusterMatchBuilder();
     }
 
+    /**
+     * Starts building a constraint on the default value of a method.
+     */
     public static DefaultMethodValueMatchBuilder defaultValue() {
         return new DefaultMethodValueMatchBuilder();
     }
 
+    /**
+     * Starts building a constraint on annotation value.
+     * @param operator operator to use for the value comparisons
+     */
     public static AnnotationValueBuilder value(Operator operator) {
         return new AnnotationValueBuilder(operator);
     }
 
+    /**
+     * Matches zero or more annotation values with any value (useful for matching arrays for example).
+     */
     public static AnnotationValueMatchAllBuilder allValues() {
         return new AnnotationValueMatchAllBuilder();
     }
 
+    /**
+     * Starts building a constraint on an annotation present on some statement.
+     * @param type the type of the annotation on the statement
+     */
     public static AnnotationMatchBuilder annotation(TypeReferenceMatchBuilder type) {
         return new AnnotationMatchBuilder(type);
     }
 
+    /**
+     * Starts building a constraint on an annotation attribute with given name.
+     * @param name the match on the name of the annotation attribute.
+     */
     public static AnnotationAttributeValueBuilder attribute(NameMatch name) {
         return new AnnotationAttributeValueBuilder(name);
     }
 
+    /**
+     * Matches an annotation attribute with any name.
+     */
     public static AnnotationAttributeAnyBuilder anyAttribute() {
         return new AnnotationAttributeAnyBuilder();
     }
 
-    public static AnntotationAttributeAllBuilder anyAttributes() {
-        return new AnntotationAttributeAllBuilder();
+    /**
+     * Matches zero or more attribures of any name and value.
+     */
+    public static AnnotationAttributeAllBuilder anyAttributes() {
+        return new AnnotationAttributeAllBuilder();
     }
 
+    /**
+     * Starts a constraint on an array value of an annotation attribute.
+     */
     public static AnnotationArrayValueBuilder array() {
         return new AnnotationArrayValueBuilder();
     }
 
+    /**
+     * Starts a constraint on an item in an array value of an annotation attribute.
+     */
     public static AnnotationArrayItemValueBuilder item() {
         return new AnnotationArrayItemValueBuilder();
     }
 
+    /**
+     * Starts a constraint on the parameter of a method.
+     * @param type the type of the method parameter
+     */
     public static MethodParameterMatchBuilder parameter(TypeReferenceMatchBuilder type) {
         return new MethodParameterMatchBuilder(type);
     }
 
+    /**
+     * A constraint requiring a single method parameter with arbitrary type.
+     * Equivalent to {@code parameter(anyType())}.
+     */
     public static MethodParameterMatchBuilder anyParameter() {
         return new MethodParameterMatchBuilder(anyType());
     }
 
+    /**
+     * A constraint requiring zero or more method parameters with arbirary types.
+     */
     public static MethodParameterMatchBuilder anyParameters() {
         return new MethodParameterMatchBuilder(anyTypes());
     }
 
+    /**
+     * Starts a constraint on the interfaces implemented by a type.
+     */
     public static ImplementsMatchBuilder implements_() {
         return new ImplementsMatchBuilder();
     }
 
+    /**
+     * Starts a constraints on the super type of a type.
+     * @param type the required super type
+     */
     public static ExtendsMatchBuilder extends_(TypeReferenceMatchBuilder type) {
         return new ExtendsMatchBuilder(type);
-    }
-
-    public static ModifierClusterMatchBuilder group() {
-        return new ModifierClusterMatchBuilder();
     }
 
     private abstract static class AbstractStatementBuilder<This extends AbstractStatementBuilder<This, S>, S extends AbstractStatement> extends AbstractMatchBuilder<S> {
@@ -267,32 +435,59 @@ public final class Classif {
 
         }
 
-        public This called(String name) {
+        /**
+         * Assigns a name to the statement using which it can be referred to in other places of the query.
+         * @see #match(String, String...)
+         * @see #usedBy(String, String...)
+         * @see SingleTypeReferenceMatchBuilder#ref(String)
+         */
+        public This as(String name) {
             this.definedVariable = name;
             return castThis();
         }
 
+        /**
+         * Makes this statement returned from the query
+         */
         public This matched() {
             this.isMatch = true;
             return castThis();
         }
 
+        /**
+         * Sets a constraint on modifiers of the statement
+         * @param modifiers the modifiers
+         * @see #modifiers()
+         * @see #modifiers(Modifier, Modifier...)
+         * @see #atLeastOne()
+         */
         public This $(ModifiersMatchBuilder modifiers) {
             this.modifiers = modifiers;
             return castThis();
         }
 
+        /**
+         * Sets a constraint on annotation on the statement
+         * @param annotation the annotation to match
+         * @see #annotation(TypeReferenceMatchBuilder)
+         */
         public This $(AnnotationMatchBuilder annotation) {
             this.annotations.add(annotation);
             return castThis();
         }
 
+        /**
+         * Negates this statement. I.e. it is only matched if it doesn't comply with this query.
+         */
         public This negated() {
             this.negation = true;
             return castThis();
         }
     }
 
+    /**
+     * Builds a query matching any kind of statement.
+     */
     public static final class GenericStatementBuilder extends AbstractStatementBuilder<GenericStatementBuilder, GenericStatement> {
         private @Nullable UsesMatchBuilder uses;
 
@@ -300,6 +495,10 @@ public final class Classif {
 
         }
 
+        /**
+         * Sets a constraint on what types this statement uses.
+         * @see #uses(TypeReferenceMatchBuilder)
+         */
         public GenericStatementBuilder $(UsesMatchBuilder uses) {
             this.uses = uses;
             return this;
@@ -311,6 +510,9 @@ public final class Classif {
         }
     }
 
+    /**
+     * Builds a query on a field.
+     */
     public static final class FieldStatementBuilder extends AbstractStatementBuilder<FieldStatementBuilder, FieldStatement> {
         private final NameMatch name;
         private @Nullable TypeReferenceMatchBuilder type;
@@ -321,16 +523,32 @@ public final class Classif {
             this.name = name;
         }
 
+        /**
+         * Sets a constraint on the type of the field.
+         * @see #type()
+         * @see #type(TypeKindBuilder, FqnMatchBuilder)
+         * @see #anyType()
+         */
         public FieldStatementBuilder $(TypeReferenceMatchBuilder type) {
             this.type = type;
             return this;
         }
 
+        /**
+         * Sets the constraint on the type the field is declared in.
+         * @see #type()
+         * @see #type(TypeKindBuilder, FqnMatchBuilder)
+         * @see #anyType()
+         */
         public FieldStatementBuilder declaredIn(TypeReferenceMatchBuilder type) {
             this.declaringType = type;
             return this;
         }
 
+        /**
+         * Sets the constraint on what types this field uses.
+         * @see #uses(TypeReferenceMatchBuilder)
+         */
         public FieldStatementBuilder $(UsesMatchBuilder uses) {
             this.uses = uses;
             return this;
@@ -343,6 +561,9 @@ public final class Classif {
         }
     }
 
+    /**
+     * Builds a query on a method.
+     */
     public static final class MethodStatementBuilder extends AbstractStatementBuilder<MethodStatementBuilder, MethodStatement> {
         private final NameMatch name;
         private @Nullable TypeReferenceMatchBuilder returnType;
@@ -358,41 +579,88 @@ public final class Classif {
             this.name = name;
         }
 
+        /**
+         * Sets the constraint on the return type of the method.
+         * @see #type()
+         * @see #type(TypeKindBuilder, FqnMatchBuilder)
+         * @see #anyType()
+         */
         public MethodStatementBuilder returns(TypeReferenceMatchBuilder type) {
             this.returnType = type;
             return this;
         }
 
+        /**
+         * Sets the constraint on the type the method is declared in.
+         * @see #type()
+         * @see #type(TypeKindBuilder, FqnMatchBuilder)
+         * @see #anyType()
+         */
         public MethodStatementBuilder declaredIn(TypeReferenceMatchBuilder type) {
             this.declaringType = type;
             return this;
         }
 
+        /**
+         * Sets the constraint on the method type parameter. Multiple calls of this method define constraints on the
+         * consecutive method type parameters.
+         * @param typeParameter the type parameter of the method
+         * @see #bound(TypeReferenceMatchBuilder)
+         * @see #wildcard()
+         * @see #wildcardSuper(TypeReferenceMatchBuilder)
+         * @see #wildcardExtends(TypeReferenceMatchBuilder)
+         */
         public MethodStatementBuilder $(TypeParameterMatchBuilder typeParameter) {
             this.typeParameters.add(typeParameter);
             return this;
         }
 
+        /**
+         * Sets the constraint on what this method overrides.
+         * @see #overrides()
+         */
         public MethodStatementBuilder $(OverridesMatchBuilder overrides) {
             this.overrides = overrides;
             return this;
         }
 
+        /**
+         * Sets a constraint on what types this method uses.
+         * @see #uses(TypeReferenceMatchBuilder)
+         */
         public MethodStatementBuilder $(UsesMatchBuilder uses) {
             this.uses = uses;
             return this;
         }
 
+        /**
+         * Sets a constraint on what this method throws.
+         * @see #type()
+         * @see #type(TypeKindBuilder, FqnMatchBuilder)
+         * @see #anyType()
+         */
         public MethodStatementBuilder throws_(TypeReferenceMatchBuilder type) {
             this.throws_.add(type);
             return this;
         }
 
+        /**
+         * Sets the constraint on the method parameter. Multiple calls of this method define constraints on the
+         * consecutive method parameters.
+         * @param parameter the parameter of the method
+         * @see #anyParameter()
+         * @see #anyParameters()
+         * @see #parameter(TypeReferenceMatchBuilder)
+         */
         public MethodStatementBuilder $(MethodParameterMatchBuilder parameter) {
             this.parameters.add(parameter);
             return this;
         }
 
+        /**
+         * Sets a constraint on the default value of a method.
+         * @see #defaultValue()
+         */
         public MethodStatementBuilder $(DefaultMethodValueMatchBuilder defaultValue) {
             this.defaultValue = defaultValue;
             return this;
@@ -417,6 +685,9 @@ public final class Classif {
         }
     }
 
+    /**
+     * Builds a query for a type.
+     */
     public static final class TypeDefinitionStatementBuilder extends AbstractStatementBuilder<TypeDefinitionStatementBuilder, TypeDefinitionStatement> {
         private final TypeKindBuilder typeKind;
         private final FqnMatchBuilder fqn;
@@ -432,41 +703,83 @@ public final class Classif {
             this.fqn = fqn;
         }
 
+        /**
+         * Sets the constraint on the generic type parameter. Multiple calls of this method define constraints on the
+         * consecutive generic type parameters.
+         * @param param the generic parameter of the type
+         * @see #bound(TypeReferenceMatchBuilder)
+         * @see #wildcard()
+         * @see #wildcardSuper(TypeReferenceMatchBuilder)
+         * @see #wildcardExtends(TypeReferenceMatchBuilder)
+         */
         public TypeDefinitionStatementBuilder $(TypeParameterMatchBuilder param) {
             this.typeParameters.add(param);
             return this;
         }
 
+        /**
+         * Sets the constraint on the interfaces implemented by the queried type.
+         * @see #implements_()
+         */
         public TypeDefinitionStatementBuilder $(ImplementsMatchBuilder implements_) {
             this.implemented.add(implements_);
             return this;
         }
 
+        /**
+         * Sets the constraint on the super type of the queried type.
+         * @see #extends_(TypeReferenceMatchBuilder)
+         */
         public TypeDefinitionStatementBuilder $(ExtendsMatchBuilder extends_) {
             this.extended = extends_;
             return this;
         }
 
+        /**
+         * Sets the constraint on the types used by the queried type.
+         * @see #uses(TypeReferenceMatchBuilder)
+         */
         public TypeDefinitionStatementBuilder $(UsesMatchBuilder uses) {
             this.uses.add(uses);
             return this;
         }
 
+        /**
+         * Sets the constraint on the types used by the queried type.
+         * @see #usedBy(String, String...)
+         */
         public TypeDefinitionStatementBuilder $(UsedByMatchBuilder usedBy) {
             this.usedBys.add(usedBy);
             return this;
         }
 
+        /**
+         * Sets the constraint on a field declared in the queried type. Multiple calls of this method will require
+         * the queried type to declare all the queried fields.
+         * @see #field(NameMatch)
+         */
         public TypeDefinitionStatementBuilder $(FieldStatementBuilder field) {
             this.innerStatements.add(field);
             return this;
         }
 
+        /**
+         * Sets the constraint on a method declared in the queried type. Multiple calls of this method will require
+         * the queried type to declare all the queried methods.
+         * @see #method(NameMatch)
+         */
         public TypeDefinitionStatementBuilder $(MethodStatementBuilder method) {
             this.innerStatements.add(method);
             return this;
         }
 
+        /**
+         * Sets the constraint on a nested type declared in the queried type. Multiple calls of this method will require
+         * the queried type to declare all the queried nested types.
+         * @see #type()
+         * @see #type(TypeKindBuilder, FqnMatchBuilder)
+         * @see #anyType()
+         */
         public TypeDefinitionStatementBuilder $(TypeDefinitionStatementBuilder type) {
             this.innerStatements.add(type);
             return this;
@@ -486,6 +799,9 @@ public final class Classif {
         }
     }
 
+    /**
+     * Creates a constraint on the implemented interfaces of a type.
+     */
     public static final class ImplementsMatchBuilder extends AbstractMatchBuilder<ImplementsMatch> {
         private boolean directly;
         private boolean exactly;
@@ -495,16 +811,28 @@ public final class Classif {
 
         }
 
+        /**
+         * Modifies the constraint to only consider directly implemented interfaces.
+         */
         public ImplementsMatchBuilder directly() {
             this.directly = true;
             return this;
         }
 
+        /**
+         * Modifies the constraint so that it checks that the type implements only the listed interfaces and no else.
+         */
         public ImplementsMatchBuilder exactly() {
             this.exactly = true;
             return this;
         }
 
+        /**
+         * Adds a type to the list of the implemented interfaces. The order in which the interfaces are added is not
+         * significant.
+         *
+         * @param type the type of the interface that should be implemented
+         */
         public ImplementsMatchBuilder $(TypeReferenceMatchBuilder type) {
             this.types.add(type);
             return this;
@@ -516,6 +844,9 @@ public final class Classif {
         }
     }
 
+    /**
+     * Builds a constraint on the super type of the queried type.
+     */
     public static final class ExtendsMatchBuilder extends AbstractMatchBuilder<ExtendsMatch> {
         private boolean directly;
         private final TypeReferenceMatchBuilder type;
@@ -525,6 +856,9 @@ public final class Classif {
         }
 
 
+        /**
+         * Modifies the constraint such that it only matches types that are direct subtypes of the provided super type.
+         */
         public ExtendsMatchBuilder directly() {
             this.directly = true;
             return this;
@@ -536,6 +870,9 @@ public final class Classif {
         }
     }
 
+    /**
+     * Builds a constraint on a method parameter.
+     */
     public static final class MethodParameterMatchBuilder extends AbstractMatchBuilder<MethodParameterMatch> {
         private final List<AnnotationMatchBuilder> annotations = new ArrayList<>();
         private final TypeReferenceMatchBuilder type;
@@ -544,6 +881,10 @@ public final class Classif {
             this.type = type;
         }
 
+        /**
+         * Sets the constraint on annotation present on the method parameter.
+         * @see #annotation(TypeReferenceMatchBuilder)
+         */
         public MethodParameterMatchBuilder $(AnnotationMatchBuilder annotation) {
             this.annotations.add(annotation);
             return this;
@@ -555,6 +896,9 @@ public final class Classif {
         }
     }
 
+    /**
+     * Builds a Classif query.
+     */
     public static final class Builder extends AbstractMatchBuilder<StructuralMatcher> {
         private final List<AbstractStatementBuilder<?, ? extends AbstractStatement>> statements = new ArrayList<>();
         private final List<String> returns;
@@ -564,16 +908,31 @@ public final class Classif {
             this.returns = new ArrayList<>(returns);
         }
 
+        /**
+         * Modifies the matching so that strict hierarchy match is required for nested types. The default mode is to
+         * match both top-level types and nested types using a top level type statement. If {@code strictHierarchy} is
+         * set, then a subtype is only matched if the query also reflects its enclosing types.
+         */
         public Builder strictHierarchy() {
             this.strictHierarchy = true;
             return this;
         }
 
+        /**
+         * Adds a statement on any type of Java element to the query.
+         * @see #declaration()
+         */
         public Builder $(GenericStatementBuilder decl) {
             statements.add(decl);
             return this;
         }
 
+       /**
+         * Adds a type statement to the query.
+         * @see #type()
+         * @see #type(TypeKindBuilder, FqnMatchBuilder)
+         * @see #anyType()
+         */
         public Builder $(TypeDefinitionStatementBuilder type) {
             statements.add(type);
             return this;
@@ -585,6 +944,9 @@ public final class Classif {
         }
     }
 
+    /**
+     * Adds a constraint on the fully qualified name of the type.
+     */
     public static final class FqnMatchBuilder extends AbstractMatchBuilder<FqnMatch> {
         private final List<NameMatch> parts;
 
@@ -592,11 +954,17 @@ public final class Classif {
             this.parts = parts;
         }
 
+        /**
+         * Adds another level to the hierarchical fully qualified name.
+         */
         public FqnMatchBuilder dot(NameMatch name) {
             parts.add(name);
             return this;
         }
 
+        /**
+         * Adds a couple of levels to the hierarchical fully qualified name in the order.
+         */
         public FqnMatchBuilder parts(NameMatch... names) {
             parts.addAll(asList(names));
             return this;
@@ -608,6 +976,9 @@ public final class Classif {
         }
     }
 
+    /**
+     * A super-class for the more specific type parameter constraints.
+     */
     public static abstract class TypeParameterMatchBuilder extends AbstractMatchBuilder<TypeParameterMatch> {
         private TypeParameterMatchBuilder() {
 
@@ -616,6 +987,10 @@ public final class Classif {
         public abstract TypeParameterMatch build();
     }
 
+    /**
+     * Adds a constraint on the qualified bound of the type parameter. This works for both the named type parameters
+     * and wildcards, despite the name. See Classif documentation for the explanation.
+     */
     public static final class TypeParameterWildcardBuilder extends TypeParameterMatchBuilder {
         private final boolean isExtends;
         private final List<TypeReferenceMatchBuilder> bounds = new ArrayList<>();
@@ -624,6 +999,10 @@ public final class Classif {
             this.isExtends = isExtends;
         }
 
+        /**
+         * Adds another type to the bound, making it an intersection bound, e.g.
+         * {@code T extends Cloneable & Serializable}.
+         */
         public TypeParameterWildcardBuilder and(TypeReferenceMatchBuilder type) {
             bounds.add(type);
             return this;
@@ -635,6 +1014,9 @@ public final class Classif {
         }
     }
 
+    /**
+     * Builds a concrete type parameter bound, e.g. the {@code String} in the {@code Set<String>}.
+     */
     public static final class TypeParameterBoundBuilder extends TypeParameterMatchBuilder {
         private final List<TypeReferenceMatchBuilder> bounds = new ArrayList<>();
 
@@ -642,6 +1024,11 @@ public final class Classif {
 
         }
 
+        /**
+         * Adds another type to the bound, making it an intersection bound, e.g.
+         * {@code Cloneable & Serializable}. While this is not a valid Java construct (you cannot specify
+         * {@code Set<Cloneable & Serializable>}), it may be useful to test the types like that.
+         */
         public TypeParameterBoundBuilder and(TypeReferenceMatchBuilder type) {
             bounds.add(type);
             return this;
@@ -664,26 +1051,49 @@ public final class Classif {
 
         }
 
+        /**
+         * Negates the type match
+         */
         public This negated() {
             this.negation = true;
             return castThis();
         }
 
+        /**
+         * Modifies the match to match array types of given dimension.
+         * E.g. {@code type(exact("java"), exact("lang"), exact("String")).array(2)} would match {@code String[][]}.
+         */
         public This array(int arrayDimension) {
             this.arrayDimension = arrayDimension;
             return castThis();
         }
 
-        public This var(String variableName) {
+        /**
+         * The constraint will only match types that correspond to the type statement
+         * {@link TypeDefinitionStatementBuilder#as(String) called} this name. E.g. this type reference matches the
+         * type using its {@code var}iable name.
+         */
+        public This ref(String variableName) {
             this.variable = variableName;
             return castThis();
         }
 
+        /**
+         * Modifies the constraint to match only types with the provided fully qualified name.
+         * @see Classif#fqn(NameMatch, NameMatch...)
+         */
         public This fqn(NameMatch first, NameMatch... rest) {
             this.fqn = Classif.fqn(first, rest);
             return castThis();
         }
 
+        /**
+         * Adds a type parameter constraint on the type match.
+         * @see #wildcard()
+         * @see #wildcardExtends(TypeReferenceMatchBuilder)
+         * @see #wildcardSuper(TypeReferenceMatchBuilder)
+         * @see #bound(TypeReferenceMatchBuilder)
+         */
         public This $(TypeParameterMatchBuilder typeParameter) {
             this.typeParameters.add(typeParameter);
             return castThis();
@@ -698,6 +1108,15 @@ public final class Classif {
         }
     }
 
+    /**
+     * Creates a type constraint.
+     *
+     * @see #type()
+     * @see #type(TypeKindBuilder, FqnMatchBuilder)
+     * @see #type(TypeKind, FqnMatchBuilder)
+     * @see #type(TypeKind, NameMatch, NameMatch...)
+     * @see #type(TypeKindBuilder, NameMatch, NameMatch...)
+     */
     public static final class TypeReferenceMatchBuilder extends SingleTypeReferenceMatchBuilder<TypeReferenceMatchBuilder, TypeReferenceMatch> {
         private final List<SingleTypeReferenceMatch> types = new ArrayList<>();
 
@@ -705,6 +1124,10 @@ public final class Classif {
 
         }
 
+        /**
+         * Finishes off the current type match and starts a new one. The resulting match will succeed if either the
+         * old one or the new one to be built will match.
+         */
         public TypeReferenceMatchBuilder or() {
             if (variable != null) {
                 referencedVariables.add(variable);
@@ -726,6 +1149,10 @@ public final class Classif {
         }
     }
 
+    /**
+     * Creates a constraint on types used by a statement.
+     * @see #uses(TypeReferenceMatchBuilder)
+     */
     public static final class UsesMatchBuilder extends AbstractMatchBuilder<UsesMatch> {
         private boolean onlyDirect;
         private final TypeReferenceMatchBuilder type;
@@ -734,6 +1161,10 @@ public final class Classif {
             this.type = type;
         }
 
+        /**
+         * By default indirect usages are also considered. Using this method only direct usages are allowed. A direct
+         * usage means that the type appears directly in the statement.
+         */
         public UsesMatchBuilder directly() {
             this.onlyDirect = true;
             return this;
@@ -745,6 +1176,10 @@ public final class Classif {
         }
     }
 
+    /**
+     * Creates a constraint on a type by specifying what it should be used by.
+     * @see #usedBy(String, String...)
+     */
     public static final class UsedByMatchBuilder extends AbstractMatchBuilder<UsedByMatch> {
         private boolean onlyDirect;
 
@@ -752,6 +1187,10 @@ public final class Classif {
             this.referencedVariables.addAll(variables);
         }
 
+        /**
+         * Limits the constraint so that it only matches types that are directly used by the matching statements.
+         * The default is to match also indirect usages.
+         */
         public UsedByMatchBuilder directly() {
             this.onlyDirect = true;
             return this;
@@ -762,6 +1201,12 @@ public final class Classif {
         }
     }
 
+    /**
+     * Builds a type kind constraint.
+     * @see #kind(TypeKind)
+     * @see #type(TypeKindBuilder, NameMatch, NameMatch...)
+     * @see #type(TypeKindBuilder, FqnMatchBuilder)
+     */
     public static final class TypeKindBuilder extends AbstractMatchBuilder<TypeKindMatch> {
         private boolean negated;
         private final TypeKind kind;
@@ -770,6 +1215,9 @@ public final class Classif {
             this.kind = kind;
         }
 
+        /**
+         * Negates the type kind match.
+         */
         public TypeKindBuilder negated() {
             this.negated = true;
             return this;
@@ -781,9 +1229,21 @@ public final class Classif {
         }
     }
 
+    /**
+     * Builds a throws constraint on method statements.
+     *
+     * @see MethodStatementBuilder#throws_(TypeReferenceMatchBuilder)
+     */
     public static final class ThrowsMatchBuilder extends AbstractMatchBuilder<ThrowsMatch> {
         private final List<TypeReferenceMatchBuilder> types = new ArrayList<>();
 
+        /**
+         * Adds a type to the list of thrown types.
+         * @see #type()
+         * @see #type(TypeKindBuilder, FqnMatchBuilder)
+         * @see #anyType()
+         * @see #anyTypes()
+         */
         public ThrowsMatchBuilder $(TypeReferenceMatchBuilder type) {
             types.add(type);
             return this;
@@ -795,6 +1255,9 @@ public final class Classif {
         }
     }
 
+    /**
+     * Builds a constraint limiting the method statement to match methods overriding some other method.
+     */
     public static final class OverridesMatchBuilder extends AbstractMatchBuilder<OverridesMatch> {
         private @Nullable Classif.TypeReferenceMatchBuilder type;
 
@@ -802,6 +1265,12 @@ public final class Classif {
 
         }
 
+        /**
+         * If specified, the statement will only match methods that override from the specified type.
+         * @see #type()
+         * @see #type(TypeKindBuilder, FqnMatchBuilder)
+         * @see #anyType()
+         */
         public OverridesMatchBuilder from(TypeReferenceMatchBuilder type) {
             this.type = type;
             return this;
@@ -924,7 +1393,7 @@ public final class Classif {
             return castThis();
         }
 
-        protected AnnotationValueMatch buildValueMatch() {
+        AnnotationValueMatch buildValueMatch() {
             if (value instanceof String) {
                 return AnnotationValueMatch.string(operator, (String) value);
             } else if (value instanceof Pattern) {
@@ -1116,8 +1585,8 @@ public final class Classif {
         }
     }
 
-    public static final class AnntotationAttributeAllBuilder extends AnnotationAttributeMatchBuilder {
-        private AnntotationAttributeAllBuilder() {
+    public static final class AnnotationAttributeAllBuilder extends AnnotationAttributeMatchBuilder {
+        private AnnotationAttributeAllBuilder() {
 
         }
 
@@ -1169,7 +1638,7 @@ public final class Classif {
     }
 
     public abstract static class AbstractMatchBuilder<M> {
-        protected final List<String> referencedVariables = new ArrayList<>();
+        final List<String> referencedVariables = new ArrayList<>();
 
         public abstract M build();
 
@@ -1179,7 +1648,7 @@ public final class Classif {
             }
         }
 
-        protected <X> @Nullable X finish(@Nullable AbstractMatchBuilder<X> builder) {
+        <X> @Nullable X finish(@Nullable AbstractMatchBuilder<X> builder) {
             if (builder == null) {
                 return null;
             }
@@ -1192,7 +1661,7 @@ public final class Classif {
             return ret;
         }
 
-        protected <X> List<X> finish(List<@Nullable ? extends AbstractMatchBuilder<? extends X>> builders) {
+        <X> List<X> finish(List<@Nullable ? extends AbstractMatchBuilder<? extends X>> builders) {
             return builders.stream()
                     .filter(Objects::nonNull)
                     .map(this::finish)
@@ -1200,7 +1669,7 @@ public final class Classif {
         }
 
         @SuppressWarnings("unchecked")
-        protected <T> T castThis() {
+        <T> T castThis() {
             return (T) this;
         }
     }
