@@ -1,7 +1,9 @@
 language: java
 jdk:
-  - oraclejdk8
-  - oraclejdk9
+  - openjdk8
+  - openjdk9
+  - openjdk11
+  - openjdk13
 
 notifications:
   email: false
