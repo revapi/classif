@@ -29,7 +29,7 @@
 
     <groupId>org.revapi.classif</groupId>
     <artifactId>classif-parent</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1-SNAPSHOT</version>
 
     <name>Classif :: Parent</name>
     <description>Structural search on Java classes</description>
@@ -74,7 +74,7 @@
         <connection>scm:git:git://github.com/revapi/classif.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/revapi/classif.git</developerConnection>
         <url>https://github.com/revapi/classif</url>
-        <tag>classif-0.1.0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <distributionManagement>
