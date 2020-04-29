@@ -18,7 +18,7 @@ case) and inform Classif about what you found. Classif can then run its queries 
 == Examples
 
 Each of these is actually implemented as a test
-link:src/main/test/java/org/revapi/classif/readme/Exampletest.java[here].
+link:classif-dsl/src/test/java/org/revapi/classif/readme/ExamplesTest.java[here].
 
 . Match anything annotated by annotation `Anno` with attribute `a` equal to `'x'`:
 +
