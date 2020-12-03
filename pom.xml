@@ -87,6 +87,10 @@
     <properties>
         <version.org.apache.logging.log4j>2.13.3</version.org.apache.logging.log4j>
         <version.org.junit.jupiter>5.4.0</version.org.junit.jupiter>
+
+        <sonar.projectKey>revapi_classif</sonar.projectKey>
+        <sonar.organization>revapi</sonar.organization>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
 
     <dependencies>
